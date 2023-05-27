@@ -115,6 +115,11 @@ export class Component {
 			this.triggerRecalc(event);
 		});
 
+		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
+		skip0Cb.addEventListener("change", (event) => {
+			this.triggerRecalc(event);
+		});
+
 		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
 		export_characteristic.addEventListener("click", (event) => {
 			this.exportTableToExcelDef("characteristic");
@@ -130,6 +135,11 @@ export class Component {
 			this.exportTableToExcelDef("talent");
 		});
 
+		const export_all = document.getElementById("export_all") as HTMLSelectElement;
+		export_all.addEventListener("click", (event) => {
+			this.exportAllTableToExcelDef("characteristic","skill","talent");
+		});
+
 		this.triggerRecalc(null);
 	}
 
@@ -139,6 +149,9 @@ export class Component {
 		//debugger;
 
 		this.selectedAptitudes = [];
+
+		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
+		const skip0CbChecked = skip0Cb.checked;
 
 		// push this.data.free in array selectedAptitudes as first element
 		this.selectedAptitudes.push(this.data.free);
@@ -201,10 +214,9 @@ export class Component {
 			return - amatches + bmatches;
 		});
 		for (let i = 0; i < sortedCharacteristic.length; i++) {
-			const root= document.createElement("div");
-			characteristic.appendChild(root);
 			const cost= document.createElement("div");
 			const cost2= document.createElement("div");
+			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "characteristic") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -219,8 +231,16 @@ export class Component {
 					cost.classList.add("m"+matches);
 					cost2.innerHTML = ""+matches;
 					cost2.classList.add("m"+matches);
+					if(matches === 0 && skip0CbChecked) {
+						skip = true;
+					}
 				}
 			}
+			if(skip) {
+				continue;
+			}
+			const root= document.createElement("div");
+			characteristic.appendChild(root);
 			root.appendChild(cost);
 			root.appendChild(cost2);
 			const characteristicName = document.createElement("div");
@@ -254,13 +274,15 @@ export class Component {
 			if(this.selectedAptitudes.includes(b.apt2)) {
 				bmatches++;
 			}
+			if(amatches === bmatches) {
+				return a.tier - b.tier;
+			}
 			return - amatches + bmatches;
 		});
 		for (let i = 0; i < sortedTalents.length; i++) {
-			const root= document.createElement("div");
-			talent.appendChild(root);
 			const cost= document.createElement("div");
 			const cost2= document.createElement("div");
+			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "talent") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -275,8 +297,16 @@ export class Component {
 					cost.classList.add("m"+matches);
 					cost2.innerHTML = ""+matches;
 					cost2.classList.add("m"+matches);
+					if(matches === 0 && skip0CbChecked) {
+						skip = true;
+					}
 				}
 			}
+			if(skip) {
+				continue;
+			}
+			const root= document.createElement("div");
+			talent.appendChild(root);
 			root.appendChild(cost)
 			root.appendChild(cost2);
 			const talentTier = document.createElement("div");
@@ -285,6 +315,7 @@ export class Component {
 			const talentName = document.createElement("div");
 			talentName.innerHTML = sortedTalents[i].talent;
 			root.appendChild(talentName);
+			talentName.title = sortedTalents[i].benefit;
 			const talentApt1 = document.createElement("div");
 			talentApt1.innerHTML = sortedTalents[i].apt1;
 			root.appendChild(talentApt1);
@@ -300,6 +331,10 @@ export class Component {
 			const talentPrerequisites = document.createElement("div");
 			talentPrerequisites.innerHTML = sortedTalents[i].prerequisites;
 			root.appendChild(talentPrerequisites);
+			const talentDescription = document.createElement("div");
+			talentDescription.innerHTML = sortedTalents[i].benefit;
+			talentDescription.style.display = "none";
+			root.appendChild(talentDescription);
 		}
 
 		// iterate over array this.data.skills
@@ -323,8 +358,7 @@ export class Component {
 			return - amatches + bmatches;
 		});
 		for (let i = 0; i < sortedSkills.length; i++) {
-			const root= document.createElement("div");
-			skill.appendChild(root);
+			let skip = false;
 			const cost= document.createElement("div");
 			const cost2= document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
@@ -341,8 +375,16 @@ export class Component {
 					cost.classList.add("m"+matches);
 					cost2.innerHTML = ""+matches;
 					cost2.classList.add("m"+matches);
+					if(matches === 0 && skip0CbChecked) {
+						skip = true;
+					}
 				}
 			}
+			if(skip) {
+				continue;
+			}
+			const root= document.createElement("div");
+			skill.appendChild(root);
 			root.appendChild(cost);
 			root.appendChild(cost2);
 			const skillName = document.createElement("div");
@@ -357,6 +399,56 @@ export class Component {
 				root.appendChild(skillApt);
 			}
 		}
+	}
+
+	exportAllTableToExcelDef(divId1: string,divId2: string,divId3: string){
+		document.getElementById("exportTableToExcelDef")?.remove();
+		const tableHtml1 = this.exportDivToTable(divId1);
+		const tableHtml2 = this.exportDivToTable(divId2);
+		const tableHtml3 = this.exportDivToTable(divId3);
+		if(!tableHtml1) return;
+		if(!tableHtml2) return;
+		if(!tableHtml3) return;
+		const d = document.createElement("div");
+		d.innerHTML = "<table>"
+			+"<tr><td>Characteristics</td></tr>"
+			+"\t<tr>\n" +
+			"\t\t<td>cost</td>\n" +
+			"\t\t<td>m</td>\n" +
+			"\t\t<td>skill</td>\n" +
+			"\t\t<td>aptitude</td>\n" +
+			"\t</tr>"
+			+tableHtml1.replace("<table>","").replace("</table>","")
+			+"<tr><td> </td></tr>"
+			+"<tr><td> </td></tr>"
+			+"<tr><td>Skills</td></tr>"
+			+"\t<tr>\n" +
+			"\t\t<td>cost</td>\n" +
+			"\t\t<td>m</td>\n" +
+			"\t\t<td>characteristic</td>\n" +
+			"\t\t<td>aptitude</td>\n" +
+			"\t\t<td>aptitude</td>\n" +
+			"\t</tr>"
+			+tableHtml2.replace("<table>","").replace("</table>","")
+			+"<tr><td> </td></tr>"
+			+"<tr><td> </td></tr>"
+			+"<tr><td>Talents</td></tr>"
+			+"\t<tr>\n" +
+			"\t\t<td>cost</td>\n" +
+			"\t\t<td>m</td>\n" +
+			"\t\t<td>tier</td>\n" +
+			"\t\t<td>talent</td>\n" +
+			"\t\t<td>aptitude</td>\n" +
+			"\t\t<td>aptitude</td>\n" +
+			"\t\t<td>requirement</td>\n" +
+			"\t\t<td>description</td>\n" +
+			"\t</tr>"
+			+tableHtml3.replace("<table>","").replace("</table>","")
+			+"</table>";
+		d.style.display = "none";
+		d.id = "exportTableToExcelDef";
+		document.body.appendChild(d);
+		this.exportTableToExcel("exportTableToExcelDef", "all");
 	}
 
 	exportTableToExcelDef(divId: string){

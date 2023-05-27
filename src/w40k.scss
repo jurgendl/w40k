@@ -2,15 +2,11 @@ body {
 	padding: 3em;
 }
 
-.classSelect {
-	margin-bottom: 2em;
-}
-
-.aptitudeSelect {
-	margin-bottom: 2em;
-}
-
-.selectedAptitudes {
+.classSelect,
+.aptitudeSelect,
+.selectedAptitudes,
+.skip0,
+.export_all {
 	margin-bottom: 2em;
 }
 
@@ -76,16 +72,16 @@ body {
 
 .talent > div {
 	display: grid;
-	grid-template-columns: 50px 20px 40px 250px 150px 150px 2fr;
+	grid-template-columns: 50px 20px 40px 250px 150px 150px 2fr 0px;
 	grid-template-rows: auto;
 }
 
-.talent > div :nth-child(7n - 1),
-.talent > div :nth-child(7n - 2) {
+.talent > div :nth-child(8n - 2),
+.talent > div :nth-child(8n - 3) {
 	font-weight: 500;
 }
 
-.talent:not(.header) > div :nth-child(7n - 3) {
+.talent:not(.header) > div :nth-child(8n - 4) {
 	text-decoration: underline;
 }
 

@@ -19,7 +19,16 @@
 <select id="classSelect" name="classSelect" class="classSelect form-control"></select>
 <select id="aptitudeSelect" name="aptitudeSelect" class="aptitudeSelect form-control"></select>
 <div class="selectedAptitudes" id="selectedAptitudes"></div>
-<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export</button>
+<div id="skip0" name="skip0" class="skip0 custom-control custom-checkbox">
+	<input type="checkbox" class="custom-control-input" id="skip0Cb" name="skip0Cb" checked="">
+	<label class="custom-control-label" for="skip0Cb">Skip 0 matches</label>
+</div>
+<div>
+	<button type="button" class="export_all btn btn-sm btn-primary" id="export_all">Export all</button>
+</div>
+<div>
+	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export</button>
+</div>
 <div class="characteristic header">
 	<div>
 		<div>cost</div>
@@ -29,7 +38,9 @@
 	</div>
 </div>
 <div class="characteristic" id="characteristic"></div>
-<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export</button>
+<div>
+	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export</button>
+</div>
 <div class="skill header">
 	<div>
 		<div>cost</div>
@@ -40,7 +51,9 @@
 	</div>
 </div>
 <div class="skill" id="skill"></div>
-<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export</button>
+<div>
+	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export</button>
+</div>
 <div class="talent header">
 	<div>
 		<div>cost</div>
@@ -50,6 +63,7 @@
 		<div>aptitude</div>
 		<div>aptitude</div>
 		<div>requirement</div>
+		<div style="display: none">description</div>
 	</div>
 </div>
 <div class="talent" id="talent"></div>
