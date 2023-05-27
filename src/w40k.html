@@ -20,14 +20,15 @@
 <select id="aptitudeSelect" name="aptitudeSelect" class="aptitudeSelect form-control"></select>
 <div class="selectedAptitudes" id="selectedAptitudes"></div>
 <div id="skip0" name="skip0" class="skip0 custom-control custom-checkbox">
-	<input type="checkbox" class="custom-control-input" id="skip0Cb" name="skip0Cb" checked="">
+	<input type="checkbox" class="custom-control-input" id="skip0Cb" name="skip0Cb">
 	<label class="custom-control-label" for="skip0Cb">Skip 0 matches</label>
 </div>
+<textarea cols="3" style="width: 100%" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
 <div>
-	<button type="button" class="export_all btn btn-sm btn-primary" id="export_all">Export all</button>
+	<button type="button" class="export_all btn btn-sm btn-primary" id="export_all">Export all to xls</button>
 </div>
 <div>
-	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export</button>
+	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export to clipboard</button>
 </div>
 <div class="characteristic header">
 	<div>
@@ -39,7 +40,7 @@
 </div>
 <div class="characteristic" id="characteristic"></div>
 <div>
-	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export</button>
+	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export to clipboard</button>
 </div>
 <div class="skill header">
 	<div>
@@ -52,7 +53,7 @@
 </div>
 <div class="skill" id="skill"></div>
 <div>
-	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export</button>
+	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
 </div>
 <div class="talent header">
 	<div>

@@ -120,19 +120,27 @@ export class Component {
 			this.triggerRecalc(event);
 		});
 
+		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
+		wishlist.addEventListener("change", (event) => {
+			this.triggerRecalc(event);
+		});
+
 		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
 		export_characteristic.addEventListener("click", (event) => {
-			this.exportTableToExcelDef("characteristic");
+			//this.exportTableToExcelDef("characteristic");
+			this.copyToClipboard("characteristic");
 		});
 
 		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
 		export_skill.addEventListener("click", (event) => {
-			this.exportTableToExcelDef("skill");
+			//this.exportTableToExcelDef("skill");
+			this.copyToClipboard("skill");
 		});
 
 		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
 		export_talent.addEventListener("click", (event) => {
-			this.exportTableToExcelDef("talent");
+			//this.exportTableToExcelDef("talent");
+			this.copyToClipboard("talent");
 		});
 
 		const export_all = document.getElementById("export_all") as HTMLSelectElement;
@@ -147,6 +155,22 @@ export class Component {
 		// javascript breakpoint
 		//// eslint-disable-next-line no-debugger
 		//debugger;
+
+		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
+		// split textarea content into array
+		const wishlistArray = wishlist.value.split("\n");
+		// remove empty elements from array
+		for (let i = 0; i < wishlistArray.length; i++) {
+			if (wishlistArray[i] === "") {
+				wishlistArray.splice(i, 1);
+				i--;
+			}
+		}
+		// lowercase all elements in array
+		for (let i = 0; i < wishlistArray.length; i++) {
+			wishlistArray[i] = wishlistArray[i].toLowerCase().trim();
+		}
+		console.log("wishlistArray",wishlistArray.length,wishlistArray);
 
 		this.selectedAptitudes = [];
 
@@ -280,6 +304,10 @@ export class Component {
 			return - amatches + bmatches;
 		});
 		for (let i = 0; i < sortedTalents.length; i++) {
+			console.log(sortedTalents[i].talent.toLowerCase(),wishlistArray.length==0,wishlistArray.includes(sortedTalents[i].talent.toLowerCase()));
+			if(!(wishlistArray.length==0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
+				continue;
+			}
 			const cost= document.createElement("div");
 			const cost2= document.createElement("div");
 			let skip = false;
@@ -463,23 +491,26 @@ export class Component {
 		this.exportTableToExcel("exportTableToExcelDef", divId);
 	}
 
-	exportDivToTable(divId: string){
+	exportDivToTable(divId: string, plain = false){
 		const div = document.getElementById(divId);
 		if(!div) return;
 		// iterate over divs inside div
-		let tab = "<table>";
+		let tab = "";
+		if(!plain) tab += "<table>";
 		for (let i = 0; i < div.children.length; i++) {
-			tab += "<tr>";
+			if(!plain) tab += "<tr>";
 			const r = div.children[i] as HTMLDivElement;
 			for (let j = 0; j < r.children.length; j++) {
 				const c = r.children[j] as HTMLDivElement;
-				tab += "<td>";
+				if(!plain) tab += "<td>";
 				tab += c.innerHTML;
-				tab += "</td>";
+				if(!plain) tab += "</td>";
+				else tab += "\t";
 			}
-			tab += "</tr>";
+			if(!plain) tab += "</tr>";
+			else tab += "\n";
 		}
-		tab += "</table>";
+		if(!plain) tab += "</table>";
 		return tab;
 	}
 
@@ -507,5 +538,22 @@ export class Component {
 			//triggering the function
 			downloadLink.click();
 		}
+	}
+
+	copyToClipboard(divId: string) {
+		document.getElementById("exportTableToClipboard")?.remove();
+		const tableHtml = this.exportDivToTable(divId,true);
+		if(!tableHtml) return;
+		const d: HTMLTextAreaElement = document.createElement("textarea");
+		//d.type="text";
+		//d.value = tableHtml;
+		d.innerHTML = tableHtml;
+		d.style.display = "none";
+		d.id = "exportTableToClipboard";
+		document.body.appendChild(d);
+		d.select();
+		d.setSelectionRange(0, 99999); // For mobile devices
+		console.log(d.value);
+		navigator.clipboard.writeText(d.value);
 	}
 }
