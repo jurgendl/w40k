@@ -1,5 +1,5 @@
 body {
-	padding: 4em;
+	padding: 3em;
 }
 
 .classSelect {
@@ -14,51 +14,78 @@ body {
 	margin-bottom: 2em;
 }
 
+.skill:not(.header) ,
+.talent:not(.header) ,
+.characteristic:not(.header) {
+	margin-bottom: 2em;
+}
+
+.header {
+	background-color: #161a1a;
+	color: #ddd;
+	font-weight: 600;
+}
+
+.skill ,
+.talent ,
 .characteristic {
-	display: grid;
-	grid-template-columns: 120px 150px 150px;
-	grid-template-rows: auto;
-	margin-bottom: 2em;
+	border: 1px solid #161a1a;
 }
 
-.characteristic :nth-child(3n),
-.characteristic :nth-child(3n - 1) {
+.skill > :nth-child(2n) ,
+.talent > :nth-child(2n) ,
+.characteristic > :nth-child(2n) {
+	background-color: #f8f5e8;
+}
+
+.skill > div ,
+.talent > div ,
+.characteristic > div {
+	padding: 0.25em;
+}
+
+.characteristic > div {
+	display: grid;
+	grid-template-columns: 50px 20px 150px 150px;
+	grid-template-rows: auto;
+}
+
+.characteristic > div :nth-child(4n),
+.characteristic > div :nth-child(4n - 1) {
 	font-weight: 500;
 }
 
-.characteristic :nth-child(3n - 1) {
+.characteristic:not(.header) > div :nth-child(4n - 1) {
 	text-decoration: underline;
 }
 
-.skill {
+.skill > div {
 	display: grid;
-	grid-template-columns: 120px 150px 150px 150px;
+	grid-template-columns: 50px 20px 150px 150px 150px;
 	grid-template-rows: auto;
-	margin-bottom: 2em;
 }
 
-.skill :nth-child(4n),
-.skill :nth-child(4n - 1) {
+.skill > div :nth-child(5n),
+.skill > div :nth-child(5n - 1) {
 	font-weight: 500;
 }
 
-.skill :nth-child(4n - 2) {
+.skill:not(.header) > div :nth-child(5n - 2) {
 	text-decoration: underline;
 }
 
-.talent {
+.talent > div {
 	display: grid;
-	grid-template-columns: 60px 40px 250px 150px 150px 2fr;
+	grid-template-columns: 50px 20px 40px 250px 150px 150px 2fr;
 	grid-template-rows: auto;
-	margin-bottom: 2em;
 }
 
-.talent :nth-child(6n - 1),
-.talent :nth-child(6n - 2) {
+.talent > div :nth-child(7n - 1),
+.talent > div :nth-child(7n - 2) {
 	font-weight: 500;
 }
 
-.talent :nth-child(6n - 3) {
+.talent:not(.header) > div :nth-child(7n - 3) {
 	text-decoration: underline;
 }
 

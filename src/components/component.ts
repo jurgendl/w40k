@@ -114,9 +114,26 @@ export class Component {
 		aptitudeSelect.addEventListener("change", (event) => {
 			this.triggerRecalc(event);
 		});
+
+		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
+		export_characteristic.addEventListener("click", (event) => {
+			this.exportTableToExcelDef("characteristic");
+		});
+
+		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
+		export_skill.addEventListener("click", (event) => {
+			this.exportTableToExcelDef("skill");
+		});
+
+		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
+		export_talent.addEventListener("click", (event) => {
+			this.exportTableToExcelDef("talent");
+		});
+
+		this.triggerRecalc(null);
 	}
 
-	triggerRecalc(event: Event) {
+	triggerRecalc(event: Event | null) {
 		// javascript breakpoint
 		//// eslint-disable-next-line no-debugger
 		//debugger;
@@ -184,7 +201,10 @@ export class Component {
 			return - amatches + bmatches;
 		});
 		for (let i = 0; i < sortedCharacteristic.length; i++) {
+			const root= document.createElement("div");
+			characteristic.appendChild(root);
 			const cost= document.createElement("div");
+			const cost2= document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "characteristic") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -195,23 +215,26 @@ export class Component {
 					if(this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
 						matches++;
 					}
-					cost.innerHTML = this.data.costs[j].cost[2-matches][0]+"..."+this.data.costs[j].cost[2-matches][3]+" ("+matches+")";
+					cost.innerHTML = ""+this.data.costs[j].cost[2-matches][0];
 					cost.classList.add("m"+matches);
+					cost2.innerHTML = ""+matches;
+					cost2.classList.add("m"+matches);
 				}
 			}
-			characteristic.appendChild(cost);
+			root.appendChild(cost);
+			root.appendChild(cost2);
 			const characteristicName = document.createElement("div");
 			characteristicName.innerHTML = sortedCharacteristic[i].name;
 			if(this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
 				characteristicName.classList.add("m2");
 			}
-			characteristic.appendChild(characteristicName);
+			root.appendChild(characteristicName);
 			const characteristicAptitude = document.createElement("div");
 			characteristicAptitude.innerHTML = sortedCharacteristic[i].aptitude;
 			if(this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
 				characteristicAptitude.classList.add("m2");
 			}
-			characteristic.appendChild(characteristicAptitude);
+			root.appendChild(characteristicAptitude);
 		}
 
 		const talent = document.getElementById("talent") as HTMLDivElement;
@@ -234,7 +257,10 @@ export class Component {
 			return - amatches + bmatches;
 		});
 		for (let i = 0; i < sortedTalents.length; i++) {
+			const root= document.createElement("div");
+			talent.appendChild(root);
 			const cost= document.createElement("div");
+			const cost2= document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "talent") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -245,32 +271,35 @@ export class Component {
 					if(this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
 						matches++;
 					}
-					cost.innerHTML = this.data.costs[j].cost[2-matches][sortedTalents[i].tier-1]+" ("+matches+")";
+					cost.innerHTML = ""+this.data.costs[j].cost[2-matches][sortedTalents[i].tier-1];
 					cost.classList.add("m"+matches);
+					cost2.innerHTML = ""+matches;
+					cost2.classList.add("m"+matches);
 				}
 			}
-			talent.appendChild(cost);
+			root.appendChild(cost)
+			root.appendChild(cost2);
 			const talentTier = document.createElement("div");
 			talentTier.innerHTML = "T" + sortedTalents[i].tier;
-			talent.appendChild(talentTier);
+			root.appendChild(talentTier);
 			const talentName = document.createElement("div");
 			talentName.innerHTML = sortedTalents[i].talent;
-			talent.appendChild(talentName);
+			root.appendChild(talentName);
 			const talentApt1 = document.createElement("div");
 			talentApt1.innerHTML = sortedTalents[i].apt1;
-			talent.appendChild(talentApt1);
+			root.appendChild(talentApt1);
 			if(this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
 				talentApt1.classList.add("m2");
 			}
 			const talentApt2 = document.createElement("div");
 			talentApt2.innerHTML = sortedTalents[i].apt2;
-			talent.appendChild(talentApt2);
+			root.appendChild(talentApt2);
 			if(this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
 				talentApt2.classList.add("m2");
 			}
 			const talentPrerequisites = document.createElement("div");
 			talentPrerequisites.innerHTML = sortedTalents[i].prerequisites;
-			talent.appendChild(talentPrerequisites);
+			root.appendChild(talentPrerequisites);
 		}
 
 		// iterate over array this.data.skills
@@ -294,7 +323,10 @@ export class Component {
 			return - amatches + bmatches;
 		});
 		for (let i = 0; i < sortedSkills.length; i++) {
+			const root= document.createElement("div");
+			skill.appendChild(root);
 			const cost= document.createElement("div");
+			const cost2= document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "skill") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -305,22 +337,83 @@ export class Component {
 					if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) {
 						matches++;
 					}
-					cost.innerHTML = this.data.costs[j].cost[2-matches][0]+"..."+this.data.costs[j].cost[2-matches][3]+" ("+matches+")";
+					cost.innerHTML = ""+this.data.costs[j].cost[2-matches][0];
 					cost.classList.add("m"+matches);
+					cost2.innerHTML = ""+matches;
+					cost2.classList.add("m"+matches);
 				}
 			}
-			skill.appendChild(cost);
+			root.appendChild(cost);
+			root.appendChild(cost2);
 			const skillName = document.createElement("div");
 			skillName.innerHTML = sortedSkills[i].name;
-			skill.appendChild(skillName);
+			root.appendChild(skillName);
 			for (let j = 0; j < sortedSkills[i].aptitudes.length; j++) {
 				const skillApt = document.createElement("div");
 				skillApt.innerHTML = sortedSkills[i].aptitudes[j];
 				if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[j])) {
 					skillApt.classList.add("m2");
 				}
-				skill.appendChild(skillApt);
+				root.appendChild(skillApt);
 			}
+		}
+	}
+
+	exportTableToExcelDef(divId: string){
+		document.getElementById("exportTableToExcelDef")?.remove();
+		const tableHtml = this.exportDivToTable(divId);
+		if(!tableHtml) return;
+		const d = document.createElement("div");
+		d.innerHTML = tableHtml;
+		d.style.display = "none";
+		d.id = "exportTableToExcelDef";
+		document.body.appendChild(d);
+		this.exportTableToExcel("exportTableToExcelDef", divId);
+	}
+
+	exportDivToTable(divId: string){
+		const div = document.getElementById(divId);
+		if(!div) return;
+		// iterate over divs inside div
+		let tab = "<table>";
+		for (let i = 0; i < div.children.length; i++) {
+			tab += "<tr>";
+			const r = div.children[i] as HTMLDivElement;
+			for (let j = 0; j < r.children.length; j++) {
+				const c = r.children[j] as HTMLDivElement;
+				tab += "<td>";
+				tab += c.innerHTML;
+				tab += "</td>";
+			}
+			tab += "</tr>";
+		}
+		tab += "</table>";
+		return tab;
+	}
+
+	// https://www.codexworld.com/export-html-table-data-to-excel-using-javascript/
+	exportTableToExcel(tableID: string, filename = ''){
+		const dataType = 'application/vnd.ms-excel';
+		const tableSelect = document.getElementById(tableID);
+		if(!tableSelect) return;
+		const tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+		// Specify file name
+		filename = filename?filename+'.xls':'excel_data.xls';
+		// Create download link element
+		const downloadLink = document.createElement("a");
+		document.body.appendChild(downloadLink);
+		if((navigator as any).msSaveOrOpenBlob){
+			const blob = new Blob(['\ufeff', tableHTML], {
+				type: dataType
+			});
+			(navigator as any).msSaveOrOpenBlob( blob, filename);
+		}else{
+			// Create a link to the file
+			downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+			// Setting the file name
+			downloadLink.download = filename;
+			//triggering the function
+			downloadLink.click();
 		}
 	}
 }
