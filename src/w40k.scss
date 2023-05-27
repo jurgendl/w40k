@@ -48,7 +48,7 @@ body {
 
 .talent {
 	display: grid;
-	grid-template-columns: 60px 40px 200px 150px 150px 2fr;
+	grid-template-columns: 60px 40px 250px 150px 150px 2fr;
 	grid-template-rows: auto;
 	margin-bottom: 2em;
 }
@@ -63,13 +63,13 @@ body {
 }
 
 .m2 {
-	color: darkgreen;
+	color: #44c32a;
 }
 
 .m1 {
-	color: blueviolet;
+	color: #b6bd18;
 }
 
 .m0 {
-	color: mediumvioletred;
+	color: #f91965;
 }

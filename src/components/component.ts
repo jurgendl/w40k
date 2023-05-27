@@ -153,24 +153,46 @@ export class Component {
 		// concatenate selectedAptitudes into textfield
 		const selectedAptitudes = document.getElementById("selectedAptitudes") as HTMLDivElement;
 		console.log(this.selectedAptitudes);
-		selectedAptitudes.innerHTML = this.selectedAptitudes.join(", ");
+		selectedAptitudes.innerHTML = "<u>Aptitudes</u>: ";
+		for (let i = 0; i < this.selectedAptitudes.length; i++) {
+			selectedAptitudes.innerHTML += "<span class='badge badge-secondary'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
+		}
 		if(duplicate) {
-			selectedAptitudes.innerHTML += ", "+duplicate+" (duplicate)";
+			selectedAptitudes.innerHTML += "<span class='badge badge-danger'>" + duplicate + " (duplicate)" + "</span>";
 		}
 
 		// iterate over array this.data.characteristic
 		const characteristic = document.getElementById("characteristic") as HTMLDivElement;
 		characteristic.innerHTML = "";
-		for (let i = 0; i < this.data.characteristic.length; i++) {
+
+		// iterate over array this.data.characteristic and sort by index
+		const sortedCharacteristic = this.data.characteristic.sort((a, b) => {
+			let amatches = 0;
+			if(this.selectedAptitudes.includes(a.name)) {
+				amatches++;
+			}
+			if(this.selectedAptitudes.includes(a.aptitude)) {
+				amatches++;
+			}
+			let bmatches = 0;
+			if(this.selectedAptitudes.includes(b.name)) {
+				bmatches++;
+			}
+			if(this.selectedAptitudes.includes(b.aptitude)) {
+				bmatches++;
+			}
+			return - amatches + bmatches;
+		});
+		for (let i = 0; i < sortedCharacteristic.length; i++) {
 			const cost= document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "characteristic") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if(this.selectedAptitudes.includes(this.data.characteristic[i].name)) {
+					if(this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
 						matches++;
 					}
-					if(this.selectedAptitudes.includes(this.data.characteristic[i].aptitude)) {
+					if(this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
 						matches++;
 					}
 					cost.innerHTML = this.data.costs[j].cost[2-matches][0]+"..."+this.data.costs[j].cost[2-matches][3]+" ("+matches+")";
@@ -179,63 +201,108 @@ export class Component {
 			}
 			characteristic.appendChild(cost);
 			const characteristicName = document.createElement("div");
-			characteristicName.innerHTML = this.data.characteristic[i].name;
+			characteristicName.innerHTML = sortedCharacteristic[i].name;
+			if(this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
+				characteristicName.classList.add("m2");
+			}
 			characteristic.appendChild(characteristicName);
 			const characteristicAptitude = document.createElement("div");
-			characteristicAptitude.innerHTML = this.data.characteristic[i].aptitude;
+			characteristicAptitude.innerHTML = sortedCharacteristic[i].aptitude;
+			if(this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
+				characteristicAptitude.classList.add("m2");
+			}
 			characteristic.appendChild(characteristicAptitude);
 		}
 
-		// iterate over array this.data.talents
 		const talent = document.getElementById("talent") as HTMLDivElement;
 		talent.innerHTML = "";
-		for (let i = 0; i < this.data.talents.length; i++) {
+		const sortedTalents = this.data.talents.sort((a, b) => {
+			let amatches = 0;
+			if(this.selectedAptitudes.includes(a.apt1)) {
+				amatches++;
+			}
+			if(this.selectedAptitudes.includes(a.apt2)) {
+				amatches++;
+			}
+			let bmatches = 0;
+			if(this.selectedAptitudes.includes(b.apt1)) {
+				bmatches++;
+			}
+			if(this.selectedAptitudes.includes(b.apt2)) {
+				bmatches++;
+			}
+			return - amatches + bmatches;
+		});
+		for (let i = 0; i < sortedTalents.length; i++) {
 			const cost= document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "talent") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if(this.selectedAptitudes.includes(this.data.talents[i].apt1)) {
+					if(this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
 						matches++;
 					}
-					if(this.selectedAptitudes.includes(this.data.talents[i].apt2)) {
+					if(this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
 						matches++;
 					}
-					cost.innerHTML = this.data.costs[j].cost[2-matches][this.data.talents[i].tier-1]+" ("+matches+")";
+					cost.innerHTML = this.data.costs[j].cost[2-matches][sortedTalents[i].tier-1]+" ("+matches+")";
 					cost.classList.add("m"+matches);
 				}
 			}
 			talent.appendChild(cost);
 			const talentTier = document.createElement("div");
-			talentTier.innerHTML = "T" + this.data.talents[i].tier;
+			talentTier.innerHTML = "T" + sortedTalents[i].tier;
 			talent.appendChild(talentTier);
 			const talentName = document.createElement("div");
-			talentName.innerHTML = this.data.talents[i].talent;
+			talentName.innerHTML = sortedTalents[i].talent;
 			talent.appendChild(talentName);
 			const talentApt1 = document.createElement("div");
-			talentApt1.innerHTML = this.data.talents[i].apt1;
+			talentApt1.innerHTML = sortedTalents[i].apt1;
 			talent.appendChild(talentApt1);
+			if(this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
+				talentApt1.classList.add("m2");
+			}
 			const talentApt2 = document.createElement("div");
-			talentApt2.innerHTML = this.data.talents[i].apt2;
+			talentApt2.innerHTML = sortedTalents[i].apt2;
 			talent.appendChild(talentApt2);
+			if(this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
+				talentApt2.classList.add("m2");
+			}
 			const talentPrerequisites = document.createElement("div");
-			talentPrerequisites.innerHTML = this.data.talents[i].prerequisites;
+			talentPrerequisites.innerHTML = sortedTalents[i].prerequisites;
 			talent.appendChild(talentPrerequisites);
 		}
 
 		// iterate over array this.data.skills
 		const skill = document.getElementById("skill") as HTMLDivElement;
 		skill.innerHTML = "";
-		for (let i = 0; i < this.data.skills.length; i++) {
+		const sortedSkills = this.data.skills.sort((a, b) => {
+			let amatches = 0;
+			if(this.selectedAptitudes.includes(a.aptitudes[0])) {
+				amatches++;
+			}
+			if(this.selectedAptitudes.includes(a.aptitudes[1])) {
+				amatches++;
+			}
+			let bmatches = 0;
+			if(this.selectedAptitudes.includes(b.aptitudes[0])) {
+				bmatches++;
+			}
+			if(this.selectedAptitudes.includes(b.aptitudes[1])) {
+				bmatches++;
+			}
+			return - amatches + bmatches;
+		});
+		for (let i = 0; i < sortedSkills.length; i++) {
 			const cost= document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if(this.data.costs[j].type === "skill") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if(this.selectedAptitudes.includes(this.data.skills[i].aptitudes[0])) {
+					if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[0])) {
 						matches++;
 					}
-					if(this.selectedAptitudes.includes(this.data.skills[i].aptitudes[1])) {
+					if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) {
 						matches++;
 					}
 					cost.innerHTML = this.data.costs[j].cost[2-matches][0]+"..."+this.data.costs[j].cost[2-matches][3]+" ("+matches+")";
@@ -244,11 +311,14 @@ export class Component {
 			}
 			skill.appendChild(cost);
 			const skillName = document.createElement("div");
-			skillName.innerHTML = this.data.skills[i].name;
+			skillName.innerHTML = sortedSkills[i].name;
 			skill.appendChild(skillName);
-			for (let j = 0; j < this.data.skills[i].aptitudes.length; j++) {
+			for (let j = 0; j < sortedSkills[i].aptitudes.length; j++) {
 				const skillApt = document.createElement("div");
-				skillApt.innerHTML = this.data.skills[i].aptitudes[j];
+				skillApt.innerHTML = sortedSkills[i].aptitudes[j];
+				if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[j])) {
+					skillApt.classList.add("m2");
+				}
 				skill.appendChild(skillApt);
 			}
 		}
