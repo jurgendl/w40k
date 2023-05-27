@@ -11,20 +11,21 @@ export enum Aptitude {
 	Willpower = "Willpower",
 	Fellowship = "Fellowship",
 	//
-	Offence="Offence",
-	Finesse="Finesse",
-	Defence="Defence",
-	Psyker="Psyker",
-	Tech="Tech",
-	Knowledge="Knowledge",
-	Leadership="Leadership",
-	Fieldcraft="Fieldcraft",
-	Social="Social"
+	Offence = "Offence",
+	Finesse = "Finesse",
+	Defence = "Defence",
+	Psyker = "Psyker",
+	Tech = "Tech",
+	Knowledge = "Knowledge",
+	Leadership = "Leadership",
+	Fieldcraft = "Fieldcraft",
+	Social = "Social"
 }
 
 interface W40KCosts {
 	type: string;//characteristic(max:4),talent(max:3),skill(max:4)
-	cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
+	cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/
+	;
 }
 
 interface W40KData {
@@ -143,9 +144,14 @@ export class Component {
 			this.copyToClipboard("talent");
 		});
 
+		const export_talent_wishlist = document.getElementById("export_talent_wishlist") as HTMLSelectElement;
+		export_talent_wishlist.addEventListener("click", (event) => {
+			this.copyToClipboardWishlist();
+		});
+
 		const export_all = document.getElementById("export_all") as HTMLSelectElement;
 		export_all.addEventListener("click", (event) => {
-			this.exportAllTableToExcelDef("characteristic","skill","talent");
+			this.exportAllTableToExcelDef("characteristic", "skill", "talent");
 		});
 
 		this.triggerRecalc(null);
@@ -170,7 +176,7 @@ export class Component {
 		for (let i = 0; i < wishlistArray.length; i++) {
 			wishlistArray[i] = wishlistArray[i].toLowerCase().trim();
 		}
-		console.log("wishlistArray",wishlistArray.length,wishlistArray);
+		// console.log("wishlistArray", wishlistArray.length, wishlistArray);
 
 		this.selectedAptitudes = [];
 
@@ -179,39 +185,39 @@ export class Component {
 
 		// push this.data.free in array selectedAptitudes as first element
 		this.selectedAptitudes.push(this.data.free);
-		console.log("free",this.data.free);
+		// console.log("free", this.data.free);
 
 		const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
-		if(classSelect.selectedIndex > 0) {
+		if (classSelect.selectedIndex > 0) {
 			const classAptitudes = this.data.classes[classSelect.selectedIndex - 1].aptitudes;
 			// iterate over array selectedAptitudes
 			for (let i = 0; i < classAptitudes.length; i++) {
 				this.selectedAptitudes.push(classAptitudes[i]);
-				console.log("class",classSelect.selectedIndex,i,classAptitudes[i]);
+				// console.log("class", classSelect.selectedIndex, i, classAptitudes[i]);
 			}
 		}
 
 		let duplicate: Aptitude | null = null;
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
-		if(aptitudeSelect.selectedIndex > 0) {
+		if (aptitudeSelect.selectedIndex > 0) {
 			const aptitude = this.data.optional[aptitudeSelect.selectedIndex - 1] as Aptitude;
-			if(this.selectedAptitudes.includes(aptitude)) {
+			if (this.selectedAptitudes.includes(aptitude)) {
 				duplicate = aptitude;
 			} else {
 				// push aptitude in array selectedAptitudes
 				this.selectedAptitudes.push(aptitude);
-				console.log("apt",aptitudeSelect.selectedIndex, aptitude);
+				// console.log("apt", aptitudeSelect.selectedIndex, aptitude);
 			}
 		}
 
 		// concatenate selectedAptitudes into textfield
 		const selectedAptitudes = document.getElementById("selectedAptitudes") as HTMLDivElement;
-		console.log(this.selectedAptitudes);
+		// console.log(this.selectedAptitudes);
 		selectedAptitudes.innerHTML = "<u>Aptitudes</u>: ";
 		for (let i = 0; i < this.selectedAptitudes.length; i++) {
 			selectedAptitudes.innerHTML += "<span class='badge badge-secondary'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
 		}
-		if(duplicate) {
+		if (duplicate) {
 			selectedAptitudes.innerHTML += "<span class='badge badge-danger'>" + duplicate + " (duplicate)" + "</span>";
 		}
 
@@ -222,60 +228,60 @@ export class Component {
 		// iterate over array this.data.characteristic and sort by index
 		const sortedCharacteristic = this.data.characteristic.sort((a, b) => {
 			let amatches = 0;
-			if(this.selectedAptitudes.includes(a.name)) {
+			if (this.selectedAptitudes.includes(a.name)) {
 				amatches++;
 			}
-			if(this.selectedAptitudes.includes(a.aptitude)) {
+			if (this.selectedAptitudes.includes(a.aptitude)) {
 				amatches++;
 			}
 			let bmatches = 0;
-			if(this.selectedAptitudes.includes(b.name)) {
+			if (this.selectedAptitudes.includes(b.name)) {
 				bmatches++;
 			}
-			if(this.selectedAptitudes.includes(b.aptitude)) {
+			if (this.selectedAptitudes.includes(b.aptitude)) {
 				bmatches++;
 			}
-			return - amatches + bmatches;
+			return -amatches + bmatches;
 		});
 		for (let i = 0; i < sortedCharacteristic.length; i++) {
-			const cost= document.createElement("div");
-			const cost2= document.createElement("div");
+			const cost = document.createElement("div");
+			const cost2 = document.createElement("div");
 			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
-				if(this.data.costs[j].type === "characteristic") {
+				if (this.data.costs[j].type === "characteristic") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if(this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
+					if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
 						matches++;
 					}
-					if(this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
+					if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
 						matches++;
 					}
-					cost.innerHTML = ""+this.data.costs[j].cost[2-matches][0];
-					cost.classList.add("m"+matches);
-					cost2.innerHTML = ""+matches;
-					cost2.classList.add("m"+matches);
-					if(matches === 0 && skip0CbChecked) {
+					cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
+					cost.classList.add("m" + matches);
+					cost2.innerHTML = "" + matches;
+					cost2.classList.add("m" + matches);
+					if (matches === 0 && skip0CbChecked) {
 						skip = true;
 					}
 				}
 			}
-			if(skip) {
+			if (skip) {
 				continue;
 			}
-			const root= document.createElement("div");
+			const root = document.createElement("div");
 			characteristic.appendChild(root);
 			root.appendChild(cost);
 			root.appendChild(cost2);
 			const characteristicName = document.createElement("div");
 			characteristicName.innerHTML = sortedCharacteristic[i].name;
-			if(this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
+			if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
 				characteristicName.classList.add("m2");
 			}
 			root.appendChild(characteristicName);
 			const characteristicAptitude = document.createElement("div");
 			characteristicAptitude.innerHTML = sortedCharacteristic[i].aptitude;
-			if(this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
+			if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
 				characteristicAptitude.classList.add("m2");
 			}
 			root.appendChild(characteristicAptitude);
@@ -285,55 +291,66 @@ export class Component {
 		talent.innerHTML = "";
 		const sortedTalents = this.data.talents.sort((a, b) => {
 			let amatches = 0;
-			if(this.selectedAptitudes.includes(a.apt1)) {
+			if (this.selectedAptitudes.includes(a.apt1)) {
 				amatches++;
 			}
-			if(this.selectedAptitudes.includes(a.apt2)) {
+			if (this.selectedAptitudes.includes(a.apt2)) {
 				amatches++;
 			}
 			let bmatches = 0;
-			if(this.selectedAptitudes.includes(b.apt1)) {
+			if (this.selectedAptitudes.includes(b.apt1)) {
 				bmatches++;
 			}
-			if(this.selectedAptitudes.includes(b.apt2)) {
+			if (this.selectedAptitudes.includes(b.apt2)) {
 				bmatches++;
 			}
-			if(amatches === bmatches) {
+			if (amatches === bmatches) {
 				return a.tier - b.tier;
 			}
-			return - amatches + bmatches;
+			return -amatches + bmatches;
 		});
+		let matches2 = 0;
+		let matches1 = 0;
+		let matches0 = 0;
 		for (let i = 0; i < sortedTalents.length; i++) {
-			console.log(sortedTalents[i].talent.toLowerCase(),wishlistArray.length==0,wishlistArray.includes(sortedTalents[i].talent.toLowerCase()));
-			if(!(wishlistArray.length==0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
+			// console.log(sortedTalents[i].talent.toLowerCase(), wishlistArray.length == 0, wishlistArray.includes(sortedTalents[i].talent.toLowerCase()));
+			if (!(wishlistArray.length == 0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
 				continue;
 			}
-			const cost= document.createElement("div");
-			const cost2= document.createElement("div");
+			const cost = document.createElement("div");
+			const cost2 = document.createElement("div");
 			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
-				if(this.data.costs[j].type === "talent") {
+				if (this.data.costs[j].type === "talent") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if(this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
+					if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
 						matches++;
 					}
-					if(this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
+					if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
 						matches++;
 					}
-					cost.innerHTML = ""+this.data.costs[j].cost[2-matches][sortedTalents[i].tier-1];
-					cost.classList.add("m"+matches);
-					cost2.innerHTML = ""+matches;
-					cost2.classList.add("m"+matches);
-					if(matches === 0 && skip0CbChecked) {
+					if (matches == 2) {
+						matches2++;
+					} else if (matches == 1) {
+						matches1++;
+					} else {
+						matches0++;
+					}
+					cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][sortedTalents[i].tier - 1];
+					cost.classList.add("m" + matches);
+					cost2.innerHTML = "" + matches;
+					cost2.classList.add("m" + matches);
+					if (matches === 0 && skip0CbChecked) {
 						skip = true;
 					}
 				}
 			}
-			if(skip) {
+			// console.log("2 -- 1 -- 0", matches2, matches1, matches0);
+			if (skip) {
 				continue;
 			}
-			const root= document.createElement("div");
+			const root = document.createElement("div");
 			talent.appendChild(root);
 			root.appendChild(cost)
 			root.appendChild(cost2);
@@ -347,13 +364,13 @@ export class Component {
 			const talentApt1 = document.createElement("div");
 			talentApt1.innerHTML = sortedTalents[i].apt1;
 			root.appendChild(talentApt1);
-			if(this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
+			if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
 				talentApt1.classList.add("m2");
 			}
 			const talentApt2 = document.createElement("div");
 			talentApt2.innerHTML = sortedTalents[i].apt2;
 			root.appendChild(talentApt2);
-			if(this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
+			if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
 				talentApt2.classList.add("m2");
 			}
 			const talentPrerequisites = document.createElement("div");
@@ -370,48 +387,48 @@ export class Component {
 		skill.innerHTML = "";
 		const sortedSkills = this.data.skills.sort((a, b) => {
 			let amatches = 0;
-			if(this.selectedAptitudes.includes(a.aptitudes[0])) {
+			if (this.selectedAptitudes.includes(a.aptitudes[0])) {
 				amatches++;
 			}
-			if(this.selectedAptitudes.includes(a.aptitudes[1])) {
+			if (this.selectedAptitudes.includes(a.aptitudes[1])) {
 				amatches++;
 			}
 			let bmatches = 0;
-			if(this.selectedAptitudes.includes(b.aptitudes[0])) {
+			if (this.selectedAptitudes.includes(b.aptitudes[0])) {
 				bmatches++;
 			}
-			if(this.selectedAptitudes.includes(b.aptitudes[1])) {
+			if (this.selectedAptitudes.includes(b.aptitudes[1])) {
 				bmatches++;
 			}
-			return - amatches + bmatches;
+			return -amatches + bmatches;
 		});
 		for (let i = 0; i < sortedSkills.length; i++) {
 			let skip = false;
-			const cost= document.createElement("div");
-			const cost2= document.createElement("div");
+			const cost = document.createElement("div");
+			const cost2 = document.createElement("div");
 			for (let j = 0; j < this.data.costs.length; j++) {
-				if(this.data.costs[j].type === "skill") {
+				if (this.data.costs[j].type === "skill") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[0])) {
+					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[0])) {
 						matches++;
 					}
-					if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) {
+					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) {
 						matches++;
 					}
-					cost.innerHTML = ""+this.data.costs[j].cost[2-matches][0];
-					cost.classList.add("m"+matches);
-					cost2.innerHTML = ""+matches;
-					cost2.classList.add("m"+matches);
-					if(matches === 0 && skip0CbChecked) {
+					cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
+					cost.classList.add("m" + matches);
+					cost2.innerHTML = "" + matches;
+					cost2.classList.add("m" + matches);
+					if (matches === 0 && skip0CbChecked) {
 						skip = true;
 					}
 				}
 			}
-			if(skip) {
+			if (skip) {
 				continue;
 			}
-			const root= document.createElement("div");
+			const root = document.createElement("div");
 			skill.appendChild(root);
 			root.appendChild(cost);
 			root.appendChild(cost2);
@@ -421,7 +438,7 @@ export class Component {
 			for (let j = 0; j < sortedSkills[i].aptitudes.length; j++) {
 				const skillApt = document.createElement("div");
 				skillApt.innerHTML = sortedSkills[i].aptitudes[j];
-				if(this.selectedAptitudes.includes(sortedSkills[i].aptitudes[j])) {
+				if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[j])) {
 					skillApt.classList.add("m2");
 				}
 				root.appendChild(skillApt);
@@ -429,39 +446,39 @@ export class Component {
 		}
 	}
 
-	exportAllTableToExcelDef(divId1: string,divId2: string,divId3: string){
+	exportAllTableToExcelDef(divId1: string, divId2: string, divId3: string) {
 		document.getElementById("exportTableToExcelDef")?.remove();
 		const tableHtml1 = this.exportDivToTable(divId1);
 		const tableHtml2 = this.exportDivToTable(divId2);
 		const tableHtml3 = this.exportDivToTable(divId3);
-		if(!tableHtml1) return;
-		if(!tableHtml2) return;
-		if(!tableHtml3) return;
+		if (!tableHtml1) return;
+		if (!tableHtml2) return;
+		if (!tableHtml3) return;
 		const d = document.createElement("div");
 		d.innerHTML = "<table>"
-			+"<tr><td>Characteristics</td></tr>"
-			+"\t<tr>\n" +
+			+ "<tr><td>Characteristics</td></tr>"
+			+ "\t<tr>\n" +
 			"\t\t<td>cost</td>\n" +
 			"\t\t<td>m</td>\n" +
 			"\t\t<td>skill</td>\n" +
 			"\t\t<td>aptitude</td>\n" +
 			"\t</tr>"
-			+tableHtml1.replace("<table>","").replace("</table>","")
-			+"<tr><td> </td></tr>"
-			+"<tr><td> </td></tr>"
-			+"<tr><td>Skills</td></tr>"
-			+"\t<tr>\n" +
+			+ tableHtml1.replace("<table>", "").replace("</table>", "")
+			+ "<tr><td> </td></tr>"
+			+ "<tr><td> </td></tr>"
+			+ "<tr><td>Skills</td></tr>"
+			+ "\t<tr>\n" +
 			"\t\t<td>cost</td>\n" +
 			"\t\t<td>m</td>\n" +
 			"\t\t<td>characteristic</td>\n" +
 			"\t\t<td>aptitude</td>\n" +
 			"\t\t<td>aptitude</td>\n" +
 			"\t</tr>"
-			+tableHtml2.replace("<table>","").replace("</table>","")
-			+"<tr><td> </td></tr>"
-			+"<tr><td> </td></tr>"
-			+"<tr><td>Talents</td></tr>"
-			+"\t<tr>\n" +
+			+ tableHtml2.replace("<table>", "").replace("</table>", "")
+			+ "<tr><td> </td></tr>"
+			+ "<tr><td> </td></tr>"
+			+ "<tr><td>Talents</td></tr>"
+			+ "\t<tr>\n" +
 			"\t\t<td>cost</td>\n" +
 			"\t\t<td>m</td>\n" +
 			"\t\t<td>tier</td>\n" +
@@ -471,18 +488,18 @@ export class Component {
 			"\t\t<td>requirement</td>\n" +
 			"\t\t<td>description</td>\n" +
 			"\t</tr>"
-			+tableHtml3.replace("<table>","").replace("</table>","")
-			+"</table>";
+			+ tableHtml3.replace("<table>", "").replace("</table>", "")
+			+ "</table>";
 		d.style.display = "none";
 		d.id = "exportTableToExcelDef";
 		document.body.appendChild(d);
 		this.exportTableToExcel("exportTableToExcelDef", "all");
 	}
 
-	exportTableToExcelDef(divId: string){
+	exportTableToExcelDef(divId: string) {
 		document.getElementById("exportTableToExcelDef")?.remove();
 		const tableHtml = this.exportDivToTable(divId);
-		if(!tableHtml) return;
+		if (!tableHtml) return;
 		const d = document.createElement("div");
 		d.innerHTML = tableHtml;
 		d.style.display = "none";
@@ -491,46 +508,46 @@ export class Component {
 		this.exportTableToExcel("exportTableToExcelDef", divId);
 	}
 
-	exportDivToTable(divId: string, plain = false){
+	exportDivToTable(divId: string, plain = false) {
 		const div = document.getElementById(divId);
-		if(!div) return;
+		if (!div) return;
 		// iterate over divs inside div
 		let tab = "";
-		if(!plain) tab += "<table>";
+		if (!plain) tab += "<table>";
 		for (let i = 0; i < div.children.length; i++) {
-			if(!plain) tab += "<tr>";
+			if (!plain) tab += "<tr>";
 			const r = div.children[i] as HTMLDivElement;
 			for (let j = 0; j < r.children.length; j++) {
 				const c = r.children[j] as HTMLDivElement;
-				if(!plain) tab += "<td>";
+				if (!plain) tab += "<td>";
 				tab += c.innerHTML;
-				if(!plain) tab += "</td>";
+				if (!plain) tab += "</td>";
 				else tab += "\t";
 			}
-			if(!plain) tab += "</tr>";
+			if (!plain) tab += "</tr>";
 			else tab += "\n";
 		}
-		if(!plain) tab += "</table>";
+		if (!plain) tab += "</table>";
 		return tab;
 	}
 
 	// https://www.codexworld.com/export-html-table-data-to-excel-using-javascript/
-	exportTableToExcel(tableID: string, filename = ''){
+	exportTableToExcel(tableID: string, filename = '') {
 		const dataType = 'application/vnd.ms-excel';
 		const tableSelect = document.getElementById(tableID);
-		if(!tableSelect) return;
+		if (!tableSelect) return;
 		const tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
-		// Specify file name
-		filename = filename?filename+'.xls':'excel_data.xls';
-		// Create download link element
+		filename = filename ? filename + '.xls' : 'excel_data.xls';
+		document.getElementById("a789")?.remove();
 		const downloadLink = document.createElement("a");
+		downloadLink.id = "a789";
 		document.body.appendChild(downloadLink);
-		if((navigator as any).msSaveOrOpenBlob){
+		if ((navigator as any).msSaveOrOpenBlob) {
 			const blob = new Blob(['\ufeff', tableHTML], {
 				type: dataType
 			});
-			(navigator as any).msSaveOrOpenBlob( blob, filename);
-		}else{
+			(navigator as any).msSaveOrOpenBlob(blob, filename);
+		} else {
 			// Create a link to the file
 			downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
 			// Setting the file name
@@ -541,19 +558,53 @@ export class Component {
 	}
 
 	copyToClipboard(divId: string) {
-		document.getElementById("exportTableToClipboard")?.remove();
-		const tableHtml = this.exportDivToTable(divId,true);
-		if(!tableHtml) return;
+		const tableHtml = this.exportDivToTable(divId, true);
+		if (!tableHtml) return;
+		document.getElementById("textarea123")?.remove();
 		const d: HTMLTextAreaElement = document.createElement("textarea");
 		//d.type="text";
 		//d.value = tableHtml;
 		d.innerHTML = tableHtml;
 		d.style.display = "none";
-		d.id = "exportTableToClipboard";
+		d.id = "textarea123";
+		document.body.appendChild(d);
+		d.select();
+		d.setSelectionRange(0, 99999); // For mobile devices
+		// console.log(d.value);
+		navigator.clipboard.writeText(d.value);
+	}
+
+	copyToClipboardWishlist() {
+		const div = document.getElementById("talent");
+		if (!div) return;
+		let tableHtml = "";
+		for (let i = 0; i < div.children.length; i++) {
+			const r = div.children[i] as HTMLDivElement;
+			const retain = (r.children[1] as HTMLInputElement).innerHTML == "0" || (r.children[1] as HTMLInputElement).innerHTML == "1";
+			if(retain) {
+				tableHtml += (r.children[3] as HTMLDivElement).innerHTML + "\n";
+			}
+		}
+		document.getElementById("textarea456aa")?.remove();
+		const d: HTMLTextAreaElement = document.createElement("textarea");
+		d.innerHTML = tableHtml;
+		d.style.display = "none";
+		d.id = "textarea456aa";
 		document.body.appendChild(d);
 		d.select();
 		d.setSelectionRange(0, 99999); // For mobile devices
 		console.log(d.value);
 		navigator.clipboard.writeText(d.value);
+	}
+
+	aptitude(key: string): Aptitude | null {
+		for (const value in Aptitude) {
+			if( key.replace("_","").replace(" ","") == value.replace("_","").replace(" ","") ) {
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore
+				return Aptitude[value];
+			}
+		}
+		return null;
 	}
 }
