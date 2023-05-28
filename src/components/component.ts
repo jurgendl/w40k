@@ -156,6 +156,8 @@ export class Component {
 			this.exportAllTableToExcelDef("characteristic", "skill", "talent");
 		});
 
+		($('._selectpicker') as any).selectpicker();
+
 		this.triggerRecalc(null);
 	}
 
