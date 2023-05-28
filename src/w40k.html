@@ -31,7 +31,7 @@
 </div>
 <div class="form-group">
 	<label for="aptitudeSelect">Aptitudes: (Training Doctrine, Home World, ...)</label>
-	<select style="height: 204px; width: 100%" multiple id="aptitudeSelect" name="aptitudeSelect" class="aptitudeSelect form-control _selectpicker" data-live-search="true"></select>
+	<select style="height: 204px; width: 100%" multiple data-actions-box="true" id="aptitudeSelect" name="aptitudeSelect" class="aptitudeSelect form-control _selectpicker" data-live-search="true"></select>
 </div>
 <div class="form-group">
 	<label for="selectedAptitudes">Resulting aptitudes:</label>
@@ -73,6 +73,7 @@
 <div class="tablelike skill" id="skill"></div>
 <div class="form-group">
 	<label for="wishlist">Talent wishlist:</label>
+	<button type="button" class="btn btn-sm btn-danger mb-1" id="wishlist_clear">Clear</button>
 	<textarea cols="3" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
 </div>
 <div>

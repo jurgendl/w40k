@@ -156,6 +156,13 @@ export class Component {
 			this.exportAllTableToExcelDef("characteristic", "skill", "talent");
 		});
 
+		const wishlist_clear = document.getElementById("wishlist_clear") as HTMLSelectElement;
+		wishlist_clear.addEventListener("click", (event) => {
+			wishlist.value = "";
+			this.triggerRecalc(event);
+		});
+
+
 		($('._selectpicker') as any).selectpicker();
 
 		this.triggerRecalc(null);
