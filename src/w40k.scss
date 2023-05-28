@@ -18,7 +18,7 @@ body {
 }
 
 .header {
-	background-color: #161a1a;
+	background-color: #636363;
 	color: #ddd;
 	font-weight: 600;
 }
@@ -26,7 +26,7 @@ body {
 .skill ,
 .talent ,
 .characteristic {
-	border: 1px solid #161a1a;
+	border: 1px solid #636363;
 }
 
 .skill > :nth-child(2n) ,
@@ -96,4 +96,10 @@ body {
 
 .m0 {
 	color: #f91965;
+}
+
+.badge {
+	font-size: 100%;
+	padding: 0.35em 0.5em;
+	font-weight: 400;
 }

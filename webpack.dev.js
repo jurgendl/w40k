@@ -7,6 +7,9 @@ module.exports = merge(common, {
 	devtool: 'source-map',
 	devServer: {
 		port: 7584,
+		client: {
+			overlay: false,
+		},
 		open: {
 			target: ['w40k.html'],
 			app: {

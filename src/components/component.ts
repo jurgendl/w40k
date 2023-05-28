@@ -24,8 +24,7 @@ export enum Aptitude {
 
 interface W40KCosts {
 	type: string;//characteristic(max:4),talent(max:3),skill(max:4)
-	cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/
-	;
+	cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 }
 
 interface W40KData {
@@ -65,7 +64,13 @@ interface W40KClass {
 
 export class Component {
 	init(): void {
-		fetch('assets/w40k.json')
+		const queryString = window.location.search;
+		const urlParams = new URLSearchParams(queryString);
+		let source = urlParams.get('source');
+		if(source == null) {
+			source = "ow";
+		}
+		fetch('assets/w40k-'+source+'.json')
 			.then((response) => response.json())
 			.then((data) => this.app(data));
 	}
@@ -213,7 +218,7 @@ export class Component {
 		// concatenate selectedAptitudes into textfield
 		const selectedAptitudes = document.getElementById("selectedAptitudes") as HTMLDivElement;
 		// console.log(this.selectedAptitudes);
-		selectedAptitudes.innerHTML = "<u>Aptitudes</u>: ";
+		selectedAptitudes.innerHTML = "";
 		for (let i = 0; i < this.selectedAptitudes.length; i++) {
 			selectedAptitudes.innerHTML += "<span class='badge badge-secondary'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
 		}
@@ -444,6 +449,8 @@ export class Component {
 				root.appendChild(skillApt);
 			}
 		}
+
+		($('[title]') as any).tooltip();
 	}
 
 	exportAllTableToExcelDef(divId1: string, divId2: string, divId3: string) {
