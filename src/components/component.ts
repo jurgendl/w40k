@@ -104,11 +104,6 @@ export class Component {
 
 		// select element with id="aptitudeSelect"
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
-		{
-			const option = document.createElement("option");
-			option.text = "None";
-			aptitudeSelect.add(option);
-		}
 		// add options to select element
 		for (let i = 0; i < this.data.optional.length; i++) {
 			const option = document.createElement("option");
@@ -202,16 +197,22 @@ export class Component {
 			}
 		}
 
-		let duplicate: Aptitude | null = null;
+		const duplicates: Aptitude[] = [];
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
-		if (aptitudeSelect.selectedIndex > 0) {
-			const aptitude = this.data.optional[aptitudeSelect.selectedIndex - 1] as Aptitude;
-			if (this.selectedAptitudes.includes(aptitude)) {
-				duplicate = aptitude;
-			} else {
-				// push aptitude in array selectedAptitudes
-				this.selectedAptitudes.push(aptitude);
-				// console.log("apt", aptitudeSelect.selectedIndex, aptitude);
+		console.log("aptitudeSelect.selectedIndex", aptitudeSelect.selectedIndex);
+		if (aptitudeSelect.selectedIndex >= 0) {
+			const selectedOptions = aptitudeSelect.selectedOptions;
+			console.log("selectedOptions", selectedOptions.length, selectedOptions);
+			for (let z = 0; z < selectedOptions.length; z++) {
+				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				console.log(selectedOptions[z]);
+				if (this.selectedAptitudes.includes(aptitude)) {
+					duplicates.push(aptitude);
+				} else {
+					// push aptitude in array selectedAptitudes
+					this.selectedAptitudes.push(aptitude);
+					// console.log("apt", aptitudeSelect.selectedIndex, aptitude);
+				}
 			}
 		}
 
@@ -222,8 +223,9 @@ export class Component {
 		for (let i = 0; i < this.selectedAptitudes.length; i++) {
 			selectedAptitudes.innerHTML += "<span class='badge badge-secondary'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
 		}
-		if (duplicate) {
-			selectedAptitudes.innerHTML += "<span class='badge badge-danger'>" + duplicate + " (duplicate)" + "</span>";
+		// iterate over array duplicates
+		for (let i = 0; i < duplicates.length; i++) {
+			selectedAptitudes.innerHTML += "<span class='badge badge-danger'>" + duplicates[i] + " (duplicate)" + "</span>";
 		}
 
 		// iterate over array this.data.characteristic
