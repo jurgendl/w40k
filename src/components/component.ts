@@ -67,9 +67,10 @@ export class Component {
 		const queryString = window.location.search;
 		const urlParams = new URLSearchParams(queryString);
 		let source = urlParams.get('source');
-		if(source == null) {
+		if(!source) {
 			source = "ow";
 		}
+		console.log(urlParams,source,"ow"==source);
 		fetch('assets/w40k-'+source+'.json')
 			.then((response) => response.json())
 			.then((data) => this.app(data,"ow"==source));
@@ -82,9 +83,9 @@ export class Component {
 	app(data: W40KData, showClass: boolean): void {
 		this.data = data;
 
-		// select element with id="classSelect"
+		const classSelectContainer = document.getElementById("classSelectContainer") as HTMLDivElement;
+		classSelectContainer.style.display = showClass ? "block" : "none";
 		const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
-		classSelect.style.display = showClass ? "block" : "none";
 		{
 			const option = document.createElement("option");
 			option.text = "None";
