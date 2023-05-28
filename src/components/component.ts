@@ -72,18 +72,19 @@ export class Component {
 		}
 		fetch('assets/w40k-'+source+'.json')
 			.then((response) => response.json())
-			.then((data) => this.app(data));
+			.then((data) => this.app(data,"ow"==source));
 	}
 
 	data!: W40KData;
 
 	selectedAptitudes: Aptitude[] = [];
 
-	app(data: W40KData) {
+	app(data: W40KData, showClass: boolean): void {
 		this.data = data;
 
 		// select element with id="classSelect"
 		const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
+		classSelect.style.display = showClass ? "block" : "none";
 		{
 			const option = document.createElement("option");
 			option.text = "None";
