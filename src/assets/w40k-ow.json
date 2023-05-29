@@ -8,18 +8,21 @@
 					100,
 					250,
 					500,
-					750
+					750,
+					1250
 				],
 				[
 					250,
 					500,
 					750,
-					1000
+					1000,
+					1500
 				],
 				[
 					500,
 					750,
 					1000,
+					1500,
 					2500
 				]
 			]
@@ -142,7 +145,7 @@
 		{
 			"class": "Ministorum Priest (OW Core)",
 			"aptitudes": [
-				"Starting Aptitudes: Fellowship",
+				"Fellowship",
 				"Leadership",
 				"Perception",
 				"Social",
