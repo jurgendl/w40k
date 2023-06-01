@@ -1,6 +1,7 @@
 export enum Aptitude {
+	// common
 	General = "General",
-	//
+	// standard
 	Weapon_Skill = "Weapon Skill",
 	Ballistic_Skill = "Ballistic Skill",
 	Strength = "Strength",
@@ -10,7 +11,7 @@ export enum Aptitude {
 	Perception = "Perception",
 	Willpower = "Willpower",
 	Fellowship = "Fellowship",
-	//
+	// special
 	Offence = "Offence",
 	Finesse = "Finesse",
 	Defence = "Defence",
@@ -24,13 +25,32 @@ export enum Aptitude {
 
 interface W40KCosts {
 	type: string;//characteristic(max:4),talent(max:3),skill(max:4)
-	cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
+	cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/
+	;
+}
+
+interface W40KWorld {
+	world: string;
+	aptitude: Aptitude;
+}
+
+interface W40KBackground {
+	background: string;
+	aptitude: Aptitude;
+}
+
+interface W40KRole {
+	role: string;
+	aptitudes: Aptitude[];
 }
 
 interface W40KData {
 	costs: W40KCosts[];
 	free: Aptitude;
 	classes: W40KClass[];
+	worlds: W40KWorld[];
+	backgrounds: W40KBackground[];
+	roles: W40KRole[];
 	optional: Aptitude;
 	characteristic: W40KCharacteristic[];
 	skills: W40KSkill[];
@@ -61,48 +81,145 @@ interface W40KClass {
 	aptitudes: Aptitude[];
 }
 
+class WeightedClass {
+	class: W40KClass | null = null;
+	matches = 0;
+
+	constructor(c: W40KClass, matches: number) {
+		this.class = c;
+		this.matches = matches;
+	}
+}
+
 
 export class Component {
 	init(): void {
 		const queryString = window.location.search;
 		const urlParams = new URLSearchParams(queryString);
 		let source = urlParams.get('source');
-		if(!source) {
+		if (!source) {
 			source = "ow";
 		}
-		console.log(urlParams,source,"ow"==source);
-		fetch('assets/w40k-'+source+'.json')
+		console.log(urlParams, source, "ow" == source);
+		fetch('assets/w40k-' + source + '.json')
 			.then((response) => response.json())
-			.then((data) => this.app(data,"ow"==source));
+			.then((data) => this.app(data));
 	}
 
 	data!: W40KData;
 
 	selectedAptitudes: Aptitude[] = [];
 
-	app(data: W40KData, showClass: boolean): void {
+	app(data: W40KData): void {
 		this.data = data;
 
 		const classSelectContainer = document.getElementById("classSelectContainer") as HTMLDivElement;
-		classSelectContainer.style.display = showClass ? "block" : "none";
-		const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
-		{
-			const option = document.createElement("option");
-			option.text = "None";
-			classSelect.add(option);
+		if (this.data.classes && this.data.classes.length > 0) {
+			const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
+			{
+				const option = document.createElement("option");
+				option.text = "None";
+				classSelect.add(option);
+			}
+			// add options to select element
+			for (let i = 0; i < this.data.classes.length; i++) {
+				const option = document.createElement("option");
+				const apts = this.data.classes[i].aptitudes;
+				let apt = "";
+				for (let j = 0; j < apts.length; j++) {
+					apt += apts[j];
+					if (j < apts.length - 1) {
+						apt += ", ";
+					}
+				}
+				option.text = this.data.classes[i].class + " (" + apt.trim() + ")";
+				option.value = this.data.classes[i].class;
+				classSelect.add(option);
+			}
+			// add event listener to select element
+			classSelect.addEventListener("change", (event) => {
+				this.triggerRecalc(event);
+			});
+		} else {
+			classSelectContainer.style.display = "none";
 		}
 
-		// add options to select element
-		for (let i = 0; i < this.data.classes.length; i++) {
-			const option = document.createElement("option");
-			option.text = this.data.classes[i].class;
-			option.value = this.data.classes[i].class;
-			classSelect.add(option);
+		const worldSelectContainer = document.getElementById("worldSelectContainer") as HTMLDivElement;
+		if (this.data.worlds && this.data.worlds.length > 0) {
+			const worldSelect = document.getElementById("worldSelect") as HTMLSelectElement;
+			{
+				const option = document.createElement("option");
+				option.text = "None";
+				worldSelect.add(option);
+			}
+			// add options to select element
+			for (let i = 0; i < this.data.worlds.length; i++) {
+				const option = document.createElement("option");
+				option.text = this.data.worlds[i].world + " (" + this.data.worlds[i].aptitude + ")";
+				option.value = this.data.worlds[i].world;
+				worldSelect.add(option);
+			}
+			// add event listener to select element
+			worldSelect.addEventListener("change", (event) => {
+				this.triggerRecalc(event);
+			});
+		} else {
+			worldSelectContainer.style.display = "none";
 		}
-		// add event listener to select element
-		classSelect.addEventListener("change", (event) => {
-			this.triggerRecalc(event);
-		});
+
+		const backgroundSelectContainer = document.getElementById("backgroundSelectContainer") as HTMLDivElement;
+		if (this.data.backgrounds && this.data.backgrounds.length > 0) {
+			const backgroundSelect = document.getElementById("backgroundSelect") as HTMLSelectElement;
+			{
+				const option = document.createElement("option");
+				option.text = "None";
+				backgroundSelect.add(option);
+			}
+			// add options to select element
+			for (let i = 0; i < this.data.backgrounds.length; i++) {
+				const option = document.createElement("option");
+				option.text = this.data.backgrounds[i].background + " (" + this.data.backgrounds[i].aptitude + ")";
+				option.value = this.data.backgrounds[i].background;
+				backgroundSelect.add(option);
+			}
+			// add event listener to select element
+			backgroundSelect.addEventListener("change", (event) => {
+				this.triggerRecalc(event);
+			});
+		} else {
+			backgroundSelectContainer.style.display = "none";
+		}
+
+		const roleSelectContainer = document.getElementById("roleSelectContainer") as HTMLDivElement;
+		if (this.data.roles && this.data.roles.length > 0) {
+			const roleSelect = document.getElementById("roleSelect") as HTMLSelectElement;
+			{
+				const option = document.createElement("option");
+				option.text = "None";
+				roleSelect.add(option);
+			}
+			// add options to select element
+			for (let i = 0; i < this.data.roles.length; i++) {
+				const option = document.createElement("option");
+				const apts = this.data.roles[i].aptitudes;
+				let apt = "";
+				for (let j = 0; j < apts.length; j++) {
+					apt += apts[j];
+					if (j < apts.length - 1) {
+						apt += ", ";
+					}
+				}
+				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
+				option.value = this.data.roles[i].role;
+				roleSelect.add(option);
+			}
+			// add event listener to select element
+			roleSelect.addEventListener("change", (event) => {
+				this.triggerRecalc(event);
+			});
+		} else {
+			roleSelectContainer.style.display = "none";
+		}
 
 		// select element with id="aptitudeSelect"
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
@@ -117,6 +234,11 @@ export class Component {
 		aptitudeSelect.addEventListener("change", (event) => {
 			this.triggerRecalc(event);
 		});
+		if (data.classes && data.classes.length > 0) {
+			aptitudeSelect.addEventListener("change", (event) => {
+				this.logMatchingClasses(event, data);
+			});
+		}
 
 		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
 		skip0Cb.addEventListener("change", (event) => {
@@ -187,28 +309,52 @@ export class Component {
 		for (let i = 0; i < wishlistArray.length; i++) {
 			wishlistArray[i] = wishlistArray[i].toLowerCase().trim();
 		}
-		// console.log("wishlistArray", wishlistArray.length, wishlistArray);
 
 		this.selectedAptitudes = [];
 
 		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
 		const skip0CbChecked = skip0Cb.checked;
 
-		// push this.data.free in array selectedAptitudes as first element
 		this.selectedAptitudes.push(this.data.free);
-		// console.log("free", this.data.free);
+
+		const duplicates: Aptitude[] = [];
 
 		const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
 		if (classSelect.selectedIndex > 0) {
 			const classAptitudes = this.data.classes[classSelect.selectedIndex - 1].aptitudes;
-			// iterate over array selectedAptitudes
 			for (let i = 0; i < classAptitudes.length; i++) {
 				this.selectedAptitudes.push(classAptitudes[i]);
-				// console.log("class", classSelect.selectedIndex, i, classAptitudes[i]);
 			}
 		}
 
-		const duplicates: Aptitude[] = [];
+		const worldSelect = document.getElementById("worldSelect") as HTMLSelectElement;
+		if (worldSelect.selectedIndex > 0) {
+			const aptitude = this.data.worlds[worldSelect.selectedIndex - 1].aptitude;
+			if (this.selectedAptitudes.includes(aptitude)) {
+				duplicates.push(aptitude);
+			} else {
+				this.selectedAptitudes.push(aptitude);
+			}
+		}
+
+		const roleSelect = document.getElementById("roleSelect") as HTMLSelectElement;
+		if (roleSelect.selectedIndex > 0) {
+			const aptitudes = this.data.roles[roleSelect.selectedIndex - 1].aptitudes;
+			for (let i = 0; i < aptitudes.length; i++) {
+				this.selectedAptitudes.push(aptitudes[i]);
+			}
+		}
+
+		const backgroundSelect = document.getElementById("backgroundSelect") as HTMLSelectElement;
+		if (backgroundSelect.selectedIndex > 0) {
+			const aptitude = this.data.backgrounds[backgroundSelect.selectedIndex - 1].aptitude;
+			if (this.selectedAptitudes.includes(aptitude)) {
+				duplicates.push(aptitude);
+			} else {
+				this.selectedAptitudes.push(aptitude);
+			}
+		}
+
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
 		console.log("aptitudeSelect.selectedIndex", aptitudeSelect.selectedIndex);
 		if (aptitudeSelect.selectedIndex >= 0) {
@@ -601,7 +747,7 @@ export class Component {
 		for (let i = 0; i < div.children.length; i++) {
 			const r = div.children[i] as HTMLDivElement;
 			const retain = (r.children[1] as HTMLInputElement).innerHTML == "0" || (r.children[1] as HTMLInputElement).innerHTML == "1";
-			if(retain) {
+			if (retain) {
 				tableHtml += (r.children[3] as HTMLDivElement).innerHTML + "\n";
 			}
 		}
@@ -619,12 +765,48 @@ export class Component {
 
 	aptitude(key: string): Aptitude | null {
 		for (const value in Aptitude) {
-			if( key.replace("_","").replace(" ","") == value.replace("_","").replace(" ","") ) {
+			if (key.replace("_", "").replace(" ", "") == value.replace("_", "").replace(" ", "")) {
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-ignore
 				return Aptitude[value];
 			}
 		}
 		return null;
+	}
+
+	logMatchingClasses(event: Event, data: W40KData) {
+		console.log("logMatchingClasses");
+		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
+		if (aptitudeSelect.selectedIndex >= 0) {
+			const selectedOptions = aptitudeSelect.selectedOptions;
+			const aptitudes: Aptitude[] = [];
+			const weightedClasses: WeightedClass[] = [];
+			for (let z = 0; z < selectedOptions.length; z++) {
+				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				aptitudes.push(aptitude);
+			}
+			console.log(aptitudes);
+			for (let i = 0; i < data.classes.length; i++) {
+				const c = data.classes[i];
+				let matches = 0;
+				for (let j = 0; j < c.aptitudes.length; j++) {
+					const a = c.aptitudes[j];
+					for (let k = 0; k < aptitudes.length; k++) {
+						const b = aptitudes[k];
+						if (a == b) {
+							matches++;
+						}
+					}
+				}
+				const weightedClass = new WeightedClass(c, matches);
+				weightedClasses.push(weightedClass);
+			}
+			weightedClasses.sort((a, b) => {
+				return b.matches - a.matches;
+			});
+			for (let i = 0; i < weightedClasses.length; i++) {
+				console.log(weightedClasses[i].class?.class, weightedClasses[i].matches, weightedClasses[i].class?.aptitudes);
+			}
+		}
 	}
 }
