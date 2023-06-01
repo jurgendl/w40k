@@ -1,3 +1,5 @@
+import $ from "jquery";
+
 export enum Aptitude {
 	// common
 	General = "General",
@@ -609,7 +611,7 @@ export class Component {
 			}
 		}
 
-		($('[title]') as any).tooltip();
+		($('[title]:not(.dropdown-toggle)') as any).tooltip();
 	}
 
 	exportAllTableToExcelDef(divId1: string, divId2: string, divId3: string) {
