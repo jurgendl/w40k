@@ -114,14 +114,7 @@ body {
 	max-height: 250px;
 }
 
-.aptitudeSelect .dropdown-menu.inner li:nth-child(1),
-.aptitudeSelect .dropdown-menu.inner li:nth-child(2),
-.aptitudeSelect .dropdown-menu.inner li:nth-child(3),
-.aptitudeSelect .dropdown-menu.inner li:nth-child(4),
-.aptitudeSelect .dropdown-menu.inner li:nth-child(5),
-.aptitudeSelect .dropdown-menu.inner li:nth-child(6),
-.aptitudeSelect .dropdown-menu.inner li:nth-child(7),
-.aptitudeSelect .dropdown-menu.inner li:nth-child(8) {
+.aptitudeSelect .dropdown-menu.inner li:nth-child(-n+9) {
 	background-color: cornsilk;
 }
 
