@@ -4,6 +4,7 @@ body {
 	color: #eee;
 }
 
+.aptitudeWishlist,
 .classSelect,
 .worldSelect,
 .backgroundSelect,
@@ -122,4 +123,11 @@ body {
 .aptitudeSelect .dropdown-menu.inner li:nth-child(7),
 .aptitudeSelect .dropdown-menu.inner li:nth-child(8) {
 	background-color: cornsilk;
+}
+
+.dropdown-toggle .badge,
+.dropdown-menu .badge {
+	font-size: 75%;
+	margin: 0 .25em;
+	padding: 0.45em 0.6em;
 }

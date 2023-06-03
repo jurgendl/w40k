@@ -1,4 +1,5 @@
-import $ from "jquery";
+//import $ from "jquery";
+// https://developer.snapappointments.com/bootstrap-select/
 
 export enum Aptitude {
 	// common
@@ -53,7 +54,7 @@ interface W40KData {
 	worlds: W40KWorld[];
 	backgrounds: W40KBackground[];
 	roles: W40KRole[];
-	optional: Aptitude;
+	optional: Aptitude[];
 	characteristic: W40KCharacteristic[];
 	skills: W40KSkill[];
 	talents: W40KTalent[];
@@ -93,6 +94,35 @@ class WeightedClass {
 	}
 }
 
+class WeightedRole {
+	role: W40KRole | null = null;
+	matches = 0;
+
+	constructor(r: W40KRole, matches: number) {
+		this.role = r;
+		this.matches = matches;
+	}
+}
+
+class WeightedWorld {
+	world: W40KWorld | null = null;
+	matches = 0;
+
+	constructor(w: W40KWorld, matches: number) {
+		this.world = w;
+		this.matches = matches;
+	}
+}
+
+class WeightedBackground {
+	background: W40KBackground | null = null;
+	matches = 0;
+
+	constructor(b: W40KBackground, matches: number) {
+		this.background = b;
+		this.matches = matches;
+	}
+}
 
 export class Component {
 	init(): void {
@@ -128,13 +158,16 @@ export class Component {
 				const option = document.createElement("option");
 				const apts = this.data.classes[i].aptitudes;
 				let apt = "";
+				let aptalt = "";
 				for (let j = 0; j < apts.length; j++) {
 					apt += apts[j];
+					aptalt += "<span class='badge badge-pill badge-secondary "+apts[j].replace(" ","_")+"'>"+apts[j]+"</span>";
 					if (j < apts.length - 1) {
 						apt += ", ";
 					}
 				}
 				option.text = this.data.classes[i].class + " (" + apt.trim() + ")";
+				option.setAttribute("data-content", this.data.classes[i].class + " " + aptalt);
 				option.value = this.data.classes[i].class;
 				classSelect.add(option);
 			}
@@ -158,6 +191,7 @@ export class Component {
 			for (let i = 0; i < this.data.worlds.length; i++) {
 				const option = document.createElement("option");
 				option.text = this.data.worlds[i].world + " (" + this.data.worlds[i].aptitude + ")";
+				option.setAttribute("data-content", this.data.worlds[i].world + " " + "<span class='badge badge-pill badge-secondary "+this.data.worlds[i].aptitude.replace(" ","_")+"'>"+this.data.worlds[i].aptitude+"</span>");
 				option.value = this.data.worlds[i].world;
 				worldSelect.add(option);
 			}
@@ -181,6 +215,7 @@ export class Component {
 			for (let i = 0; i < this.data.backgrounds.length; i++) {
 				const option = document.createElement("option");
 				option.text = this.data.backgrounds[i].background + " (" + this.data.backgrounds[i].aptitude + ")";
+				option.setAttribute("data-content", this.data.backgrounds[i].background + " " + "<span class='badge badge-pill badge-secondary "+this.data.backgrounds[i].aptitude.replace(" ","_")+"'>"+this.data.backgrounds[i].aptitude+"</span>");
 				option.value = this.data.backgrounds[i].background;
 				backgroundSelect.add(option);
 			}
@@ -205,13 +240,16 @@ export class Component {
 				const option = document.createElement("option");
 				const apts = this.data.roles[i].aptitudes;
 				let apt = "";
+				let aptalt = "";
 				for (let j = 0; j < apts.length; j++) {
 					apt += apts[j];
 					if (j < apts.length - 1) {
 						apt += ", ";
+						aptalt += "<span class='badge badge-pill badge-secondary "+apts[j].replace(" ","_")+"'>"+apts[j]+"</span>";
 					}
 				}
 				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
+				option.setAttribute("data-content", this.data.roles[i].role + " " + aptalt);
 				option.value = this.data.roles[i].role;
 				roleSelect.add(option);
 			}
@@ -223,24 +261,31 @@ export class Component {
 			roleSelectContainer.style.display = "none";
 		}
 
-		// select element with id="aptitudeSelect"
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
-		// add options to select element
 		for (let i = 0; i < this.data.optional.length; i++) {
 			const option = document.createElement("option");
 			option.text = this.data.optional[i];
 			option.value = this.data.optional[i];
 			aptitudeSelect.add(option);
 		}
-		// add event listener to select element
 		aptitudeSelect.addEventListener("change", (event) => {
 			this.triggerRecalc(event);
 		});
-		if (data.classes && data.classes.length > 0) {
-			aptitudeSelect.addEventListener("change", (event) => {
-				this.logMatchingClasses(event, data);
-			});
+
+		const aptitudeWishlistSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
+		for (let i = 0; i < this.data.optional.length; i++) {
+			const option = document.createElement("option");
+			option.text = this.data.optional[i];
+			option.value = this.data.optional[i];
+			aptitudeWishlistSelect.add(option);
 		}
+		aptitudeWishlistSelect.addEventListener("change", (event) => {
+			this.logMatchingClasses(event, data);
+			this.logMatchingWorlds(event, data);
+			this.logMatchingBackgrounds(event, data);
+			this.logMatchingRoles(event, data);
+			this.styleAptitudeMatches(event, data);
+		});
 
 		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
 		skip0Cb.addEventListener("change", (event) => {
@@ -343,7 +388,11 @@ export class Component {
 		if (roleSelect.selectedIndex > 0) {
 			const aptitudes = this.data.roles[roleSelect.selectedIndex - 1].aptitudes;
 			for (let i = 0; i < aptitudes.length; i++) {
-				this.selectedAptitudes.push(aptitudes[i]);
+				if (this.selectedAptitudes.includes(aptitudes[i])) {
+					duplicates.push(aptitudes[i]);
+				} else {
+					this.selectedAptitudes.push(aptitudes[i]);
+				}
 			}
 		}
 
@@ -368,30 +417,23 @@ export class Component {
 				if (this.selectedAptitudes.includes(aptitude)) {
 					duplicates.push(aptitude);
 				} else {
-					// push aptitude in array selectedAptitudes
 					this.selectedAptitudes.push(aptitude);
-					// console.log("apt", aptitudeSelect.selectedIndex, aptitude);
 				}
 			}
 		}
 
-		// concatenate selectedAptitudes into textfield
 		const selectedAptitudes = document.getElementById("selectedAptitudes") as HTMLDivElement;
-		// console.log(this.selectedAptitudes);
 		selectedAptitudes.innerHTML = "";
 		for (let i = 0; i < this.selectedAptitudes.length; i++) {
-			selectedAptitudes.innerHTML += "<span class='badge badge-secondary'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
+			selectedAptitudes.innerHTML += "<span class='badge badge-pill badge-secondary "+this.selectedAptitudes[i].replace(" ","_")+"'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
 		}
-		// iterate over array duplicates
 		for (let i = 0; i < duplicates.length; i++) {
-			selectedAptitudes.innerHTML += "<span class='badge badge-danger'>" + duplicates[i] + " (duplicate)" + "</span>";
+			selectedAptitudes.innerHTML += "<span class='badge badge-pill badge-danger'>" + duplicates[i] + " (duplicate)" + "</span>";
 		}
 
-		// iterate over array this.data.characteristic
 		const characteristic = document.getElementById("characteristic") as HTMLDivElement;
 		characteristic.innerHTML = "";
 
-		// iterate over array this.data.characteristic and sort by index
 		const sortedCharacteristic = this.data.characteristic.sort((a, b) => {
 			let amatches = 0;
 			if (this.selectedAptitudes.includes(a.name)) {
@@ -776,10 +818,118 @@ export class Component {
 		return null;
 	}
 
-	logMatchingClasses(event: Event, data: W40KData) {
-		console.log("logMatchingClasses");
-		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
+	logMatchingWorlds(event: Event, data: W40KData) {
+		if(!data.worlds || data.worlds.length==0) return;
+		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
+			console.log("logMatchingWorlds");
+			const selectedOptions = aptitudeSelect.selectedOptions;
+			const aptitudes: Aptitude[] = [];
+			const weightedWorlds: WeightedWorld[] = [];
+			for (let z = 0; z < selectedOptions.length; z++) {
+				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				aptitudes.push(aptitude);
+			}
+			console.log(aptitudes);
+			for (let i = 0; i < data.worlds.length; i++) {
+				const c = data.worlds[i];
+				let matches = 0;
+				const a = c.aptitude;
+				for (let k = 0; k < aptitudes.length; k++) {
+					const b = aptitudes[k];
+					if (a == b) {
+						matches++;
+					}
+				}
+				const weightedWorld = new WeightedWorld(c, matches);
+				weightedWorlds.push(weightedWorld);
+			}
+			weightedWorlds.sort((a, b) => {
+				return b.matches - a.matches;
+			});
+			for (let i = 0; i < weightedWorlds.length; i++) {
+				console.log(weightedWorlds[i].world?.world, weightedWorlds[i].matches, weightedWorlds[i].world?.aptitude);
+			}
+		}
+	}
+
+	logMatchingBackgrounds(event: Event, data: W40KData) {
+		if(!data.backgrounds || data.backgrounds.length==0) return;
+		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
+		if (aptitudeSelect.selectedIndex >= 0) {
+			console.log("logMatchingBackgrounds");
+			const selectedOptions = aptitudeSelect.selectedOptions;
+			const aptitudes: Aptitude[] = [];
+			const weightedBackgrounds: WeightedBackground[] = [];
+			for (let z = 0; z < selectedOptions.length; z++) {
+				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				aptitudes.push(aptitude);
+			}
+			console.log(aptitudes);
+			for (let i = 0; i < data.backgrounds.length; i++) {
+				const c = data.backgrounds[i];
+				let matches = 0;
+				const a = c.aptitude;
+				for (let k = 0; k < aptitudes.length; k++) {
+					const b = aptitudes[k];
+					if (a == b) {
+						matches++;
+					}
+				}
+				const weightedBackground = new WeightedBackground(c, matches);
+				weightedBackgrounds.push(weightedBackground);
+			}
+			weightedBackgrounds.sort((a, b) => {
+				return b.matches - a.matches;
+			});
+			for (let i = 0; i < weightedBackgrounds.length; i++) {
+				console.log(weightedBackgrounds[i].background?.background, weightedBackgrounds[i].matches, weightedBackgrounds[i].background?.aptitude);
+			}
+		}
+	}
+
+	logMatchingRoles(event: Event, data: W40KData) {
+		if (!data.roles || data.roles.length == 0) return;
+		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
+		if (aptitudeSelect.selectedIndex >= 0) {
+			console.log("logMatchingRoles");
+			const selectedOptions = aptitudeSelect.selectedOptions;
+			const aptitudes: Aptitude[] = [];
+			const weightedRoles: WeightedRole[] = [];
+			for (let z = 0; z < selectedOptions.length; z++) {
+				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				aptitudes.push(aptitude);
+			}
+			console.log(aptitudes);
+			for (let i = 0; i < data.roles.length; i++) {
+				const c = data.roles[i];
+				let matches = 0;
+				for (let j = 0; j < c.aptitudes.length; j++) {
+					const a = c.aptitudes[j];
+					for (let k = 0; k < aptitudes.length; k++) {
+						const b = aptitudes[k];
+						if (a == b) {
+							matches++;
+						}
+					}
+				}
+				const weightedRole = new WeightedRole(c, matches);
+				weightedRoles.push(weightedRole);
+			}
+			weightedRoles.sort((a, b) => {
+				return b.matches - a.matches;
+			});
+			for (let i = 0; i < weightedRoles.length; i++) {
+				console.log(weightedRoles[i].role?.role, weightedRoles[i].matches, weightedRoles[i].role?.aptitudes);
+			}
+		}
+	}
+
+	logMatchingClasses(event: Event, data: W40KData) {
+		if(!data.classes || data.classes.length==0) return;
+		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
+		if (aptitudeSelect.selectedIndex >= 0) {
+			console.log("logMatchingClasses");
 			const selectedOptions = aptitudeSelect.selectedOptions;
 			const aptitudes: Aptitude[] = [];
 			const weightedClasses: WeightedClass[] = [];
@@ -808,6 +958,33 @@ export class Component {
 			});
 			for (let i = 0; i < weightedClasses.length; i++) {
 				console.log(weightedClasses[i].class?.class, weightedClasses[i].matches, weightedClasses[i].class?.aptitudes);
+			}
+		}
+	}
+
+	styleAptitudeMatches(event: Event, data: W40KData) {
+		for (let z = 0; z < data.optional.length; z++) {
+			const aptitude = data.optional[z];
+			let style = document.getElementById("style-" + aptitude.replace(" ","_")) as HTMLStyleElement;
+			if(style) {
+				style.disabled = true;
+			} else {
+				style = document.createElement("style");
+				style.id = "style-" + aptitude.replace(" ","_");
+				style.innerHTML = ".badge.badge-pill.badge-secondary."+aptitude.replace(" ","_")+"{background-color:#1cc88a !important}";
+				document.body.appendChild(style);
+				style.disabled = true;
+				console.log(style);
+			}
+		}
+		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
+		if (aptitudeSelect.selectedIndex >= 0) {
+			const selectedOptions = aptitudeSelect.selectedOptions;
+			for (let z = 0; z < selectedOptions.length; z++) {
+				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				const style = document.getElementById("style-" + aptitude.replace(" ","_")) as HTMLStyleElement;
+				style.disabled = false;
+				console.log(style);
 			}
 		}
 	}
