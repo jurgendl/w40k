@@ -243,9 +243,9 @@ export class Component {
 				let aptalt = "";
 				for (let j = 0; j < apts.length; j++) {
 					apt += apts[j];
+					aptalt += "<span class='badge badge-pill badge-secondary "+apts[j].replace(" ","_")+"'>"+apts[j]+"</span>";
 					if (j < apts.length - 1) {
 						apt += ", ";
-						aptalt += "<span class='badge badge-pill badge-secondary "+apts[j].replace(" ","_")+"'>"+apts[j]+"</span>";
 					}
 				}
 				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
@@ -370,13 +370,19 @@ export class Component {
 		if (classSelect.selectedIndex > 0) {
 			const classAptitudes = this.data.classes[classSelect.selectedIndex - 1].aptitudes;
 			for (let i = 0; i < classAptitudes.length; i++) {
-				this.selectedAptitudes.push(classAptitudes[i]);
+				console.log("classSelect", classAptitudes[i]);
+				if (this.selectedAptitudes.includes(classAptitudes[i])) {
+					duplicates.push(classAptitudes[i]);
+				} else {
+					this.selectedAptitudes.push(classAptitudes[i]);
+				}
 			}
 		}
 
 		const worldSelect = document.getElementById("worldSelect") as HTMLSelectElement;
 		if (worldSelect.selectedIndex > 0) {
 			const aptitude = this.data.worlds[worldSelect.selectedIndex - 1].aptitude;
+			console.log("worldSelect", aptitude);
 			if (this.selectedAptitudes.includes(aptitude)) {
 				duplicates.push(aptitude);
 			} else {
@@ -388,6 +394,7 @@ export class Component {
 		if (roleSelect.selectedIndex > 0) {
 			const aptitudes = this.data.roles[roleSelect.selectedIndex - 1].aptitudes;
 			for (let i = 0; i < aptitudes.length; i++) {
+				console.log("roleSelect", aptitudes[i]);
 				if (this.selectedAptitudes.includes(aptitudes[i])) {
 					duplicates.push(aptitudes[i]);
 				} else {
@@ -399,6 +406,7 @@ export class Component {
 		const backgroundSelect = document.getElementById("backgroundSelect") as HTMLSelectElement;
 		if (backgroundSelect.selectedIndex > 0) {
 			const aptitude = this.data.backgrounds[backgroundSelect.selectedIndex - 1].aptitude;
+			console.log("backgroundSelect", aptitude);
 			if (this.selectedAptitudes.includes(aptitude)) {
 				duplicates.push(aptitude);
 			} else {
@@ -407,13 +415,11 @@ export class Component {
 		}
 
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
-		console.log("aptitudeSelect.selectedIndex", aptitudeSelect.selectedIndex);
 		if (aptitudeSelect.selectedIndex >= 0) {
 			const selectedOptions = aptitudeSelect.selectedOptions;
-			console.log("selectedOptions", selectedOptions.length, selectedOptions);
 			for (let z = 0; z < selectedOptions.length; z++) {
 				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
-				console.log(selectedOptions[z]);
+				console.log("aptitudeSelect", aptitude);
 				if (this.selectedAptitudes.includes(aptitude)) {
 					duplicates.push(aptitude);
 				} else {
