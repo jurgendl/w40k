@@ -158,7 +158,7 @@ export class Component {
 			for (let i = 0; i < this.data.classes.length; i++) {
 				const option = document.createElement("option");
 				const apts = this.data.classes[i].aptitudes;
-				let apt = "";
+				/*let apt = "";
 				let aptalt = "";
 				for (let j = 0; j < apts.length; j++) {
 					apt += apts[j];
@@ -166,7 +166,8 @@ export class Component {
 					if (j < apts.length - 1) {
 						apt += ", ";
 					}
-				}
+				}*/
+				const {apt, aptalt} = this.commonFunc2(apts);
 				option.text = this.data.classes[i].class + " (" + apt.trim() + ")";
 				option.setAttribute("data-content", this.data.classes[i].class + " " + aptalt);
 				option.value = this.data.classes[i].class;
@@ -240,15 +241,7 @@ export class Component {
 			for (let i = 0; i < this.data.roles.length; i++) {
 				const option = document.createElement("option");
 				const apts = this.data.roles[i].aptitudes;
-				let apt = "";
-				let aptalt = "";
-				for (let j = 0; j < apts.length; j++) {
-					apt += apts[j];
-					aptalt += "<span class='badge badge-pill badge-secondary "+apts[j].replace(" ","_")+"'>"+apts[j]+"</span>";
-					if (j < apts.length - 1) {
-						apt += ", ";
-					}
-				}
+				const {apt, aptalt} = this.commonFunc2(apts);
 				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
 				option.setAttribute("data-content", this.data.roles[i].role + " " + aptalt);
 				option.value = this.data.roles[i].role;
@@ -299,29 +292,34 @@ export class Component {
 		});
 
 		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		export_characteristic.addEventListener("click", (event) => {
 			//this.exportTableToExcelDef("characteristic");
 			this.copyToClipboard("characteristic");
 		});
 
 		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		export_skill.addEventListener("click", (event) => {
 			//this.exportTableToExcelDef("skill");
 			this.copyToClipboard("skill");
 		});
 
 		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		export_talent.addEventListener("click", (event) => {
 			//this.exportTableToExcelDef("talent");
 			this.copyToClipboard("talent");
 		});
 
 		const export_talent_wishlist = document.getElementById("export_talent_wishlist") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		export_talent_wishlist.addEventListener("click", (event) => {
 			this.copyToClipboardWishlist();
 		});
 
 		const export_all = document.getElementById("export_all") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		export_all.addEventListener("click", (event) => {
 			this.exportAllTableToExcelDef("characteristic", "skill", "talent");
 		});
@@ -332,15 +330,29 @@ export class Component {
 			this.triggerRecalc(event);
 		});
 
-
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('._selectpicker') as any).selectpicker();
 
 		this.triggerRecalc(null);
 	}
 
+	private commonFunc2(apts: Aptitude[]) {
+		let apt = "";
+		let aptalt = "";
+		for (let j = 0; j < apts.length; j++) {
+			apt += apts[j];
+			aptalt += "<span class='badge badge-pill badge-secondary " + apts[j].replace(" ", "_") + "'>" + apts[j] + "</span>";
+			if (j < apts.length - 1) {
+				apt += ", ";
+			}
+		}
+		return {apt, aptalt};
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	triggerRecalc(event: Event | null) {
 		// javascript breakpoint
-		//// eslint-disable-next-line no-debugger
+		// // eslint-disable-next-line no-debugger
 		//debugger;
 
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
@@ -472,13 +484,7 @@ export class Component {
 					if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
 						matches++;
 					}
-					cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
-					cost.classList.add("m" + matches);
-					cost2.innerHTML = "" + matches;
-					cost2.classList.add("m" + matches);
-					if (matches === 0 && skip0CbChecked) {
-						skip = true;
-					}
+					skip = this.commonFunc1(cost, j, matches, cost2, skip0CbChecked, skip);
 				}
 			}
 			if (skip) {
@@ -524,9 +530,9 @@ export class Component {
 			}
 			return -amatches + bmatches;
 		});
-		let matches2 = 0;
+		/*let matches2 = 0;
 		let matches1 = 0;
-		let matches0 = 0;
+		let matches0 = 0;*/
 		for (let i = 0; i < sortedTalents.length; i++) {
 			// console.log(sortedTalents[i].talent.toLowerCase(), wishlistArray.length == 0, wishlistArray.includes(sortedTalents[i].talent.toLowerCase()));
 			if (!(wishlistArray.length == 0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
@@ -545,13 +551,13 @@ export class Component {
 					if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
 						matches++;
 					}
-					if (matches == 2) {
+					/*if (matches == 2) {
 						matches2++;
 					} else if (matches == 1) {
 						matches1++;
 					} else {
 						matches0++;
-					}
+					}*/
 					cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][sortedTalents[i].tier - 1];
 					cost.classList.add("m" + matches);
 					cost2.innerHTML = "" + matches;
@@ -631,13 +637,14 @@ export class Component {
 					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) {
 						matches++;
 					}
-					cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
+					skip = this.commonFunc1(cost, j, matches, cost2, skip0CbChecked, skip);
+					/*cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
 					cost.classList.add("m" + matches);
 					cost2.innerHTML = "" + matches;
 					cost2.classList.add("m" + matches);
 					if (matches === 0 && skip0CbChecked) {
 						skip = true;
-					}
+					}*/
 				}
 			}
 			if (skip) {
@@ -660,7 +667,19 @@ export class Component {
 			}
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
+	}
+
+	private commonFunc1(cost: HTMLDivElement, j: number, matches: number, cost2: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
+		cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
+		cost.classList.add("m" + matches);
+		cost2.innerHTML = "" + matches;
+		cost2.classList.add("m" + matches);
+		if (matches === 0 && skip0CbChecked) {
+			skip = true;
+		}
+		return skip;
 	}
 
 	exportAllTableToExcelDef(divId1: string, divId2: string, divId3: string) {
@@ -759,10 +778,12 @@ export class Component {
 		const downloadLink = document.createElement("a");
 		downloadLink.id = "a789";
 		document.body.appendChild(downloadLink);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		if ((navigator as any).msSaveOrOpenBlob) {
 			const blob = new Blob(['\ufeff', tableHTML], {
 				type: dataType
 			});
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			(navigator as any).msSaveOrOpenBlob(blob, filename);
 		} else {
 			// Create a link to the file
@@ -814,7 +835,7 @@ export class Component {
 		navigator.clipboard.writeText(d.value);
 	}
 
-	aptitude(key: string): Aptitude | null {
+	/*aptitude(key: string): Aptitude | null {
 		for (const value in Aptitude) {
 			if (key.replace("_", "").replace(" ", "") == value.replace("_", "").replace(" ", "")) {
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -823,7 +844,7 @@ export class Component {
 			}
 		}
 		return null;
-	}
+	}*/
 
 	logMatchingWorlds(event: Event, data: W40KData) {
 		if(!data.worlds || data.worlds.length==0) return;
