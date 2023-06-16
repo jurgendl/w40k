@@ -1,5 +1,6 @@
 //import $ from "jquery";
 // https://developer.snapappointments.com/bootstrap-select/
+// https://apps.ajott.io/quickref/character.html
 
 export enum Aptitude {
 	// common
