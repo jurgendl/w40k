@@ -72,7 +72,8 @@ interface W40KTalent {
 	prerequisites: string,
 	apt1: Aptitude,
 	apt2: Aptitude,
-	benefit: string
+	benefit: string,
+	ref: string
 }
 
 interface W40KSkill {
@@ -582,6 +583,7 @@ export class Component {
 			talentName.innerHTML = sortedTalents[i].talent;
 			root.appendChild(talentName);
 			talentName.title = sortedTalents[i].benefit;
+			if(sortedTalents[i].ref) talentName.title += " ( " + sortedTalents[i].ref.replace("PG","").trim() + " )";
 			const talentApt1 = document.createElement("div");
 			talentApt1.innerHTML = sortedTalents[i].apt1;
 			root.appendChild(talentApt1);
