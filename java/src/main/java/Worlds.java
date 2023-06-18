@@ -9,7 +9,7 @@ public class Worlds {
 	public static void main(String[] args) {
 		String line = "";
 		String[] parts = new String[0];
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File("worlds.txt"))));) {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(Backgrounds.class.getClassLoader().getResourceAsStream("worlds.csv")))) {
 			line = br.readLine();
 			while ((line = br.readLine()) != null) {
 				parts = line.split("\t");

@@ -9,7 +9,7 @@ public class Backgrounds {
 	public static void main(String[] args) {
 		String line = "";
 		String[] parts = new String[0];
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File("backgrounds.txt"))));) {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(Backgrounds.class.getClassLoader().getResourceAsStream("backgrounds.csv")))) {
 			line = br.readLine();
 			while ((line = br.readLine()) != null) {
 				parts = line.split("\t");
