@@ -155,10 +155,11 @@ export class Component {
 		const queryString = window.location.search;
 		const urlParams = new URLSearchParams(queryString);
 		const sourceParam: string | null = urlParams.get('source');
+		const configDateParam: string | null = urlParams.get('cfg');
 		const source = sourceParam ? sourceParam : "ow";
 		fetch('assets/w40k-' + source + '.json')
 			.then((response) => response.json())
-			.then((data) => this.app(data, source));
+			.then((data) => this.app(data, source, configDateParam));
 	}
 
 	data!: W40KData;
@@ -169,12 +170,15 @@ export class Component {
 
 	source = "ow";
 
-	app(data: W40KData, source: string): void {
+	app(data: W40KData, source: string, configDateParam: string | null): void {
 		this.data = data;
 		this.source = source;
 
 		const configDataString: string | null = localStorage.getItem("w40k-data-config-"+source);
-		if (configDataString) {
+		if(configDateParam) {
+			console.log("load","w40k-data-config-"+this.source,configDateParam);
+			this.configData = JSON.parse(configDateParam);
+		} else if (configDataString) {
 			console.log("load","w40k-data-config-"+this.source,configDataString);
 			this.configData = JSON.parse(configDataString);
 		}
@@ -785,6 +789,9 @@ export class Component {
 		const configDataString = JSON.stringify(this.configData);
 		console.log("save","w40k-data-config-"+this.source, configDataString);
 		localStorage.setItem("w40k-data-config-"+this.source, configDataString);
+
+		const saveLink : HTMLLinkElement | null = document.getElementById("saveLink") as HTMLLinkElement;
+		if(saveLink) saveLink.href = "?source="+this.source+"&cfg=" + encodeURIComponent(configDataString);
 	}
 
 	private commonFunc1(cost: HTMLDivElement, j: number, matches: number, cost2: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
