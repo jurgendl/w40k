@@ -24,8 +24,8 @@ body {
 }
 
 .header {
-	background-color: #621212;
-	color: #eee;
+	background-color: desaturate(maroon, 50%);
+	color: #ddd;
 	font-weight: 600;
 }
 
@@ -108,15 +108,15 @@ body {
 }
 
 .m2 {
-	color: #44c32a;
+	color: darken(lightgreen, 30%);
 }
 
 .m1 {
-	color: #b6bd18;
+	color: goldenrod;
 }
 
 .m0 {
-	color: #f91965;
+	color: indianred;
 }
 
 .badge {

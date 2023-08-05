@@ -126,26 +126,58 @@ class WeightedBackground {
 	}
 }
 
+class ConfigData {
+	wishlist : string;
+	skill_wishlist : string;
+	skip0CbChecked : boolean;
+	worldSelected : string;
+	classSelected: string;
+	backgroundSelected: string;
+	roleSelected: string;
+	extraAptitudesSelected: string[];
+	aptitudesWishlist: string[];
+
+	constructor() {
+		this.wishlist = "";
+		this.skill_wishlist = "";
+		this.skip0CbChecked = false;
+		this.worldSelected = "";
+		this.classSelected = "";
+		this.backgroundSelected = "";
+		this.roleSelected = "";
+		this.extraAptitudesSelected = [];
+		this.aptitudesWishlist = [];
+	}
+}
+
 export class Component {
 	init(): void {
 		const queryString = window.location.search;
 		const urlParams = new URLSearchParams(queryString);
-		let source = urlParams.get('source');
-		if (!source) {
-			source = "ow";
-		}
-		console.log(urlParams, source, "ow" == source);
+		const sourceParam: string | null = urlParams.get('source');
+		const source = sourceParam ? sourceParam : "ow";
 		fetch('assets/w40k-' + source + '.json')
 			.then((response) => response.json())
-			.then((data) => this.app(data));
+			.then((data) => this.app(data, source));
 	}
 
 	data!: W40KData;
 
+	configData: ConfigData = new ConfigData();
+
 	selectedAptitudes: Aptitude[] = [];
 
-	app(data: W40KData): void {
+	source = "ow";
+
+	app(data: W40KData, source: string): void {
 		this.data = data;
+		this.source = source;
+
+		const configDataString: string | null = localStorage.getItem("w40k-data-config-"+source);
+		if (configDataString) {
+			console.log("load","w40k-data-config-"+this.source,configDataString);
+			this.configData = JSON.parse(configDataString);
+		}
 
 		const classSelectContainer = document.getElementById("classSelectContainer") as HTMLDivElement;
 		if (this.data.classes && this.data.classes.length > 0) {
@@ -172,6 +204,9 @@ export class Component {
 				option.text = this.data.classes[i].class + " (" + apt.trim() + ")";
 				option.setAttribute("data-content", this.data.classes[i].class + " " + aptalt);
 				option.value = this.data.classes[i].class;
+				if(this.configData.classSelected && this.configData.classSelected == this.data.classes[i].class) {
+					option.selected = true;
+				}
 				classSelect.add(option);
 			}
 			// add event listener to select element
@@ -196,6 +231,9 @@ export class Component {
 				option.text = this.data.worlds[i].world + " (" + this.data.worlds[i].aptitude + ")";
 				option.setAttribute("data-content", this.data.worlds[i].world + " " + "<span class='badge badge-pill badge-secondary "+this.data.worlds[i].aptitude.replace(" ","_")+"'>"+this.data.worlds[i].aptitude+"</span>");
 				option.value = this.data.worlds[i].world;
+				if(this.configData.worldSelected && this.configData.worldSelected == this.data.worlds[i].world) {
+					option.selected = true;
+				}
 				worldSelect.add(option);
 			}
 			// add event listener to select element
@@ -220,6 +258,9 @@ export class Component {
 				option.text = this.data.backgrounds[i].background + " (" + this.data.backgrounds[i].aptitude + ")";
 				option.setAttribute("data-content", this.data.backgrounds[i].background + " " + "<span class='badge badge-pill badge-secondary "+this.data.backgrounds[i].aptitude.replace(" ","_")+"'>"+this.data.backgrounds[i].aptitude+"</span>");
 				option.value = this.data.backgrounds[i].background;
+				if(this.configData.backgroundSelected && this.configData.backgroundSelected == this.data.backgrounds[i].background) {
+					option.selected = true;
+				}
 				backgroundSelect.add(option);
 			}
 			// add event listener to select element
@@ -246,6 +287,9 @@ export class Component {
 				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
 				option.setAttribute("data-content", this.data.roles[i].role + " " + aptalt);
 				option.value = this.data.roles[i].role;
+				if(this.configData.roleSelected && this.configData.roleSelected == this.data.roles[i].role) {
+					option.selected = true;
+				}
 				roleSelect.add(option);
 			}
 			// add event listener to select element
@@ -261,6 +305,9 @@ export class Component {
 			const option = document.createElement("option");
 			option.text = this.data.optional[i];
 			option.value = this.data.optional[i];
+			if(this.configData.extraAptitudesSelected && this.configData.extraAptitudesSelected.includes(this.data.optional[i])) {
+				option.selected = true;
+			}
 			aptitudeSelect.add(option);
 		}
 		aptitudeSelect.addEventListener("change", (event) => {
@@ -272,6 +319,9 @@ export class Component {
 			const option = document.createElement("option");
 			option.text = this.data.optional[i];
 			option.value = this.data.optional[i];
+			if(this.configData.aptitudesWishlist && this.configData.aptitudesWishlist.includes(this.data.optional[i])) {
+				option.selected = true;
+			}
 			aptitudeWishlistSelect.add(option);
 		}
 		aptitudeWishlistSelect.addEventListener("change", (event) => {
@@ -283,12 +333,20 @@ export class Component {
 		});
 
 		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
+		skip0Cb.checked = this.configData.skip0CbChecked;
 		skip0Cb.addEventListener("change", (event) => {
 			this.triggerRecalc(event);
 		});
 
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
+		wishlist.value = this.configData.wishlist;
 		wishlist.addEventListener("change", (event) => {
+			this.triggerRecalc(event);
+		});
+
+		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
+		skill_wishlist.value = this.configData.skill_wishlist;
+		skill_wishlist.addEventListener("change", (event) => {
 			this.triggerRecalc(event);
 		});
 
@@ -331,10 +389,17 @@ export class Component {
 			this.triggerRecalc(event);
 		});
 
+		const skill_wishlist_clear = document.getElementById("skill_wishlist_clear") as HTMLSelectElement;
+		skill_wishlist_clear.addEventListener("click", (event) => {
+			skill_wishlist.value = "";
+			this.triggerRecalc(event);
+		});
+
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('._selectpicker') as any).selectpicker();
 
 		this.triggerRecalc(null);
+		this.styleAptitudeMatches(null, data);
 	}
 
 	private commonFunc2(apts: Aptitude[]) {
@@ -356,7 +421,10 @@ export class Component {
 		// // eslint-disable-next-line no-debugger
 		//debugger;
 
+		console.log("triggerRecalc");
+
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
+		this.configData.wishlist = wishlist.value;
 		// split textarea content into array
 		const wishlistArray = wishlist.value.split("\n");
 		// remove empty elements from array
@@ -371,9 +439,26 @@ export class Component {
 			wishlistArray[i] = wishlistArray[i].toLowerCase().trim();
 		}
 
+		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
+		this.configData.skill_wishlist = skill_wishlist.value;
+		// split textarea content into array
+		const skill_wishlistArray = skill_wishlist.value.split("\n");
+		// remove empty elements from array
+		for (let i = 0; i < skill_wishlistArray.length; i++) {
+			if (skill_wishlistArray[i] === "") {
+				skill_wishlistArray.splice(i, 1);
+				i--;
+			}
+		}
+		// lowercase all elements in array
+		for (let i = 0; i < skill_wishlistArray.length; i++) {
+			skill_wishlistArray[i] = skill_wishlistArray[i].toLowerCase().trim();
+		}
+
 		this.selectedAptitudes = [];
 
 		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
+		this.configData.skip0CbChecked = skip0Cb.checked;
 		const skip0CbChecked = skip0Cb.checked;
 
 		this.selectedAptitudes.push(this.data.free);
@@ -382,7 +467,9 @@ export class Component {
 
 		const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
 		if (classSelect.selectedIndex > 0) {
-			const classAptitudes = this.data.classes[classSelect.selectedIndex - 1].aptitudes;
+			const selectedClass = this.data.classes[classSelect.selectedIndex - 1];
+			const classAptitudes = selectedClass.aptitudes;
+			this.configData.classSelected = selectedClass.class;
 			for (let i = 0; i < classAptitudes.length; i++) {
 				console.log("classSelect", classAptitudes[i]);
 				if (this.selectedAptitudes.includes(classAptitudes[i])) {
@@ -391,22 +478,30 @@ export class Component {
 					this.selectedAptitudes.push(classAptitudes[i]);
 				}
 			}
+		} else {
+			this.configData.classSelected = "";
 		}
 
 		const worldSelect = document.getElementById("worldSelect") as HTMLSelectElement;
 		if (worldSelect.selectedIndex > 0) {
-			const aptitude = this.data.worlds[worldSelect.selectedIndex - 1].aptitude;
+			const selectedWorld = this.data.worlds[worldSelect.selectedIndex - 1];
+			const aptitude = selectedWorld.aptitude;
+			this.configData.worldSelected = selectedWorld.world;
 			console.log("worldSelect", aptitude);
 			if (this.selectedAptitudes.includes(aptitude)) {
 				duplicates.push(aptitude);
 			} else {
 				this.selectedAptitudes.push(aptitude);
 			}
+		} else {
+			this.configData.worldSelected = "";
 		}
 
 		const roleSelect = document.getElementById("roleSelect") as HTMLSelectElement;
 		if (roleSelect.selectedIndex > 0) {
-			const aptitudes = this.data.roles[roleSelect.selectedIndex - 1].aptitudes;
+			const roleSelected = this.data.roles[roleSelect.selectedIndex - 1];
+			const aptitudes = roleSelected.aptitudes;
+			this.configData.roleSelected = roleSelected.role;
 			for (let i = 0; i < aptitudes.length; i++) {
 				console.log("roleSelect", aptitudes[i]);
 				if (this.selectedAptitudes.includes(aptitudes[i])) {
@@ -415,24 +510,32 @@ export class Component {
 					this.selectedAptitudes.push(aptitudes[i]);
 				}
 			}
+		} else {
+			this.configData.roleSelected = "";
 		}
 
 		const backgroundSelect = document.getElementById("backgroundSelect") as HTMLSelectElement;
 		if (backgroundSelect.selectedIndex > 0) {
-			const aptitude = this.data.backgrounds[backgroundSelect.selectedIndex - 1].aptitude;
+			const backgroundSelected = this.data.backgrounds[backgroundSelect.selectedIndex - 1];
+			const aptitude = backgroundSelected.aptitude;
+			this.configData.backgroundSelected = backgroundSelected.background;
 			console.log("backgroundSelect", aptitude);
 			if (this.selectedAptitudes.includes(aptitude)) {
 				duplicates.push(aptitude);
 			} else {
 				this.selectedAptitudes.push(aptitude);
 			}
+		} else {
+			this.configData.backgroundSelected = "";
 		}
 
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
+		this.configData.extraAptitudesSelected = [];
 		if (aptitudeSelect.selectedIndex >= 0) {
 			const selectedOptions = aptitudeSelect.selectedOptions;
 			for (let z = 0; z < selectedOptions.length; z++) {
 				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				this.configData.extraAptitudesSelected.push(aptitude);
 				console.log("aptitudeSelect", aptitude);
 				if (this.selectedAptitudes.includes(aptitude)) {
 					duplicates.push(aptitude);
@@ -626,9 +729,12 @@ export class Component {
 			return -amatches + bmatches;
 		});
 		for (let i = 0; i < sortedSkills.length; i++) {
-			let skip = false;
+			if (!(skill_wishlistArray.length == 0 || skill_wishlistArray.includes(sortedSkills[i].name.toLowerCase().trim()))) {
+				continue;
+			}
 			const cost = document.createElement("div");
 			const cost2 = document.createElement("div");
+			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if (this.data.costs[j].type === "skill") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -671,6 +777,14 @@ export class Component {
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
+
+		this.save();
+	}
+
+	private save() {
+		const configDataString = JSON.stringify(this.configData);
+		console.log("save","w40k-data-config-"+this.source, configDataString);
+		localStorage.setItem("w40k-data-config-"+this.source, configDataString);
 	}
 
 	private commonFunc1(cost: HTMLDivElement, j: number, matches: number, cost2: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
@@ -992,7 +1106,7 @@ export class Component {
 		}
 	}
 
-	styleAptitudeMatches(event: Event, data: W40KData) {
+	styleAptitudeMatches(event: Event | null, data: W40KData) {
 		for (let z = 0; z < data.optional.length; z++) {
 			const aptitude = data.optional[z];
 			let style = document.getElementById("style-" + aptitude.replace(" ","_")) as HTMLStyleElement;
@@ -1008,14 +1122,17 @@ export class Component {
 			}
 		}
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
+		this.configData.aptitudesWishlist = [];
 		if (aptitudeSelect.selectedIndex >= 0) {
 			const selectedOptions = aptitudeSelect.selectedOptions;
 			for (let z = 0; z < selectedOptions.length; z++) {
 				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
+				this.configData.aptitudesWishlist.push(aptitude);
 				const style = document.getElementById("style-" + aptitude.replace(" ","_")) as HTMLStyleElement;
 				style.disabled = false;
 				console.log(style);
 			}
 		}
+		this.save();
 	}
 }

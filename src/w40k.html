@@ -61,53 +61,67 @@
 <div>
 	<button type="button" class="export_all btn btn-sm btn-primary" id="export_all">Export all to xls</button>
 </div>
+
 <div>
-	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export to clipboard</button>
-</div>
-<div class="characteristic header">
 	<div>
-		<div title="cost">cost</div>
-		<div title="matches">m</div>
-		<div title="skill">skill</div>
-		<div title="aptitude">aptitude</div>
+		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export to clipboard</button>
 	</div>
+	<div class="characteristic header">
+		<div>
+			<div title="cost">cost</div>
+			<div title="matches">m</div>
+			<div title="skill">skill</div>
+			<div title="aptitude">aptitude</div>
+		</div>
+	</div>
+	<div class="tablelike characteristic" id="characteristic"></div>
 </div>
-<div class="tablelike characteristic" id="characteristic"></div>
+
 <div>
-	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export to clipboard</button>
-</div>
-<div class="skill header">
-	<div>
-		<div title="cost">cost</div>
-		<div title="matches">m</div>
-		<div title="characteristic">characteristic</div>
-		<div title="aptitude">aptitude</div>
-		<div title="aptitude">aptitude</div>
+	<div class="form-group">
+		<label for="skill_wishlist">Skill wishlist / filter (seperated by enter):</label>
+		<button type="button" class="btn btn-sm btn-danger mb-1" id="skill_wishlist_clear">Clear</button>
+		<textarea cols="3" class="wishlist form-control" id="skill_wishlist" name="skill_wishlist"></textarea>
 	</div>
+	<div>
+		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export to clipboard</button>
+	</div>
+	<div class="skill header">
+		<div>
+			<div title="cost">cost</div>
+			<div title="matches">m</div>
+			<div title="characteristic">characteristic</div>
+			<div title="aptitude">aptitude</div>
+			<div title="aptitude">aptitude</div>
+		</div>
+	</div>
+	<div class="tablelike skill" id="skill"></div>
 </div>
-<div class="tablelike skill" id="skill"></div>
-<div class="form-group">
-	<label for="wishlist">Talent wishlist:</label>
-	<button type="button" class="btn btn-sm btn-danger mb-1" id="wishlist_clear">Clear</button>
-	<textarea cols="3" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
-</div>
+
 <div>
-	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
-	<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
-</div>
-<div class="talent header">
-	<div>
-		<div title="cost">cost</div>
-		<div title="aptitude" title="matches">m</div>
-		<div title="tier">tier</div>
-		<div title="talent">talent</div>
-		<div title="aptitude">aptitude</div>
-		<div title="aptitude">aptitude</div>
-		<div title="prerequisites">prerequisites</div>
-		<div title="description" style="display: none">description</div>
+	<div class="form-group">
+		<label for="wishlist">Talent wishlist / filter (seperated by enter):</label>
+		<button type="button" class="btn btn-sm btn-danger mb-1" id="wishlist_clear">Clear</button>
+		<textarea cols="3" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
 	</div>
+	<div>
+		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
+		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
+	</div>
+	<div class="talent header">
+		<div>
+			<div title="cost">cost</div>
+			<div title="aptitude" title="matches">m</div>
+			<div title="tier">tier</div>
+			<div title="talent">talent</div>
+			<div title="aptitude">aptitude</div>
+			<div title="aptitude">aptitude</div>
+			<div title="prerequisites">prerequisites</div>
+			<div title="description" style="display: none">description</div>
+		</div>
+	</div>
+	<div class="tablelike talent" id="talent"></div>
 </div>
-<div class="tablelike talent" id="talent"></div>
 
 </body>
 </html>
