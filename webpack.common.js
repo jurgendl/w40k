@@ -6,6 +6,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/w40k.ts',
@@ -53,6 +54,11 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js']
   },
   plugins: [
+// Work around for Buffer is undefined:
+// https://github.com/webpack/changelog-v5/issues/10
+new webpack.ProvidePlugin({
+Buffer: ['buffer', 'Buffer'],
+}),
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output
       // both options are optional

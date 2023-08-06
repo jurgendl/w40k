@@ -2,6 +2,9 @@
 // https://developer.snapappointments.com/bootstrap-select/
 // https://apps.ajott.io/quickref/character.html
 
+import { compressUrlSafe } from './lzma-url.mjs'
+import { decompressUrlSafe } from './lzma-url.mjs'
+
 export enum Aptitude {
 	// common
 	General = "General",
@@ -176,10 +179,16 @@ export class Component {
 
 		const configDataString: string | null = localStorage.getItem("w40k-data-config-"+source);
 		if(configDateParam) {
-			console.log("load","w40k-data-config-"+this.source,configDateParam);
-			this.configData = JSON.parse(configDateParam);
+			if(configDateParam.startsWith("%7B") || configDateParam.startsWith("{")) {
+				console.log("load-json","w40k-data-config-"+this.source,configDateParam);
+				this.configData = JSON.parse(configDateParam);
+			} else {
+				const decompressUrlSafe1 = decompressUrlSafe(configDateParam);
+				console.log("load-compressed","w40k-data-config-"+this.source,decompressUrlSafe1);
+				this.configData = JSON.parse(decompressUrlSafe1);
+			}
 		} else if (configDataString) {
-			console.log("load","w40k-data-config-"+this.source,configDataString);
+			console.log("load-browser","w40k-data-config-"+this.source,configDataString);
 			this.configData = JSON.parse(configDataString);
 		}
 
@@ -790,8 +799,35 @@ export class Component {
 		console.log("save","w40k-data-config-"+this.source, configDataString);
 		localStorage.setItem("w40k-data-config-"+this.source, configDataString);
 
+
+		// https://github.com/rotemdan/lzutf8.js/
+		// https://www.digitalocean.com/community/tutorials/how-to-encode-and-decode-strings-with-base64-in-javascript
+		// https://gist.github.com/loilo/92220c23567d6ed085a28f2c3e84e311#file-base64-mjs
+
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
+		//const compressorLZUTF8 = (LZUTF8 as any);
+		//const tmp1 = compressorLZUTF8.compress(configDataString, {outputEncoding: "ByteArray"});
+		//const tmp2 = compressorLZUTF8.decompress(tmp1, {inputEncoding: "ByteArray"});
+		//const encodedStringBtoA = btoa(tmp1);
+		//const decodedStringAtoB = atob(encodedStringBtoA);
+		//const compressed = compressorLZUTF8.compress(configDataString, {outputEncoding: "Base64"});
+		//const decompressed = compressorLZUTF8.decompress(compressed, {inputEncoding: "Base64"});
+
+		const compressedSerializedData = compressUrlSafe(configDataString);
+		//const deserializedData = decompressUrlSafe(compressedSerializedData);
+		// replace / followed by newline in deserializedData by newline
+		//const fixedDeserializedData = deserializedData.replace(/\//g, /\n/g);
+		//console.log(configDataString.length,compressedSerializedData.length,compressedSerializedData);
+		//console.log(JSON.parse(deserializedData));
+
+
+		const encoded = encodeURIComponent(configDataString);
+		console.log(configDataString.length,encoded.length,compressedSerializedData.length);
 		const saveLink : HTMLLinkElement | null = document.getElementById("saveLink") as HTMLLinkElement;
-		if(saveLink) saveLink.href = "?source="+this.source+"&cfg=" + encodeURIComponent(configDataString);
+		saveLink!.href = "?source="+this.source+"&cfg=" + encoded;
+		const saveLinkAlt : HTMLLinkElement | null = document.getElementById("saveLinkAlt") as HTMLLinkElement;
+		saveLinkAlt!.href = "?source="+this.source+"&cfg=" + compressedSerializedData;
 	}
 
 	private commonFunc1(cost: HTMLDivElement, j: number, matches: number, cost2: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
