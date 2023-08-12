@@ -2,8 +2,7 @@
 // https://developer.snapappointments.com/bootstrap-select/
 // https://apps.ajott.io/quickref/character.html
 
-import { compressUrlSafe } from './lzma-url.mjs'
-import { decompressUrlSafe } from './lzma-url.mjs'
+import {compressUrlSafe, decompressUrlSafe} from './lzma-url.mjs'
 
 export enum Aptitude {
 	// common
@@ -130,10 +129,11 @@ class WeightedBackground {
 }
 
 class ConfigData {
-	wishlist : string;
-	skill_wishlist : string;
-	skip0CbChecked : boolean;
-	worldSelected : string;
+	wishlist: string; // talent_wishlist
+	skill_wishlist: string;
+	characteristic_wishlist: string;
+	skip0CbChecked: boolean;
+	worldSelected: string;
 	classSelected: string;
 	backgroundSelected: string;
 	roleSelected: string;
@@ -141,15 +141,16 @@ class ConfigData {
 	aptitudesWishlist: string[];
 
 	constructor() {
-		this.wishlist = "";
+		this.wishlist = ""; // talent_wishlist
 		this.skill_wishlist = "";
+		this.characteristic_wishlist = "";
+		this.aptitudesWishlist = [];
 		this.skip0CbChecked = false;
 		this.worldSelected = "";
 		this.classSelected = "";
 		this.backgroundSelected = "";
 		this.roleSelected = "";
 		this.extraAptitudesSelected = [];
-		this.aptitudesWishlist = [];
 	}
 }
 
@@ -177,18 +178,18 @@ export class Component {
 		this.data = data;
 		this.source = source;
 
-		const configDataString: string | null = localStorage.getItem("w40k-data-config-"+source);
-		if(configDateParam) {
-			if(configDateParam.startsWith("%7B") || configDateParam.startsWith("{")) {
-				console.log("load-json","w40k-data-config-"+this.source,configDateParam);
+		const configDataString: string | null = localStorage.getItem("w40k-data-config-" + source);
+		if (configDateParam) {
+			if (configDateParam.startsWith("%7B") || configDateParam.startsWith("{")) {
+				console.log("load-json", "w40k-data-config-" + this.source, configDateParam);
 				this.configData = JSON.parse(configDateParam);
 			} else {
 				const decompressUrlSafe1 = decompressUrlSafe(configDateParam);
-				console.log("load-compressed","w40k-data-config-"+this.source,decompressUrlSafe1);
+				console.log("load-compressed", "w40k-data-config-" + this.source, decompressUrlSafe1);
 				this.configData = JSON.parse(decompressUrlSafe1);
 			}
 		} else if (configDataString) {
-			console.log("load-browser","w40k-data-config-"+this.source,configDataString);
+			console.log("load-browser", "w40k-data-config-" + this.source, configDataString);
 			this.configData = JSON.parse(configDataString);
 		}
 
@@ -217,7 +218,7 @@ export class Component {
 				option.text = this.data.classes[i].class + " (" + apt.trim() + ")";
 				option.setAttribute("data-content", this.data.classes[i].class + " " + aptalt);
 				option.value = this.data.classes[i].class;
-				if(this.configData.classSelected && this.configData.classSelected == this.data.classes[i].class) {
+				if (this.configData.classSelected && this.configData.classSelected == this.data.classes[i].class) {
 					option.selected = true;
 				}
 				classSelect.add(option);
@@ -242,9 +243,9 @@ export class Component {
 			for (let i = 0; i < this.data.worlds.length; i++) {
 				const option = document.createElement("option");
 				option.text = this.data.worlds[i].world + " (" + this.data.worlds[i].aptitude + ")";
-				option.setAttribute("data-content", this.data.worlds[i].world + " " + "<span class='badge badge-pill badge-secondary "+this.data.worlds[i].aptitude.replace(" ","_")+"'>"+this.data.worlds[i].aptitude+"</span>");
+				option.setAttribute("data-content", this.data.worlds[i].world + " " + "<span class='badge badge-pill badge-secondary " + this.data.worlds[i].aptitude.replace(" ", "_") + "'>" + this.data.worlds[i].aptitude + "</span>");
 				option.value = this.data.worlds[i].world;
-				if(this.configData.worldSelected && this.configData.worldSelected == this.data.worlds[i].world) {
+				if (this.configData.worldSelected && this.configData.worldSelected == this.data.worlds[i].world) {
 					option.selected = true;
 				}
 				worldSelect.add(option);
@@ -269,9 +270,9 @@ export class Component {
 			for (let i = 0; i < this.data.backgrounds.length; i++) {
 				const option = document.createElement("option");
 				option.text = this.data.backgrounds[i].background + " (" + this.data.backgrounds[i].aptitude + ")";
-				option.setAttribute("data-content", this.data.backgrounds[i].background + " " + "<span class='badge badge-pill badge-secondary "+this.data.backgrounds[i].aptitude.replace(" ","_")+"'>"+this.data.backgrounds[i].aptitude+"</span>");
+				option.setAttribute("data-content", this.data.backgrounds[i].background + " " + "<span class='badge badge-pill badge-secondary " + this.data.backgrounds[i].aptitude.replace(" ", "_") + "'>" + this.data.backgrounds[i].aptitude + "</span>");
 				option.value = this.data.backgrounds[i].background;
-				if(this.configData.backgroundSelected && this.configData.backgroundSelected == this.data.backgrounds[i].background) {
+				if (this.configData.backgroundSelected && this.configData.backgroundSelected == this.data.backgrounds[i].background) {
 					option.selected = true;
 				}
 				backgroundSelect.add(option);
@@ -300,7 +301,7 @@ export class Component {
 				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
 				option.setAttribute("data-content", this.data.roles[i].role + " " + aptalt);
 				option.value = this.data.roles[i].role;
-				if(this.configData.roleSelected && this.configData.roleSelected == this.data.roles[i].role) {
+				if (this.configData.roleSelected && this.configData.roleSelected == this.data.roles[i].role) {
 					option.selected = true;
 				}
 				roleSelect.add(option);
@@ -318,21 +319,19 @@ export class Component {
 			const option = document.createElement("option");
 			option.text = this.data.optional[i];
 			option.value = this.data.optional[i];
-			if(this.configData.extraAptitudesSelected && this.configData.extraAptitudesSelected.includes(this.data.optional[i])) {
+			if (this.configData.extraAptitudesSelected && this.configData.extraAptitudesSelected.includes(this.data.optional[i])) {
 				option.selected = true;
 			}
 			aptitudeSelect.add(option);
 		}
-		aptitudeSelect.addEventListener("change", (event) => {
-			this.triggerRecalc(event);
-		});
+		aptitudeSelect.addEventListener("change", (event) => this.triggerRecalc(event));
 
 		const aptitudeWishlistSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		for (let i = 0; i < this.data.optional.length; i++) {
 			const option = document.createElement("option");
 			option.text = this.data.optional[i];
 			option.value = this.data.optional[i];
-			if(this.configData.aptitudesWishlist && this.configData.aptitudesWishlist.includes(this.data.optional[i])) {
+			if (this.configData.aptitudesWishlist && this.configData.aptitudesWishlist.includes(this.data.optional[i])) {
 				option.selected = true;
 			}
 			aptitudeWishlistSelect.add(option);
@@ -347,54 +346,47 @@ export class Component {
 
 		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
 		skip0Cb.checked = this.configData.skip0CbChecked;
-		skip0Cb.addEventListener("change", (event) => {
-			this.triggerRecalc(event);
-		});
+		skip0Cb.addEventListener("change", (event) => this.triggerRecalc(event));
 
-		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
-		wishlist.value = this.configData.wishlist;
-		wishlist.addEventListener("change", (event) => {
-			this.triggerRecalc(event);
-		});
+		const characteristic_wishlist = document.getElementById("characteristic_wishlist") as HTMLTextAreaElement;
+		characteristic_wishlist.value = this.configData.characteristic_wishlist;
+		characteristic_wishlist.addEventListener("change", (event) => this.triggerRecalc(event));
 
 		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
 		skill_wishlist.value = this.configData.skill_wishlist;
-		skill_wishlist.addEventListener("change", (event) => {
-			this.triggerRecalc(event);
-		});
+		skill_wishlist.addEventListener("change", (event) => this.triggerRecalc(event));
+
+		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement; // talent_wishlist
+		wishlist.value = this.configData.wishlist;
+		wishlist.addEventListener("change", (event) => this.triggerRecalc(event));
 
 		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_characteristic.addEventListener("click", (event) => {
-			//this.exportTableToExcelDef("characteristic");
-			this.copyToClipboard("characteristic");
-		});
+		export_characteristic.addEventListener("click", (event) => this.copyToClipboard("characteristic"));
 
 		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_skill.addEventListener("click", (event) => {
-			//this.exportTableToExcelDef("skill");
-			this.copyToClipboard("skill");
-		});
+		export_skill.addEventListener("click", (event) => this.copyToClipboard("skill"));
 
 		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_talent.addEventListener("click", (event) => {
-			//this.exportTableToExcelDef("talent");
-			this.copyToClipboard("talent");
-		});
+		export_talent.addEventListener("click", (event) => this.copyToClipboard("talent"));
+
+		const export_characteristic_wishlist = document.getElementById("export_characteristic_wishlist") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_characteristic_wishlist.addEventListener("click", (event) => this.copyToClipboardWishlist("characteristic", 2));
+
+		const export_skill_wishlist = document.getElementById("export_skill_wishlist") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_skill_wishlist.addEventListener("click", (event) => this.copyToClipboardWishlist("skill", 2));
 
 		const export_talent_wishlist = document.getElementById("export_talent_wishlist") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_talent_wishlist.addEventListener("click", (event) => {
-			this.copyToClipboardWishlist();
-		});
+		export_talent_wishlist.addEventListener("click", (event) => this.copyToClipboardWishlist("talent", 3));
 
 		const export_all = document.getElementById("export_all") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_all.addEventListener("click", (event) => {
-			this.exportAllTableToExcelDef("characteristic", "skill", "talent");
-		});
+		export_all.addEventListener("click", (event) => this.exportAllTableToExcelDef("characteristic", "skill", "talent"));
 
 		const wishlist_clear = document.getElementById("wishlist_clear") as HTMLSelectElement;
 		wishlist_clear.addEventListener("click", (event) => {
@@ -405,6 +397,12 @@ export class Component {
 		const skill_wishlist_clear = document.getElementById("skill_wishlist_clear") as HTMLSelectElement;
 		skill_wishlist_clear.addEventListener("click", (event) => {
 			skill_wishlist.value = "";
+			this.triggerRecalc(event);
+		});
+
+		const characteristic_wishlist_clear = document.getElementById("characteristic_wishlist_clear") as HTMLSelectElement;
+		characteristic_wishlist_clear.addEventListener("click", (event) => {
+			characteristic_wishlist.value = "";
 			this.triggerRecalc(event);
 		});
 
@@ -466,6 +464,22 @@ export class Component {
 		// lowercase all elements in array
 		for (let i = 0; i < skill_wishlistArray.length; i++) {
 			skill_wishlistArray[i] = skill_wishlistArray[i].toLowerCase().trim();
+		}
+
+		const characteristic_wishlist = document.getElementById("characteristic_wishlist") as HTMLTextAreaElement;
+		this.configData.characteristic_wishlist = characteristic_wishlist.value;
+		// split textarea content into array
+		const characteristic_wishlistArray = characteristic_wishlist.value.split("\n");
+		// remove empty elements from array
+		for (let i = 0; i < characteristic_wishlistArray.length; i++) {
+			if (characteristic_wishlistArray[i] === "") {
+				characteristic_wishlistArray.splice(i, 1);
+				i--;
+			}
+		}
+		// lowercase all elements in array
+		for (let i = 0; i < characteristic_wishlistArray.length; i++) {
+			characteristic_wishlistArray[i] = characteristic_wishlistArray[i].toLowerCase().trim();
 		}
 
 		this.selectedAptitudes = [];
@@ -561,7 +575,7 @@ export class Component {
 		const selectedAptitudes = document.getElementById("selectedAptitudes") as HTMLDivElement;
 		selectedAptitudes.innerHTML = "";
 		for (let i = 0; i < this.selectedAptitudes.length; i++) {
-			selectedAptitudes.innerHTML += "<span class='badge badge-pill badge-secondary "+this.selectedAptitudes[i].replace(" ","_")+"'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
+			selectedAptitudes.innerHTML += "<span class='badge badge-pill badge-secondary " + this.selectedAptitudes[i].replace(" ", "_") + "'>" + this.selectedAptitudes[i] + "</span>&nbsp;";
 		}
 		for (let i = 0; i < duplicates.length; i++) {
 			selectedAptitudes.innerHTML += "<span class='badge badge-pill badge-danger'>" + duplicates[i] + " (duplicate)" + "</span>";
@@ -588,6 +602,9 @@ export class Component {
 			return -amatches + bmatches;
 		});
 		for (let i = 0; i < sortedCharacteristic.length; i++) {
+			if (!(characteristic_wishlistArray.length == 0 || characteristic_wishlistArray.includes(sortedCharacteristic[i].name.toLowerCase().trim()))) {
+				continue;
+			}
 			const cost = document.createElement("div");
 			const cost2 = document.createElement("div");
 			let skip = false;
@@ -647,11 +664,11 @@ export class Component {
 			}
 			return -amatches + bmatches;
 		});
+
 		/*let matches2 = 0;
 		let matches1 = 0;
 		let matches0 = 0;*/
 		for (let i = 0; i < sortedTalents.length; i++) {
-			// console.log(sortedTalents[i].talent.toLowerCase(), wishlistArray.length == 0, wishlistArray.includes(sortedTalents[i].talent.toLowerCase()));
 			if (!(wishlistArray.length == 0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
 				continue;
 			}
@@ -699,7 +716,7 @@ export class Component {
 			talentName.innerHTML = sortedTalents[i].talent;
 			root.appendChild(talentName);
 			talentName.title = sortedTalents[i].benefit;
-			if(sortedTalents[i].ref) talentName.title += " ( " + sortedTalents[i].ref.replace("PG","").trim() + " )";
+			if (sortedTalents[i].ref) talentName.title += " ( " + sortedTalents[i].ref.replace("PG", "").trim() + " )";
 			const talentApt1 = document.createElement("div");
 			talentApt1.innerHTML = sortedTalents[i].apt1;
 			root.appendChild(talentApt1);
@@ -796,9 +813,8 @@ export class Component {
 
 	private save() {
 		const configDataString = JSON.stringify(this.configData);
-		console.log("save","w40k-data-config-"+this.source, configDataString);
-		localStorage.setItem("w40k-data-config-"+this.source, configDataString);
-
+		console.log("save", "w40k-data-config-" + this.source, configDataString);
+		localStorage.setItem("w40k-data-config-" + this.source, configDataString);
 
 		// https://github.com/rotemdan/lzutf8.js/
 		// https://www.digitalocean.com/community/tutorials/how-to-encode-and-decode-strings-with-base64-in-javascript
@@ -821,13 +837,12 @@ export class Component {
 		//console.log(configDataString.length,compressedSerializedData.length,compressedSerializedData);
 		//console.log(JSON.parse(deserializedData));
 
-
 		const encoded = encodeURIComponent(configDataString);
-		console.log(configDataString.length,encoded.length,compressedSerializedData.length);
-		const saveLink : HTMLLinkElement | null = document.getElementById("saveLink") as HTMLLinkElement;
-		saveLink!.href = "?source="+this.source+"&cfg=" + encoded;
-		const saveLinkAlt : HTMLLinkElement | null = document.getElementById("saveLinkAlt") as HTMLLinkElement;
-		saveLinkAlt!.href = "?source="+this.source+"&cfg=" + compressedSerializedData;
+		console.log(configDataString.length, encoded.length, compressedSerializedData.length);
+		const saveLink: HTMLLinkElement | null = document.getElementById("saveLink") as HTMLLinkElement;
+		saveLink!.href = "?source=" + this.source + "&cfg=" + encoded;
+		const saveLinkAlt: HTMLLinkElement | null = document.getElementById("saveLinkAlt") as HTMLLinkElement;
+		saveLinkAlt!.href = "?source=" + this.source + "&cfg=" + compressedSerializedData;
 	}
 
 	private commonFunc1(cost: HTMLDivElement, j: number, matches: number, cost2: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
@@ -852,37 +867,37 @@ export class Component {
 		const d = document.createElement("div");
 		d.innerHTML = "<table>"
 			+ "<tr><td>Characteristics</td></tr>"
-			+ "\t<tr>\n" +
-			"\t\t<td>cost</td>\n" +
-			"\t\t<td>m</td>\n" +
-			"\t\t<td>skill</td>\n" +
-			"\t\t<td>aptitude</td>\n" +
-			"\t</tr>"
+			+ "\t<tr>\n"
+			+ "\t\t<td>cost</td>\n"
+			+ "\t\t<td>m</td>\n"
+			+ "\t\t<td>skill</td>\n"
+			+ "\t\t<td>aptitude</td>\n"
+			+ "\t</tr>"
 			+ tableHtml1.replace("<table>", "").replace("</table>", "")
 			+ "<tr><td> </td></tr>"
 			+ "<tr><td> </td></tr>"
 			+ "<tr><td>Skills</td></tr>"
-			+ "\t<tr>\n" +
-			"\t\t<td>cost</td>\n" +
-			"\t\t<td>m</td>\n" +
-			"\t\t<td>characteristic</td>\n" +
-			"\t\t<td>aptitude</td>\n" +
-			"\t\t<td>aptitude</td>\n" +
-			"\t</tr>"
+			+ "\t<tr>\n"
+			+ "\t\t<td>cost</td>\n"
+			+ "\t\t<td>m</td>\n"
+			+ "\t\t<td>characteristic</td>\n"
+			+ "\t\t<td>aptitude</td>\n"
+			+ "\t\t<td>aptitude</td>\n"
+			+ "\t</tr>"
 			+ tableHtml2.replace("<table>", "").replace("</table>", "")
 			+ "<tr><td> </td></tr>"
 			+ "<tr><td> </td></tr>"
 			+ "<tr><td>Talents</td></tr>"
-			+ "\t<tr>\n" +
-			"\t\t<td>cost</td>\n" +
-			"\t\t<td>m</td>\n" +
-			"\t\t<td>tier</td>\n" +
-			"\t\t<td>talent</td>\n" +
-			"\t\t<td>aptitude</td>\n" +
-			"\t\t<td>aptitude</td>\n" +
-			"\t\t<td>requirement</td>\n" +
-			"\t\t<td>description</td>\n" +
-			"\t</tr>"
+			+ "\t<tr>\n"
+			+ "\t\t<td>cost</td>\n"
+			+ "\t\t<td>m</td>\n"
+			+ "\t\t<td>tier</td>\n"
+			+ "\t\t<td>talent</td>\n"
+			+ "\t\t<td>aptitude</td>\n"
+			+ "\t\t<td>aptitude</td>\n"
+			+ "\t\t<td>requirement</td>\n"
+			+ "\t\t<td>description</td>\n"
+			+ "\t</tr>"
 			+ tableHtml3.replace("<table>", "").replace("</table>", "")
 			+ "</table>";
 		d.style.display = "none";
@@ -932,10 +947,10 @@ export class Component {
 		const tableSelect = document.getElementById(tableID);
 		if (!tableSelect) return;
 		const tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
-		filename = filename ? filename + '.xls' : 'excel_data.xls';
-		document.getElementById("a789")?.remove();
+		filename = filename ? filename + '.html.xls' : 'w40k.html.xls';
+		document.getElementById("downloadLinkId")?.remove();
 		const downloadLink = document.createElement("a");
-		downloadLink.id = "a789";
+		downloadLink.id = "downloadLinkId";
 		document.body.appendChild(downloadLink);
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		if ((navigator as any).msSaveOrOpenBlob) {
@@ -957,21 +972,18 @@ export class Component {
 	copyToClipboard(divId: string) {
 		const tableHtml = this.exportDivToTable(divId, true);
 		if (!tableHtml) return;
-		document.getElementById("textarea123")?.remove();
+		document.getElementById("textarea_c_" + divId)?.remove();
 		const d: HTMLTextAreaElement = document.createElement("textarea");
-		//d.type="text";
-		//d.value = tableHtml;
 		d.innerHTML = tableHtml;
 		d.style.display = "none";
-		d.id = "textarea123";
+		d.id = "textarea_c_" + divId;
 		document.body.appendChild(d);
 		d.select();
 		d.setSelectionRange(0, 99999); // For mobile devices
-		// console.log(d.value);
 		navigator.clipboard.writeText(d.value);
 	}
 
-	copyToClipboardWishlist() {
+	copyToClipboardWishlist(id: string, colIndex: number) {
 		const div = document.getElementById("talent");
 		if (!div) return;
 		let tableHtml = "";
@@ -979,14 +991,14 @@ export class Component {
 			const r = div.children[i] as HTMLDivElement;
 			const retain = (r.children[1] as HTMLInputElement).innerHTML == "0" || (r.children[1] as HTMLInputElement).innerHTML == "1";
 			if (retain) {
-				tableHtml += (r.children[3] as HTMLDivElement).innerHTML + "\n";
+				tableHtml += (r.children[colIndex] as HTMLDivElement).innerHTML + "\n";
 			}
 		}
-		document.getElementById("textarea456aa")?.remove();
+		document.getElementById("textarea_copy_" + id)?.remove();
 		const d: HTMLTextAreaElement = document.createElement("textarea");
 		d.innerHTML = tableHtml;
 		d.style.display = "none";
-		d.id = "textarea456aa";
+		d.id = "textarea_copy_" + id;
 		document.body.appendChild(d);
 		d.select();
 		d.setSelectionRange(0, 99999); // For mobile devices
@@ -1006,7 +1018,7 @@ export class Component {
 	}*/
 
 	logMatchingWorlds(event: Event, data: W40KData) {
-		if(!data.worlds || data.worlds.length==0) return;
+		if (!data.worlds || data.worlds.length == 0) return;
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
 			console.log("logMatchingWorlds");
@@ -1041,7 +1053,7 @@ export class Component {
 	}
 
 	logMatchingBackgrounds(event: Event, data: W40KData) {
-		if(!data.backgrounds || data.backgrounds.length==0) return;
+		if (!data.backgrounds || data.backgrounds.length == 0) return;
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
 			console.log("logMatchingBackgrounds");
@@ -1113,7 +1125,7 @@ export class Component {
 	}
 
 	logMatchingClasses(event: Event, data: W40KData) {
-		if(!data.classes || data.classes.length==0) return;
+		if (!data.classes || data.classes.length == 0) return;
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
 			console.log("logMatchingClasses");
@@ -1152,13 +1164,13 @@ export class Component {
 	styleAptitudeMatches(event: Event | null, data: W40KData) {
 		for (let z = 0; z < data.optional.length; z++) {
 			const aptitude = data.optional[z];
-			let style = document.getElementById("style-" + aptitude.replace(" ","_")) as HTMLStyleElement;
-			if(style) {
+			let style = document.getElementById("style-" + aptitude.replace(" ", "_")) as HTMLStyleElement;
+			if (style) {
 				style.disabled = true;
 			} else {
 				style = document.createElement("style");
-				style.id = "style-" + aptitude.replace(" ","_");
-				style.innerHTML = ".badge.badge-pill.badge-secondary."+aptitude.replace(" ","_")+"{background-color:#1cc88a !important}";
+				style.id = "style-" + aptitude.replace(" ", "_");
+				style.innerHTML = ".badge.badge-pill.badge-secondary." + aptitude.replace(" ", "_") + "{background-color:#1cc88a !important}";
 				document.body.appendChild(style);
 				style.disabled = true;
 				console.log(style);
@@ -1171,7 +1183,7 @@ export class Component {
 			for (let z = 0; z < selectedOptions.length; z++) {
 				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
 				this.configData.aptitudesWishlist.push(aptitude);
-				const style = document.getElementById("style-" + aptitude.replace(" ","_")) as HTMLStyleElement;
+				const style = document.getElementById("style-" + aptitude.replace(" ", "_")) as HTMLStyleElement;
 				style.disabled = false;
 				console.log(style);
 			}

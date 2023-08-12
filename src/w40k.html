@@ -29,47 +29,57 @@ Bookmark (save) this page:
 <a id="saveLinkAlt" href="?">[compressed]</a>
 <br>
 <br>
-<div class="form-group">
-	<label for="aptitudeWishlistSelect">Aptitude wishlist:</label>
-	<select style="height: 204px; width: 100%" multiple data-actions-box="true" id="aptitudeWishlistSelect" name="aptitudeWishlistSelect" class="aptitudeWishlistSelect form-control _selectpicker" data-live-search="true"></select>
-</div>
-<div id="classSelectContainer" class="form-group">
-	<label for="classSelect">Speciality:</label>
-	<select id="classSelect" name="classSelect" class="classSelect form-control _selectpicker" data-live-search="true"></select>
-</div>
-<div id="worldSelectContainer" class="form-group">
-	<label for="worldSelect">World:</label>
-	<select id="worldSelect" name="worldSelect" class="worldSelect form-control _selectpicker" data-live-search="true"></select>
-</div>
-<div id="backgroundSelectContainer" class="form-group">
-	<label for="backgroundSelect">Background:</label>
-	<select id="backgroundSelect" name="backgroundSelect" class="backgroundSelect form-control _selectpicker" data-live-search="true"></select>
-</div>
-<div id="roleSelectContainer" class="form-group">
-	<label for="roleSelect">Role:</label>
-	<select id="roleSelect" name="roleSelect" class="roleSelect form-control _selectpicker" data-live-search="true"></select>
-</div>
-<div class="form-group">
-	<label for="aptitudeSelect">Extra aptitudes:</label>
-	<select style="height: 204px; width: 100%" multiple data-actions-box="true" id="aptitudeSelect" name="aptitudeSelect" class="aptitudeSelect form-control _selectpicker" data-live-search="true"></select>
-</div>
-<div class="form-group">
-	<label for="selectedAptitudes">Resulting aptitudes:</label>
-	<div class="selectedAptitudes" id="selectedAptitudes"></div>
-</div>
-<div class="form-group">
-	<div id="skip0" name="skip0" class="skip0 custom-control custom-checkbox">
-		<input type="checkbox" class="custom-control-input" id="skip0Cb" name="skip0Cb">
-		<label class="custom-control-label" for="skip0Cb">Skip 0 matches</label>
+<h1>Aptitudes</h1>
+<div>
+	<div class="form-group">
+		<label for="aptitudeWishlistSelect">wishlist:</label>
+		<select style="height: 204px; width: 100%" multiple data-actions-box="true" id="aptitudeWishlistSelect" name="aptitudeWishlistSelect" class="aptitudeWishlistSelect form-control _selectpicker" data-live-search="true"></select>
+	</div>
+	<div id="classSelectContainer" class="form-group">
+		<label for="classSelect">Speciality:</label>
+		<select id="classSelect" name="classSelect" class="classSelect form-control _selectpicker" data-live-search="true"></select>
+	</div>
+	<div id="worldSelectContainer" class="form-group">
+		<label for="worldSelect">World:</label>
+		<select id="worldSelect" name="worldSelect" class="worldSelect form-control _selectpicker" data-live-search="true"></select>
+	</div>
+	<div id="backgroundSelectContainer" class="form-group">
+		<label for="backgroundSelect">Background:</label>
+		<select id="backgroundSelect" name="backgroundSelect" class="backgroundSelect form-control _selectpicker" data-live-search="true"></select>
+	</div>
+	<div id="roleSelectContainer" class="form-group">
+		<label for="roleSelect">Role:</label>
+		<select id="roleSelect" name="roleSelect" class="roleSelect form-control _selectpicker" data-live-search="true"></select>
+	</div>
+	<div class="form-group">
+		<label for="aptitudeSelect">Extra aptitudes:</label>
+		<select style="height: 204px; width: 100%" multiple data-actions-box="true" id="aptitudeSelect" name="aptitudeSelect" class="aptitudeSelect form-control _selectpicker" data-live-search="true"></select>
+	</div>
+	<div class="form-group">
+		<label for="selectedAptitudes">Resulting aptitudes:</label>
+		<div class="selectedAptitudes" id="selectedAptitudes"></div>
+	</div>
+	<div class="form-group">
+		<div id="skip0" name="skip0" class="skip0 custom-control custom-checkbox">
+			<input type="checkbox" class="custom-control-input" id="skip0Cb" name="skip0Cb">
+			<label class="custom-control-label" for="skip0Cb">Skip 0 matches</label>
+		</div>
+	</div>
+	<div>
+		<button type="button" class="export_all btn btn-sm btn-primary" id="export_all">Export all to xls</button>
 	</div>
 </div>
-<div>
-	<button type="button" class="export_all btn btn-sm btn-primary" id="export_all">Export all to xls</button>
-</div>
 
+<h1>Characteristics</h1>
 <div>
+	<div class="form-group">
+		<label for="skill_wishlist">wishlist / filter (seperated by enter):</label>
+		<button type="button" class="btn btn-sm btn-danger mb-1" id="characteristic_wishlist_clear">Clear</button>
+		<textarea rows="3" class="wishlist form-control" id="characteristic_wishlist" name="characteristic_wishlist"></textarea>
+	</div>
 	<div>
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export to clipboard</button>
+		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic_wishlist">Export to wishlist</button>
 	</div>
 	<div class="characteristic header">
 		<div>
@@ -82,14 +92,16 @@ Bookmark (save) this page:
 	<div class="tablelike characteristic" id="characteristic"></div>
 </div>
 
+<h1>Skills</h1>
 <div>
 	<div class="form-group">
-		<label for="skill_wishlist">Skill wishlist / filter (seperated by enter):</label>
+		<label for="skill_wishlist">wishlist / filter (seperated by enter):</label>
 		<button type="button" class="btn btn-sm btn-danger mb-1" id="skill_wishlist_clear">Clear</button>
-		<textarea cols="3" class="wishlist form-control" id="skill_wishlist" name="skill_wishlist"></textarea>
+		<textarea rows="3" class="wishlist form-control" id="skill_wishlist" name="skill_wishlist"></textarea>
 	</div>
 	<div>
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export to clipboard</button>
+		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill_wishlist">Export to wishlist</button>
 	</div>
 	<div class="skill header">
 		<div>
@@ -103,11 +115,12 @@ Bookmark (save) this page:
 	<div class="tablelike skill" id="skill"></div>
 </div>
 
+<h1>Talents</h1>
 <div>
 	<div class="form-group">
-		<label for="wishlist">Talent wishlist / filter (seperated by enter):</label>
+		<label for="wishlist">wishlist / filter (seperated by enter):</label>
 		<button type="button" class="btn btn-sm btn-danger mb-1" id="wishlist_clear">Clear</button>
-		<textarea cols="3" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
+		<textarea rows="3" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
 	</div>
 	<div>
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
