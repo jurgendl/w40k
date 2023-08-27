@@ -984,7 +984,7 @@ export class Component {
 	}
 
 	copyToClipboardWishlist(id: string, colIndex: number) {
-		const div = document.getElementById("talent");
+		const div = document.getElementById(id);
 		if (!div) return;
 		let tableHtml = "";
 		for (let i = 0; i < div.children.length; i++) {
