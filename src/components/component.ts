@@ -730,7 +730,7 @@ export class Component {
 				talentApt2.classList.add("m2");
 			}
 			const talentPrerequisites = document.createElement("div");
-			talentPrerequisites.innerHTML = sortedTalents[i].prerequisites;
+			talentPrerequisites.innerHTML = this.replacePrereq(sortedTalents[i].prerequisites);
 			root.appendChild(talentPrerequisites);
 			const talentDescription = document.createElement("div");
 			talentDescription.innerHTML = sortedTalents[i].benefit;
@@ -809,6 +809,25 @@ export class Component {
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
 
 		this.save();
+	}
+
+	private replacePrereq(str: string) {
+		if ('—' == str) return "—";
+		if ('-' == str) return "—";
+		const parts = str.split(',');
+		let rv = "";
+		for (let i = 0; i < parts.length; i++) {
+			let p = parts[i].trim();
+			this.data.talents.forEach((t) => {
+				let title = t.benefit;
+				if (t.ref) title += " ( " + t.ref.replace("PG", "").trim() + " )";
+				p = p.replace(t.talent, `<u title='${title}'>${t.talent}</u>`);
+			});
+			rv += `<li>${p}</li>`;
+		}
+		str = `<ul>${rv}</ul>`;
+		console.log(str);
+		return str;
 	}
 
 	private save() {
