@@ -206,9 +206,9 @@ a.jump-to-anchor {
 	cursor: pointer;
 }
 
-.characteristic:not(.header) > div :nth-child(4n - 1) ,
-.skill:not(.header) > div :nth-child(5n - 2) ,
-.talent:not(.header) > div :nth-child(8n - 4) {
+.characteristic:not(.header) > div > :nth-child(4n - 1) ,
+.skill:not(.header) > div > :nth-child(5n - 2) ,
+.talent:not(.header) > div > :nth-child(8n - 4) {
 	color: aqua;
 }
 

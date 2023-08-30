@@ -713,7 +713,7 @@ export class Component {
 			}
 
 			const talentPrerequisitesDiv = document.createElement("div");
-			this.replacePrereq(talentPrerequisitesDiv, sortedTalents[i].prerequisites);
+			this.replacePrereq(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
 			recordDiv.appendChild(talentPrerequisitesDiv);
 
 			const talentDescriptionDiv = document.createElement("div");
@@ -786,7 +786,7 @@ export class Component {
 		});
 	}
 
-	private replacePrereq(talentPrerequisitesDiv: HTMLDivElement, str: string) {
+	private replacePrereq(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
 		if ('—' == str || '-' == str) {
 			const spanEl = document.createElement("span");
 			spanEl.innerHTML = "—";
@@ -794,25 +794,34 @@ export class Component {
 			return;
 		}
 
+		if ("Sidearm" == talent.talent) {
+			// eslint-disable-next-line no-debugger
+			debugger;
+		}
+
 		const listEl = document.createElement("ul");
-		const parts = str.split(',');
+
+		// split string by comma but not comma inside parenthesis
+		// https://stackoverflow.com/questions/11456850/split-a-string-by-commas-but-ignore-commas-within-double-quotes-using-javascript
+		// eslint-disable-next-line no-useless-escape
+		const parts = str.split(/,(?![^()]*\))/);
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i].trim();
 			const listItemEl = document.createElement("li");
 
 			const partLC = part.toLowerCase();
 			const rangesToreplace: { from: number, to: number, talent: W40KTalent }[] = [];
+			const talentsReplaced: string[] = [];
 			this.data.talents.forEach((t) => {
 				const loc = partLC.indexOf(t.talent.toLowerCase());
-				if (loc >= 0) {
+				if (loc >= 0 && !talentsReplaced.includes(t.talent)) {
+					talentsReplaced.push(t.talent);
 					rangesToreplace.push({from: loc, to: t.talent.length, talent: t});
 				}
 			});
 			if (rangesToreplace.length > 0) {
 				rangesToreplace.sort((a, b) => a.from - b.from);
 				let loc = 0;
-				// eslint-disable-next-line no-debugger
-				debugger;
 				while (loc < part.length) {
 					if (rangesToreplace.length > 0 && rangesToreplace[0].from == loc) {
 						const spanEl = document.createElement("span");
@@ -840,7 +849,6 @@ export class Component {
 			} else {
 				listItemEl.innerText = part;
 			}
-
 
 			/*
 			this.data.talents.forEach((t) => {
