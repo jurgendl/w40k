@@ -3,11 +3,12 @@
 // https://apps.ajott.io/quickref/character.html
 
 import {compressUrlSafe, decompressUrlSafe} from './lzma-url.mjs'
+import 'animate.css';
 
 export enum Aptitude {
-	// common
+	/* common */
 	General = "General",
-	// standard
+	/* standard */
 	Weapon_Skill = "Weapon Skill",
 	Ballistic_Skill = "Ballistic Skill",
 	Strength = "Strength",
@@ -17,7 +18,7 @@ export enum Aptitude {
 	Perception = "Perception",
 	Willpower = "Willpower",
 	Fellowship = "Fellowship",
-	// special
+	/* special */
 	Offence = "Offence",
 	Finesse = "Finesse",
 	Defence = "Defence",
@@ -427,7 +428,7 @@ export class Component {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	triggerRecalc(event: Event | null) {
+	private triggerRecalc(event: Event | null) {
 		// javascript breakpoint
 		// // eslint-disable-next-line no-debugger
 		//debugger;
@@ -618,7 +619,7 @@ export class Component {
 					if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
 						matches++;
 					}
-					skip = this.commonFunc1(cost, j, matches, cost2, skip0CbChecked, skip);
+					skip = this.calcSkipAndSetMatchCount(cost, j, matches, cost2, skip0CbChecked, skip);
 				}
 			}
 			if (skip) {
@@ -642,27 +643,17 @@ export class Component {
 			root.appendChild(characteristicAptitude);
 		}
 
-		const talent = document.getElementById("talent") as HTMLDivElement;
-		talent.innerHTML = "";
+		const talentTable = document.getElementById("talent") as HTMLDivElement;
+		talentTable.innerHTML = "";
 		const sortedTalents = this.data.talents.sort((a, b) => {
 			let amatches = 0;
-			if (this.selectedAptitudes.includes(a.apt1)) {
-				amatches++;
-			}
-			if (this.selectedAptitudes.includes(a.apt2)) {
-				amatches++;
-			}
+			if (this.selectedAptitudes.includes(a.apt1)) amatches++;
+			if (this.selectedAptitudes.includes(a.apt2)) amatches++;
 			let bmatches = 0;
-			if (this.selectedAptitudes.includes(b.apt1)) {
-				bmatches++;
-			}
-			if (this.selectedAptitudes.includes(b.apt2)) {
-				bmatches++;
-			}
-			if (amatches === bmatches) {
-				return a.tier - b.tier;
-			}
-			return -amatches + bmatches;
+			if (this.selectedAptitudes.includes(b.apt1)) bmatches++;
+			if (this.selectedAptitudes.includes(b.apt2)) bmatches++;
+			if (amatches === bmatches) return a.tier - b.tier; // lower tier on top
+			return bmatches - amatches; // more matches on top
 		});
 
 		/*let matches2 = 0;
@@ -672,70 +663,63 @@ export class Component {
 			if (!(wishlistArray.length == 0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
 				continue;
 			}
-			const cost = document.createElement("div");
-			const cost2 = document.createElement("div");
+			const costDiv = document.createElement("div");
+			const matchesDiv = document.createElement("div");
+
 			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if (this.data.costs[j].type === "talent") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
-						matches++;
-					}
-					if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
-						matches++;
-					}
-					/*if (matches == 2) {
-						matches2++;
-					} else if (matches == 1) {
-						matches1++;
-					} else {
-						matches0++;
-					}*/
-					cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][sortedTalents[i].tier - 1];
-					cost.classList.add("m" + matches);
-					cost2.innerHTML = "" + matches;
-					cost2.classList.add("m" + matches);
-					if (matches === 0 && skip0CbChecked) {
-						skip = true;
-					}
+					if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) matches++;
+					if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) matches++;
+					costDiv.innerHTML = "" + this.data.costs[j].cost[2 - matches][sortedTalents[i].tier - 1];
+					costDiv.classList.add("m" + matches);
+					matchesDiv.innerHTML = "" + matches;
+					matchesDiv.classList.add("m" + matches);
+					if (matches === 0 && skip0CbChecked) skip = true;
 				}
 			}
-			// console.log("2 -- 1 -- 0", matches2, matches1, matches0);
-			if (skip) {
-				continue;
-			}
-			const root = document.createElement("div");
-			talent.appendChild(root);
-			root.appendChild(cost)
-			root.appendChild(cost2);
+			if (skip) continue;
+
+			const recordDiv = document.createElement("div");
+			talentTable.appendChild(recordDiv);
+			recordDiv.appendChild(costDiv)
+			recordDiv.appendChild(matchesDiv);
+
 			const talentTier = document.createElement("div");
 			talentTier.innerHTML = "T" + sortedTalents[i].tier;
-			root.appendChild(talentTier);
-			const talentName = document.createElement("div");
-			talentName.innerHTML = sortedTalents[i].talent;
-			root.appendChild(talentName);
-			talentName.title = sortedTalents[i].benefit;
-			if (sortedTalents[i].ref) talentName.title += " ( " + sortedTalents[i].ref.replace("PG", "").trim() + " )";
-			const talentApt1 = document.createElement("div");
-			talentApt1.innerHTML = sortedTalents[i].apt1;
-			root.appendChild(talentApt1);
+			recordDiv.appendChild(talentTier);
+
+			const talentNameDiv = document.createElement("div");
+			talentNameDiv.innerHTML = sortedTalents[i].talent;
+			recordDiv.appendChild(talentNameDiv);
+			talentNameDiv.title = sortedTalents[i].benefit;
+			talentNameDiv.id = sortedTalents[i].talent;
+			if (sortedTalents[i].ref) talentNameDiv.title += " ( " + sortedTalents[i].ref.replace("PG", "").trim() + " )";
+
+			const talentApt1Div = document.createElement("div");
+			talentApt1Div.innerHTML = sortedTalents[i].apt1;
+			recordDiv.appendChild(talentApt1Div);
 			if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
-				talentApt1.classList.add("m2");
+				talentApt1Div.classList.add("m2");
 			}
-			const talentApt2 = document.createElement("div");
-			talentApt2.innerHTML = sortedTalents[i].apt2;
-			root.appendChild(talentApt2);
+
+			const talentApt2Div = document.createElement("div");
+			talentApt2Div.innerHTML = sortedTalents[i].apt2;
+			recordDiv.appendChild(talentApt2Div);
 			if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
-				talentApt2.classList.add("m2");
+				talentApt2Div.classList.add("m2");
 			}
-			const talentPrerequisites = document.createElement("div");
-			talentPrerequisites.innerHTML = this.replacePrereq(sortedTalents[i].prerequisites);
-			root.appendChild(talentPrerequisites);
-			const talentDescription = document.createElement("div");
-			talentDescription.innerHTML = sortedTalents[i].benefit;
-			talentDescription.style.display = "none";
-			root.appendChild(talentDescription);
+
+			const talentPrerequisitesDiv = document.createElement("div");
+			this.replacePrereq(talentPrerequisitesDiv, sortedTalents[i].prerequisites);
+			recordDiv.appendChild(talentPrerequisitesDiv);
+
+			const talentDescriptionDiv = document.createElement("div");
+			talentDescriptionDiv.innerHTML = sortedTalents[i].benefit;
+			talentDescriptionDiv.style.display = "none";
+			recordDiv.appendChild(talentDescriptionDiv);
 		}
 
 		// iterate over array this.data.skills
@@ -743,65 +727,46 @@ export class Component {
 		skill.innerHTML = "";
 		const sortedSkills = this.data.skills.sort((a, b) => {
 			let amatches = 0;
-			if (this.selectedAptitudes.includes(a.aptitudes[0])) {
-				amatches++;
-			}
-			if (this.selectedAptitudes.includes(a.aptitudes[1])) {
-				amatches++;
-			}
+			if (this.selectedAptitudes.includes(a.aptitudes[0])) amatches++;
+			if (this.selectedAptitudes.includes(a.aptitudes[1])) amatches++;
 			let bmatches = 0;
-			if (this.selectedAptitudes.includes(b.aptitudes[0])) {
-				bmatches++;
-			}
-			if (this.selectedAptitudes.includes(b.aptitudes[1])) {
-				bmatches++;
-			}
-			return -amatches + bmatches;
+			if (this.selectedAptitudes.includes(b.aptitudes[0])) bmatches++;
+			if (this.selectedAptitudes.includes(b.aptitudes[1])) bmatches++;
+			return bmatches - amatches;
 		});
 		for (let i = 0; i < sortedSkills.length; i++) {
 			if (!(skill_wishlistArray.length == 0 || skill_wishlistArray.includes(sortedSkills[i].name.toLowerCase().trim()))) {
 				continue;
 			}
-			const cost = document.createElement("div");
-			const cost2 = document.createElement("div");
+			const costDiv = document.createElement("div");
+			const matchesDiv = document.createElement("div");
 			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if (this.data.costs[j].type === "skill") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[0])) {
-						matches++;
-					}
-					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) {
-						matches++;
-					}
-					skip = this.commonFunc1(cost, j, matches, cost2, skip0CbChecked, skip);
-					/*cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
-					cost.classList.add("m" + matches);
-					cost2.innerHTML = "" + matches;
-					cost2.classList.add("m" + matches);
-					if (matches === 0 && skip0CbChecked) {
-						skip = true;
-					}*/
+					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[0])) matches++;
+					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) matches++;
+					skip = this.calcSkipAndSetMatchCount(costDiv, j, matches, matchesDiv, skip0CbChecked, skip);
 				}
 			}
-			if (skip) {
-				continue;
-			}
-			const root = document.createElement("div");
-			skill.appendChild(root);
-			root.appendChild(cost);
-			root.appendChild(cost2);
+			if (skip) continue;
+
+			const rootDiv = document.createElement("div");
+			skill.appendChild(rootDiv);
+			rootDiv.appendChild(costDiv);
+			rootDiv.appendChild(matchesDiv);
+
 			const skillName = document.createElement("div");
 			skillName.innerHTML = sortedSkills[i].name;
-			root.appendChild(skillName);
+			rootDiv.appendChild(skillName);
 			for (let j = 0; j < sortedSkills[i].aptitudes.length; j++) {
 				const skillApt = document.createElement("div");
 				skillApt.innerHTML = sortedSkills[i].aptitudes[j];
 				if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[j])) {
 					skillApt.classList.add("m2");
 				}
-				root.appendChild(skillApt);
+				rootDiv.appendChild(skillApt);
 			}
 		}
 
@@ -811,23 +776,96 @@ export class Component {
 		this.save();
 	}
 
-	private replacePrereq(str: string) {
-		if ('—' == str) return "—";
-		if ('-' == str) return "—";
+	scrollToAnchor(anchorId: string) {
+		const $toEl = document.getElementById(anchorId);
+		const $offset = $toEl!.getBoundingClientRect().top + window.pageYOffset - 100;
+		window.scrollTo({top: $offset, behavior: "auto"});
+		$toEl!.classList.add("animate__animated", "animate__faster", "animate__flash");
+		$toEl!.addEventListener("animationend", () => {
+			$toEl!.classList.remove("animate__animated", "animate__faster", "animate__flash")
+		});
+	}
+
+	private replacePrereq(talentPrerequisitesDiv: HTMLDivElement, str: string) {
+		if ('—' == str || '-' == str) {
+			const spanEl = document.createElement("span");
+			spanEl.innerHTML = "—";
+			talentPrerequisitesDiv.appendChild(spanEl);
+			return;
+		}
+
+		const listEl = document.createElement("ul");
 		const parts = str.split(',');
-		let rv = "";
 		for (let i = 0; i < parts.length; i++) {
-			let p = parts[i].trim();
+			const part = parts[i].trim();
+			const listItemEl = document.createElement("li");
+
+			const partLC = part.toLowerCase();
+			const rangesToreplace: { from: number, to: number, talent: W40KTalent }[] = [];
+			this.data.talents.forEach((t) => {
+				const loc = partLC.indexOf(t.talent.toLowerCase());
+				if (loc >= 0) {
+					rangesToreplace.push({from: loc, to: t.talent.length, talent: t});
+				}
+			});
+			if (rangesToreplace.length > 0) {
+				rangesToreplace.sort((a, b) => a.from - b.from);
+				let loc = 0;
+				// eslint-disable-next-line no-debugger
+				debugger;
+				while (loc < part.length) {
+					if (rangesToreplace.length > 0 && rangesToreplace[0].from == loc) {
+						const spanEl = document.createElement("span");
+						spanEl.classList.add("jump-to-anchor");
+						spanEl.setAttribute("title", rangesToreplace[0].talent.benefit);
+						const talentName = rangesToreplace[0].talent.talent;
+						spanEl.innerText = talentName;
+						spanEl.setAttribute("data-talent", talentName);
+						spanEl.onclick = () => this.scrollToAnchor(talentName);
+						listItemEl.appendChild(spanEl);
+						loc += rangesToreplace[0].to;
+						rangesToreplace.shift();
+					} else if (rangesToreplace.length > 0) {
+						const spanEl = document.createElement("span");
+						spanEl.innerText = part.substring(loc, rangesToreplace[0].from);
+						listItemEl.appendChild(spanEl);
+						loc = rangesToreplace[0].from;
+					} else {
+						const spanEl = document.createElement("span");
+						spanEl.innerText = part.substring(loc);
+						listItemEl.appendChild(spanEl);
+						loc = part.length;
+					}
+				}
+			} else {
+				listItemEl.innerText = part;
+			}
+
+
+			/*
 			this.data.talents.forEach((t) => {
 				let title = t.benefit;
 				if (t.ref) title += " ( " + t.ref.replace("PG", "").trim() + " )";
-				p = p.replace(t.talent, `<u title='${title}'>${t.talent}</u>`);
+				// https://css-tricks.com/snippets/jquery/smooth-scrolling/
+				// https://animate.style/
+				// $toEl.scrollIntoView({behavior:"smooth"})
+				// window.scrollTo({top:$toEl.getBoundingClientRect().top+window.pageYOffset,behavior:"smooth"})
+				const spanEl = document.createElement("span");
+				spanEl.classList.add("jump-to-anchor");
+				//spanEl.setAttribute("href", "#" + t.talent);
+				spanEl.setAttribute("title", title);
+				spanEl.innerText = t.talent;
+				spanEl.onclick = () => this.scrollToAnchor(t.talent);
+				console.log(spanEl.outerHTML);
+				p = p.replace(t.talent, spanEl.outerHTML);
+				//p = p.replace(t.talent, `<span onclick='this.scrollToAnchor("${t.talent}")' class='jump-to-anchor' _href='#${t.talent}' title='${title}'>${t.talent}</span>`);
 			});
-			rv += `<li>${p}</li>`;
+			*/
+
+			listEl.appendChild(listItemEl);
 		}
-		str = `<ul>${rv}</ul>`;
-		console.log(str);
-		return str;
+
+		talentPrerequisitesDiv.appendChild(listEl);
 	}
 
 	private save() {
@@ -864,18 +902,16 @@ export class Component {
 		saveLinkAlt!.href = "?source=" + this.source + "&cfg=" + compressedSerializedData;
 	}
 
-	private commonFunc1(cost: HTMLDivElement, j: number, matches: number, cost2: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
-		cost.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
-		cost.classList.add("m" + matches);
-		cost2.innerHTML = "" + matches;
-		cost2.classList.add("m" + matches);
-		if (matches === 0 && skip0CbChecked) {
-			skip = true;
-		}
+	private calcSkipAndSetMatchCount(costDiv: HTMLDivElement, j: number, matches: number, matchesDiv: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
+		costDiv.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
+		costDiv.classList.add("m" + matches);
+		matchesDiv.innerHTML = "" + matches;
+		matchesDiv.classList.add("m" + matches);
+		if (matches === 0 && skip0CbChecked) skip = true;
 		return skip;
 	}
 
-	exportAllTableToExcelDef(divId1: string, divId2: string, divId3: string) {
+	private exportAllTableToExcelDef(divId1: string, divId2: string, divId3: string) {
 		document.getElementById("exportTableToExcelDef")?.remove();
 		const tableHtml1 = this.exportDivToTable(divId1);
 		const tableHtml2 = this.exportDivToTable(divId2);
@@ -925,43 +961,41 @@ export class Component {
 		this.exportTableToExcel("exportTableToExcelDef", "all");
 	}
 
-	exportTableToExcelDef(divId: string) {
+	private exportTableToExcelDef(divId: string) {
 		document.getElementById("exportTableToExcelDef")?.remove();
 		const tableHtml = this.exportDivToTable(divId);
 		if (!tableHtml) return;
-		const d = document.createElement("div");
-		d.innerHTML = tableHtml;
-		d.style.display = "none";
-		d.id = "exportTableToExcelDef";
-		document.body.appendChild(d);
-		this.exportTableToExcel("exportTableToExcelDef", divId);
+		const divElement = document.createElement("div");
+		divElement.innerHTML = tableHtml;
+		divElement.style.display = "none";
+		divElement.id = "exportTableToExcelDef";
+		document.body.appendChild(divElement);
+		this.exportTableToExcel(divElement.id, divId);
 	}
 
-	exportDivToTable(divId: string, plain = false) {
-		const div = document.getElementById(divId);
-		if (!div) return;
+	private exportDivToTable(divId: string, plain = false) {
+		const divElement = document.getElementById(divId);
+		if (!divElement) return;
 		// iterate over divs inside div
 		let tab = "";
 		if (!plain) tab += "<table>";
-		for (let i = 0; i < div.children.length; i++) {
+		for (let i = 0; i < divElement.children.length; i++) {
 			if (!plain) tab += "<tr>";
-			const r = div.children[i] as HTMLDivElement;
+			const r = divElement.children[i] as HTMLDivElement;
 			for (let j = 0; j < r.children.length; j++) {
 				const c = r.children[j] as HTMLDivElement;
 				if (!plain) tab += "<td>";
 				tab += c.innerHTML;
-				if (!plain) tab += "</td>";
-				else tab += "\t";
+				if (!plain) tab += "</td>"; else tab += "\t";
 			}
-			if (!plain) tab += "</tr>";
-			else tab += "\n";
+			if (!plain) tab += "</tr>"; else tab += "\n";
 		}
 		if (!plain) tab += "</table>";
 		return tab;
 	}
 
 	// https://www.codexworld.com/export-html-table-data-to-excel-using-javascript/
-	exportTableToExcel(tableID: string, filename = '') {
+	private exportTableToExcel(tableID: string, filename = '') {
 		const dataType = 'application/vnd.ms-excel';
 		const tableSelect = document.getElementById(tableID);
 		if (!tableSelect) return;
@@ -988,21 +1022,21 @@ export class Component {
 		}
 	}
 
-	copyToClipboard(divId: string) {
+	private copyToClipboard(divId: string) {
 		const tableHtml = this.exportDivToTable(divId, true);
 		if (!tableHtml) return;
 		document.getElementById("textarea_c_" + divId)?.remove();
-		const d: HTMLTextAreaElement = document.createElement("textarea");
-		d.innerHTML = tableHtml;
-		d.style.display = "none";
-		d.id = "textarea_c_" + divId;
-		document.body.appendChild(d);
-		d.select();
-		d.setSelectionRange(0, 99999); // For mobile devices
-		navigator.clipboard.writeText(d.value);
+		const textAreaElement: HTMLTextAreaElement = document.createElement("textarea");
+		textAreaElement.innerHTML = tableHtml;
+		textAreaElement.style.display = "none";
+		textAreaElement.id = "textarea_c_" + divId;
+		document.body.appendChild(textAreaElement);
+		textAreaElement.select();
+		textAreaElement.setSelectionRange(0, 99999); // For mobile devices
+		navigator.clipboard.writeText(textAreaElement.value);
 	}
 
-	copyToClipboardWishlist(id: string, colIndex: number) {
+	private copyToClipboardWishlist(id: string, colIndex: number) {
 		const div = document.getElementById(id);
 		if (!div) return;
 		let tableHtml = "";
@@ -1014,15 +1048,15 @@ export class Component {
 			}
 		}
 		document.getElementById("textarea_copy_" + id)?.remove();
-		const d: HTMLTextAreaElement = document.createElement("textarea");
-		d.innerHTML = tableHtml;
-		d.style.display = "none";
-		d.id = "textarea_copy_" + id;
-		document.body.appendChild(d);
-		d.select();
-		d.setSelectionRange(0, 99999); // For mobile devices
-		console.log(d.value);
-		navigator.clipboard.writeText(d.value);
+		const textAreaElement: HTMLTextAreaElement = document.createElement("textarea");
+		textAreaElement.innerHTML = tableHtml;
+		textAreaElement.style.display = "none";
+		textAreaElement.id = "textarea_copy_" + id;
+		document.body.appendChild(textAreaElement);
+		textAreaElement.select();
+		textAreaElement.setSelectionRange(0, 99999); // For mobile devices
+		console.log(textAreaElement.value);
+		navigator.clipboard.writeText(textAreaElement.value);
 	}
 
 	/*aptitude(key: string): Aptitude | null {
@@ -1036,7 +1070,7 @@ export class Component {
 		return null;
 	}*/
 
-	logMatchingWorlds(event: Event, data: W40KData) {
+	private logMatchingWorlds(event: Event, data: W40KData) {
 		if (!data.worlds || data.worlds.length == 0) return;
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
@@ -1071,7 +1105,7 @@ export class Component {
 		}
 	}
 
-	logMatchingBackgrounds(event: Event, data: W40KData) {
+	private logMatchingBackgrounds(event: Event, data: W40KData) {
 		if (!data.backgrounds || data.backgrounds.length == 0) return;
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
@@ -1106,7 +1140,7 @@ export class Component {
 		}
 	}
 
-	logMatchingRoles(event: Event, data: W40KData) {
+	private logMatchingRoles(event: Event, data: W40KData) {
 		if (!data.roles || data.roles.length == 0) return;
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
@@ -1143,7 +1177,7 @@ export class Component {
 		}
 	}
 
-	logMatchingClasses(event: Event, data: W40KData) {
+	private logMatchingClasses(event: Event, data: W40KData) {
 		if (!data.classes || data.classes.length == 0) return;
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		if (aptitudeSelect.selectedIndex >= 0) {
@@ -1180,7 +1214,7 @@ export class Component {
 		}
 	}
 
-	styleAptitudeMatches(event: Event | null, data: W40KData) {
+	private styleAptitudeMatches(event: Event | null, data: W40KData) {
 		for (let z = 0; z < data.optional.length; z++) {
 			const aptitude = data.optional[z];
 			let style = document.getElementById("style-" + aptitude.replace(" ", "_")) as HTMLStyleElement;
