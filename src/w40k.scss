@@ -212,6 +212,10 @@ a.jump-to-anchor {
 	color: aqua;
 }
 
+.characteristic:not(.header) > div > :nth-child(4n - 1).m2 {
+	color: darken(lightgreen, 30%);
+}
+
 .animate__animated {
 	--animate-duration: 4s !important;
 }
