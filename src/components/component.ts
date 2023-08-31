@@ -2,6 +2,10 @@
 // https://developer.snapappointments.com/bootstrap-select/
 // https://apps.ajott.io/quickref/character.html
 
+// javascript breakpoint
+// // eslint-disable-next-line no-debugger
+//debugger;
+
 import {compressUrlSafe, decompressUrlSafe} from './lzma-url.mjs'
 import 'animate.css';
 
@@ -155,7 +159,54 @@ class ConfigData {
 	}
 }
 
+class Tree {
+	nodeMap = new Map<string, Node>();
+
+	rootNode = new Node("");
+
+	lookup(name: string): Node {
+		if (!this.nodeMap.has(name)) {
+			this.nodeMap.set(name, new Node(name));
+		}
+		return this.nodeMap.get(name) as Node;
+	}
+
+	addChild(parent: Node, child: Node): void {
+		parent.children.push(child);
+		child.parents.push(parent);
+	}
+
+	buildTree(): Tree {
+		for (const node of this.nodeMap.values()) {
+			if (node.parents.length === 0) {
+				this.addChild(this.rootNode, node);
+			}
+		}
+		return this;
+	}
+}
+
+class Node {
+	name: string;
+	parents: Node[];
+	children: Node[];
+	data: any;
+
+	constructor(name: string) {
+		this.name = name;
+		this.data = null;
+		this.parents = [];
+		this.children = [];
+	}
+}
+
 export class Component {
+	tree = new Tree();
+	data!: W40KData;
+	configData: ConfigData = new ConfigData();
+	selectedAptitudes: Aptitude[] = [];
+	source = "ow";
+
 	init(): void {
 		const queryString = window.location.search;
 		const urlParams = new URLSearchParams(queryString);
@@ -166,14 +217,6 @@ export class Component {
 			.then((response) => response.json())
 			.then((data) => this.app(data, source, configDateParam));
 	}
-
-	data!: W40KData;
-
-	configData: ConfigData = new ConfigData();
-
-	selectedAptitudes: Aptitude[] = [];
-
-	source = "ow";
 
 	app(data: W40KData, source: string, configDateParam: string | null): void {
 		this.data = data;
@@ -308,34 +351,32 @@ export class Component {
 				roleSelect.add(option);
 			}
 			// add event listener to select element
-			roleSelect.addEventListener("change", (event) => {
-				this.triggerRecalc(event);
-			});
+			roleSelect.addEventListener("change", (event) => this.triggerRecalc(event));
 		} else {
 			roleSelectContainer.style.display = "none";
 		}
 
 		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
 		for (let i = 0; i < this.data.optional.length; i++) {
-			const option = document.createElement("option");
-			option.text = this.data.optional[i];
-			option.value = this.data.optional[i];
+			const aptitudeSelectOption = document.createElement("option");
+			aptitudeSelectOption.text = this.data.optional[i];
+			aptitudeSelectOption.value = this.data.optional[i];
 			if (this.configData.extraAptitudesSelected && this.configData.extraAptitudesSelected.includes(this.data.optional[i])) {
-				option.selected = true;
+				aptitudeSelectOption.selected = true;
 			}
-			aptitudeSelect.add(option);
+			aptitudeSelect.add(aptitudeSelectOption);
 		}
 		aptitudeSelect.addEventListener("change", (event) => this.triggerRecalc(event));
 
 		const aptitudeWishlistSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
 		for (let i = 0; i < this.data.optional.length; i++) {
-			const option = document.createElement("option");
-			option.text = this.data.optional[i];
-			option.value = this.data.optional[i];
+			const aptitudeWishlistSelectOption = document.createElement("option");
+			aptitudeWishlistSelectOption.text = this.data.optional[i];
+			aptitudeWishlistSelectOption.value = this.data.optional[i];
 			if (this.configData.aptitudesWishlist && this.configData.aptitudesWishlist.includes(this.data.optional[i])) {
-				option.selected = true;
+				aptitudeWishlistSelectOption.selected = true;
 			}
-			aptitudeWishlistSelect.add(option);
+			aptitudeWishlistSelect.add(aptitudeWishlistSelectOption);
 		}
 		aptitudeWishlistSelect.addEventListener("change", (event) => {
 			this.logMatchingClasses(event, data);
@@ -414,6 +455,15 @@ export class Component {
 		this.styleAptitudeMatches(null, data);
 	}
 
+	scrollToAnchor(anchorId: string) {
+		const $toEl = document.getElementById(anchorId) as HTMLElement;
+		const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
+		window.scrollTo({top: $offset, behavior: "auto"});
+		const classList = ["animate__animated", "animate__faster", "animate__flash"];
+		$toEl.classList.add(...classList);
+		$toEl.addEventListener("animationend", () => $toEl.classList.remove(...classList));
+	}
+
 	private commonFunc2(apts: Aptitude[]) {
 		let apt = "";
 		let aptalt = "";
@@ -429,11 +479,9 @@ export class Component {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private triggerRecalc(event: Event | null) {
-		// javascript breakpoint
-		// // eslint-disable-next-line no-debugger
-		//debugger;
-
 		console.log("triggerRecalc");
+
+		this.tree = new Tree();
 
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
 		this.configData.wishlist = wishlist.value;
@@ -587,59 +635,46 @@ export class Component {
 
 		const sortedCharacteristic = this.data.characteristic.sort((a, b) => {
 			let amatches = 0;
-			if (this.selectedAptitudes.includes(a.name)) {
-				amatches++;
-			}
-			if (this.selectedAptitudes.includes(a.aptitude)) {
-				amatches++;
-			}
+			if (this.selectedAptitudes.includes(a.name)) amatches++;
+			if (this.selectedAptitudes.includes(a.aptitude)) amatches++;
 			let bmatches = 0;
-			if (this.selectedAptitudes.includes(b.name)) {
-				bmatches++;
-			}
-			if (this.selectedAptitudes.includes(b.aptitude)) {
-				bmatches++;
-			}
-			return -amatches + bmatches;
+			if (this.selectedAptitudes.includes(b.name)) bmatches++;
+			if (this.selectedAptitudes.includes(b.aptitude)) bmatches++;
+			return bmatches - amatches;
 		});
 		for (let i = 0; i < sortedCharacteristic.length; i++) {
 			if (!(characteristic_wishlistArray.length == 0 || characteristic_wishlistArray.includes(sortedCharacteristic[i].name.toLowerCase().trim()))) {
 				continue;
 			}
-			const cost = document.createElement("div");
-			const cost2 = document.createElement("div");
+
+			const costDiv = document.createElement("div");
+			const matchesDiv = document.createElement("div");
+
 			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
 				if (this.data.costs[j].type === "characteristic") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
-						matches++;
-					}
-					if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
-						matches++;
-					}
-					skip = this.calcSkipAndSetMatchCount(cost, j, matches, cost2, skip0CbChecked, skip);
+					if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) matches++;
+					if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) matches++;
+					skip = this.calcSkipAndSetMatchCount(costDiv, j, matches, matchesDiv, skip0CbChecked, skip);
 				}
 			}
-			if (skip) {
-				continue;
-			}
+			if (skip) continue;
+
 			const root = document.createElement("div");
 			characteristic.appendChild(root);
-			root.appendChild(cost);
-			root.appendChild(cost2);
+			root.appendChild(costDiv);
+			root.appendChild(matchesDiv);
+
 			const characteristicName = document.createElement("div");
 			characteristicName.innerHTML = sortedCharacteristic[i].name;
-			if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) {
-				characteristicName.classList.add("m2");
-			}
+			if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) characteristicName.classList.add("m2");
 			root.appendChild(characteristicName);
+
 			const characteristicAptitude = document.createElement("div");
 			characteristicAptitude.innerHTML = sortedCharacteristic[i].aptitude;
-			if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) {
-				characteristicAptitude.classList.add("m2");
-			}
+			if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) characteristicAptitude.classList.add("m2");
 			root.appendChild(characteristicAptitude);
 		}
 
@@ -663,6 +698,7 @@ export class Component {
 			if (!(wishlistArray.length == 0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
 				continue;
 			}
+
 			const costDiv = document.createElement("div");
 			const matchesDiv = document.createElement("div");
 
@@ -701,16 +737,12 @@ export class Component {
 			const talentApt1Div = document.createElement("div");
 			talentApt1Div.innerHTML = sortedTalents[i].apt1;
 			recordDiv.appendChild(talentApt1Div);
-			if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) {
-				talentApt1Div.classList.add("m2");
-			}
+			if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) talentApt1Div.classList.add("m2");
 
 			const talentApt2Div = document.createElement("div");
 			talentApt2Div.innerHTML = sortedTalents[i].apt2;
 			recordDiv.appendChild(talentApt2Div);
-			if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) {
-				talentApt2Div.classList.add("m2");
-			}
+			if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) talentApt2Div.classList.add("m2");
 
 			const talentPrerequisitesDiv = document.createElement("div");
 			this.replacePrereq(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
@@ -770,20 +802,12 @@ export class Component {
 			}
 		}
 
+		console.log("tree", this.tree.buildTree().rootNode);
+
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
 
 		this.save();
-	}
-
-	scrollToAnchor(anchorId: string) {
-		const $toEl = document.getElementById(anchorId);
-		const $offset = $toEl!.getBoundingClientRect().top + window.pageYOffset - 100;
-		window.scrollTo({top: $offset, behavior: "auto"});
-		$toEl!.classList.add("animate__animated", "animate__faster", "animate__flash");
-		$toEl!.addEventListener("animationend", () => {
-			$toEl!.classList.remove("animate__animated", "animate__faster", "animate__flash")
-		});
 	}
 
 	private replacePrereq(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
@@ -794,11 +818,6 @@ export class Component {
 			return;
 		}
 
-		if ("Sidearm" == talent.talent) {
-			// eslint-disable-next-line no-debugger
-			debugger;
-		}
-
 		const listEl = document.createElement("ul");
 
 		// split string by comma but not comma inside parenthesis
@@ -807,47 +826,51 @@ export class Component {
 		const parts = str.split(/,(?![^()]*\))/);
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i].trim();
-			const listItemEl = document.createElement("li");
+			const listItemTag = document.createElement("li");
 
 			const partLC = part.toLowerCase();
-			const rangesToreplace: { from: number, to: number, talent: W40KTalent }[] = [];
+			const rangesToReplace: { from: number, to: number, talent: W40KTalent }[] = [];
 			const talentsReplaced: string[] = [];
 			this.data.talents.forEach((t) => {
 				const loc = partLC.indexOf(t.talent.toLowerCase());
 				if (loc >= 0 && !talentsReplaced.includes(t.talent)) {
 					talentsReplaced.push(t.talent);
-					rangesToreplace.push({from: loc, to: t.talent.length, talent: t});
+					rangesToReplace.push({from: loc, to: t.talent.length, talent: t});
+
+					const parent = this.tree.lookup(t.talent);
+					const child = this.tree.lookup(talent.talent);
+					this.tree.addChild(parent, child);
 				}
 			});
-			if (rangesToreplace.length > 0) {
-				rangesToreplace.sort((a, b) => a.from - b.from);
+			if (rangesToReplace.length > 0) {
+				rangesToReplace.sort((a, b) => a.from - b.from);
 				let loc = 0;
 				while (loc < part.length) {
-					if (rangesToreplace.length > 0 && rangesToreplace[0].from == loc) {
+					if (rangesToReplace.length > 0 && rangesToReplace[0].from == loc) {
 						const spanEl = document.createElement("span");
 						spanEl.classList.add("jump-to-anchor");
-						spanEl.setAttribute("title", rangesToreplace[0].talent.benefit);
-						const talentName = rangesToreplace[0].talent.talent;
+						spanEl.setAttribute("title", rangesToReplace[0].talent.benefit);
+						const talentName = rangesToReplace[0].talent.talent;
 						spanEl.innerText = talentName;
 						spanEl.setAttribute("data-talent", talentName);
 						spanEl.onclick = () => this.scrollToAnchor(talentName);
-						listItemEl.appendChild(spanEl);
-						loc += rangesToreplace[0].to;
-						rangesToreplace.shift();
-					} else if (rangesToreplace.length > 0) {
+						listItemTag.appendChild(spanEl);
+						loc += rangesToReplace[0].to;
+						rangesToReplace.shift();
+					} else if (rangesToReplace.length > 0) {
 						const spanEl = document.createElement("span");
-						spanEl.innerText = part.substring(loc, rangesToreplace[0].from);
-						listItemEl.appendChild(spanEl);
-						loc = rangesToreplace[0].from;
+						spanEl.innerText = part.substring(loc, rangesToReplace[0].from);
+						listItemTag.appendChild(spanEl);
+						loc = rangesToReplace[0].from;
 					} else {
 						const spanEl = document.createElement("span");
 						spanEl.innerText = part.substring(loc);
-						listItemEl.appendChild(spanEl);
+						listItemTag.appendChild(spanEl);
 						loc = part.length;
 					}
 				}
 			} else {
-				listItemEl.innerText = part;
+				listItemTag.innerText = part;
 			}
 
 			/*
@@ -870,7 +893,7 @@ export class Component {
 			});
 			*/
 
-			listEl.appendChild(listItemEl);
+			listEl.appendChild(listItemTag);
 		}
 
 		talentPrerequisitesDiv.appendChild(listEl);
