@@ -162,7 +162,7 @@ class ConfigData {
 class Tree {
 	nodeMap = new Map<string, Node>();
 
-	rootNode = new Node("");
+	rootNode = new Node("*");
 
 	lookup(name: string): Node {
 		if (!this.nodeMap.has(name)) {
@@ -802,12 +802,34 @@ export class Component {
 			}
 		}
 
-		console.log("tree", this.tree.buildTree().rootNode);
+		this.buildChart();
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
 
 		this.save();
+	}
+
+	private buildChart() {
+		function treeToData(node: Node, parentNodeData: any) {
+			node.children.forEach((child) => {
+				const childData = {name: child.name, parent: node.name, children: []};
+				parentNodeData.children.push(childData);
+				treeToData(child, childData);
+			});
+		}
+
+		// https://gist.github.com/d3noob/8375092
+		//console.log("tree", this.tree.buildTree().rootNode);
+		//const chartTag = document.getElementById("chart") as HTMLDivElement;
+		const treeDataRootNode = {name: this.tree.rootNode.name, parent: null, children: []};
+		treeToData(this.tree.rootNode, treeDataRootNode);
+		//console.log("treeDataRootNode", JSON.stringify(treeDataRootNode, null, "\t"));
+
+		const margin = {top: 20, right: 100, bottom: 20, left: 100};
+		const width = 1000 - margin.right - margin.left;
+		const height = (treeDataRootNode.children.length * 30) - margin.top - margin.bottom;
+		//console.log("width", width, "height", height);
 	}
 
 	private replacePrereq(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
@@ -1257,7 +1279,7 @@ export class Component {
 				style.innerHTML = ".badge.badge-pill.badge-secondary." + aptitude.replace(" ", "_") + "{background-color:#1cc88a !important}";
 				document.body.appendChild(style);
 				style.disabled = true;
-				console.log(style);
+				//console.log(style);
 			}
 		}
 		const aptitudeSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
@@ -1269,7 +1291,7 @@ export class Component {
 				this.configData.aptitudesWishlist.push(aptitude);
 				const style = document.getElementById("style-" + aptitude.replace(" ", "_")) as HTMLStyleElement;
 				style.disabled = false;
-				console.log(style);
+				//console.log(style);
 			}
 		}
 		this.save();
