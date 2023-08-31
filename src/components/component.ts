@@ -162,13 +162,18 @@ class ConfigData {
 class Tree {
 	nodeMap = new Map<string, Node>();
 
-	rootNode = new Node("*");
+	rootNode = new Node("");
+
+	nodeCount = 0;
 
 	lookup(name: string): Node {
-		if (!this.nodeMap.has(name)) {
-			this.nodeMap.set(name, new Node(name));
+		let node = this.nodeMap.get(name);
+		if (!node) {
+			this.nodeCount++;
+			node = new Node(name);
+			this.nodeMap.set(name, node);
 		}
-		return this.nodeMap.get(name) as Node;
+		return node;
 	}
 
 	addChild(parent: Node, child: Node): void {
@@ -182,6 +187,14 @@ class Tree {
 				this.addChild(this.rootNode, node);
 			}
 		}
+
+		// iterate over all nodes and sort children by name
+		for (const node of this.nodeMap.values()) {
+			node.children.sort((a, b) => a.name.localeCompare(b.name));
+		}
+
+		this.rootNode.children.sort((a, b) => a.name.localeCompare(b.name));
+
 		return this;
 	}
 }
@@ -815,7 +828,7 @@ export class Component {
 
 		function treeToData(node: Node, parentNodeData: any) {
 			node.children.forEach((child) => {
-				const childData = {name: child.name, parent: node.name, children: []};
+				const childData = {name: child.name, parent: node.name, children: [], data: child.data};
 				parentNodeData.children.push(childData);
 				treeToData(child, childData);
 			});
@@ -826,7 +839,7 @@ export class Component {
 		const treeDataRootNode = {name: this.tree.rootNode.name, parent: null, children: []};
 		treeToData(this.tree.rootNode, treeDataRootNode);
 		//console.log("treeDataRootNode", JSON.stringify(treeDataRootNode, null, "\t"));
-		drawChart(treeDataRootNode);
+		drawChart(treeDataRootNode, this.tree.nodeCount);
 	}
 
 	private replacePrereq(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
@@ -857,7 +870,9 @@ export class Component {
 					rangesToReplace.push({from: loc, to: t.talent.length, talent: t});
 
 					const parent = this.tree.lookup(t.talent);
+					parent.data = t;
 					const child = this.tree.lookup(talent.talent);
+					child.data = talent;
 					this.tree.addChild(parent, child);
 				}
 			});

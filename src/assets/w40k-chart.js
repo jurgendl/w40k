@@ -1,14 +1,31 @@
 // https://gist.github.com/d3noob/8375092
 // https://codepen.io/augbog/pen/LEXZKK
-//https://codepen.io/zhulinpinyu/pen/EaZrmM
+// https://codepen.io/zhulinpinyu/pen/EaZrmM
+// https://codepen.io/nporto/pen/zryaeZ
 
+function eliminateDuplicates(arr) {
+	var i,
+		len = arr.length,
+		out = [],
+		obj = {};
 
-function drawChart(treeRootNode) {
+	for (i = 0; i < len; i++) {
+		obj[arr[i]] = 0;
+	}
+	for (i in obj) {
+		out.push(i);
+	}
+	return out;
+}
+
+function drawChart(treeRootNode, count) {
+	document.getElementById("body").innerHTML = "";
+
 	var json_data = treeRootNode;
 
 	var m = [20, 20, 20, 20],
 		w = 1920 - m[1] - m[3],
-		h = (1024 * 2) - m[0] - m[2],
+		h = (count * 28) - m[0] - m[2],
 		i = 0,
 		root;
 
@@ -69,13 +86,13 @@ function drawChart(treeRootNode) {
 
 		nodeEnter.append("svg:circle")
 			.attr("r", 10)
-			/*.style("fill", function (d) {
-				return "#000000ff";
-			})*/
-			/*.style("fill", function (d) {
-				return d._children ? "lightsteelblue" : "#fff";
-			})*/
-			;
+		/*.style("fill", function (d) {
+			return "#000000ff";
+		})*/
+		/*.style("fill", function (d) {
+			return d._children ? "lightsteelblue" : "#fff";
+		})*/
+		;
 
 		nodeEnter.append('a')
 			.attr('xlink:href', function (d) {
@@ -86,10 +103,30 @@ function drawChart(treeRootNode) {
 				return /*d.children || d._children ? 10 : 10*/0;
 			})
 			.attr("dy", function (d) {
-				return d.children || d._children ? "0.35em" : "0.35em";
+				return /*d.children || d._children ? "0.35em" :*/ "0.35em";
 			})
 			.attr("text-anchor", function (d) {
 				return /*d.children ? "middle" : "start"*/ "middle";
+			})
+			.attr("title", function (d) {
+				let nodeTitle = "";
+				if (d.data) {
+					if (d.data.benefit) {
+						nodeTitle += d.data.benefit;
+					}
+					let apts = [d.data.apt1, d.data.apt2];
+					apts = apts.filter((item) => item != "General");
+					apts = eliminateDuplicates(apts);
+					if (apts.length == 1) {
+						nodeTitle += " [ apt: " + apts[0] + " ] ";
+					} else if (apts.length == 2) {
+						nodeTitle += " [ apt: " + apts[0] + ", " + apts[1] + " ] ";
+					}
+					if (d.data.prerequisites) {
+						nodeTitle += " [ prereq: " + d.data.prerequisites + " ] ";
+					}
+				}
+				return nodeTitle == "" ? null : nodeTitle;
 			})
 			.text(function (d) {
 				return d.name;
@@ -114,12 +151,12 @@ function drawChart(treeRootNode) {
 
 		nodeUpdate.select("circle")
 			.attr("r", 10)
-			/*.style("fill", function (d) {
-				return "#000000ff";
-			})*/
-			/*.style("fill", function (d) {
-				return d._children ? "lightsteelblue" : "#fff";
-			})*/
+		/*.style("fill", function (d) {
+			return "#000000ff";
+		})*/
+		/*.style("fill", function (d) {
+			return d._children ? "lightsteelblue" : "#fff";
+		})*/
 		;
 
 		nodeUpdate.select("text")
@@ -135,9 +172,9 @@ function drawChart(treeRootNode) {
 
 		nodeExit.select("circle")
 			.attr("r", 10)
-			/*.style("fill", function (d) {
-				return "#000000ff";
-			})*/
+		/*.style("fill", function (d) {
+			return "#000000ff";
+		})*/
 		;
 
 		nodeExit.select("text")
@@ -152,6 +189,9 @@ function drawChart(treeRootNode) {
 		// Enter any new links at the parent's previous position.
 		link.enter().insert("svg:path", "g")
 			.attr("class", "link")
+			.attr("depth", function (d) {
+				return d.target.depth;
+			})
 			.attr("d", function (d) {
 				var o = {x: source.x0, y: source.y0};
 				return diagonal({source: o, target: o});
