@@ -547,7 +547,7 @@ export class Component {
 			const classAptitudes = selectedClass.aptitudes;
 			this.configData.classSelected = selectedClass.class;
 			for (let i = 0; i < classAptitudes.length; i++) {
-				console.log("classSelect", classAptitudes[i]);
+				//console.log("classSelect", classAptitudes[i]);
 				if (this.selectedAptitudes.includes(classAptitudes[i])) {
 					duplicates.push(classAptitudes[i]);
 				} else {
@@ -563,7 +563,7 @@ export class Component {
 			const selectedWorld = this.data.worlds[worldSelect.selectedIndex - 1];
 			const aptitude = selectedWorld.aptitude;
 			this.configData.worldSelected = selectedWorld.world;
-			console.log("worldSelect", aptitude);
+			//console.log("worldSelect", aptitude);
 			if (this.selectedAptitudes.includes(aptitude)) {
 				duplicates.push(aptitude);
 			} else {
@@ -579,7 +579,7 @@ export class Component {
 			const aptitudes = roleSelected.aptitudes;
 			this.configData.roleSelected = roleSelected.role;
 			for (let i = 0; i < aptitudes.length; i++) {
-				console.log("roleSelect", aptitudes[i]);
+				//console.log("roleSelect", aptitudes[i]);
 				if (this.selectedAptitudes.includes(aptitudes[i])) {
 					duplicates.push(aptitudes[i]);
 				} else {
@@ -595,7 +595,7 @@ export class Component {
 			const backgroundSelected = this.data.backgrounds[backgroundSelect.selectedIndex - 1];
 			const aptitude = backgroundSelected.aptitude;
 			this.configData.backgroundSelected = backgroundSelected.background;
-			console.log("backgroundSelect", aptitude);
+			//console.log("backgroundSelect", aptitude);
 			if (this.selectedAptitudes.includes(aptitude)) {
 				duplicates.push(aptitude);
 			} else {
@@ -612,7 +612,7 @@ export class Component {
 			for (let z = 0; z < selectedOptions.length; z++) {
 				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
 				this.configData.extraAptitudesSelected.push(aptitude);
-				console.log("aptitudeSelect", aptitude);
+				//console.log("aptitudeSelect", aptitude);
 				if (this.selectedAptitudes.includes(aptitude)) {
 					duplicates.push(aptitude);
 				} else {
@@ -630,8 +630,8 @@ export class Component {
 			selectedAptitudes.innerHTML += "<span class='badge badge-pill badge-danger'>" + duplicates[i] + " (duplicate)" + "</span>";
 		}
 
-		const characteristic = document.getElementById("characteristic") as HTMLDivElement;
-		characteristic.innerHTML = "";
+		const characteristicTableDiv = document.getElementById("characteristic") as HTMLDivElement;
+		characteristicTableDiv.innerHTML = "";
 
 		const sortedCharacteristic = this.data.characteristic.sort((a, b) => {
 			let amatches = 0;
@@ -662,24 +662,24 @@ export class Component {
 			}
 			if (skip) continue;
 
-			const root = document.createElement("div");
-			characteristic.appendChild(root);
-			root.appendChild(costDiv);
-			root.appendChild(matchesDiv);
+			const rootDiv = document.createElement("div");
+			characteristicTableDiv.appendChild(rootDiv);
+			rootDiv.appendChild(costDiv);
+			rootDiv.appendChild(matchesDiv);
 
 			const characteristicName = document.createElement("div");
 			characteristicName.innerHTML = sortedCharacteristic[i].name;
 			if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) characteristicName.classList.add("m2");
-			root.appendChild(characteristicName);
+			rootDiv.appendChild(characteristicName);
 
 			const characteristicAptitude = document.createElement("div");
 			characteristicAptitude.innerHTML = sortedCharacteristic[i].aptitude;
 			if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) characteristicAptitude.classList.add("m2");
-			root.appendChild(characteristicAptitude);
+			rootDiv.appendChild(characteristicAptitude);
 		}
 
-		const talentTable = document.getElementById("talent") as HTMLDivElement;
-		talentTable.innerHTML = "";
+		const talentTableDiv = document.getElementById("talent") as HTMLDivElement;
+		talentTableDiv.innerHTML = "";
 		const sortedTalents = this.data.talents.sort((a, b) => {
 			let amatches = 0;
 			if (this.selectedAptitudes.includes(a.apt1)) amatches++;
@@ -719,7 +719,7 @@ export class Component {
 			if (skip) continue;
 
 			const recordDiv = document.createElement("div");
-			talentTable.appendChild(recordDiv);
+			talentTableDiv.appendChild(recordDiv);
 			recordDiv.appendChild(costDiv)
 			recordDiv.appendChild(matchesDiv);
 
@@ -755,8 +755,8 @@ export class Component {
 		}
 
 		// iterate over array this.data.skills
-		const skill = document.getElementById("skill") as HTMLDivElement;
-		skill.innerHTML = "";
+		const skillTableDiv = document.getElementById("skill") as HTMLDivElement;
+		skillTableDiv.innerHTML = "";
 		const sortedSkills = this.data.skills.sort((a, b) => {
 			let amatches = 0;
 			if (this.selectedAptitudes.includes(a.aptitudes[0])) amatches++;
@@ -785,7 +785,7 @@ export class Component {
 			if (skip) continue;
 
 			const rootDiv = document.createElement("div");
-			skill.appendChild(rootDiv);
+			skillTableDiv.appendChild(rootDiv);
 			rootDiv.appendChild(costDiv);
 			rootDiv.appendChild(matchesDiv);
 
@@ -811,6 +811,8 @@ export class Component {
 	}
 
 	private buildChart() {
+		this.tree.buildTree();
+
 		function treeToData(node: Node, parentNodeData: any) {
 			node.children.forEach((child) => {
 				const childData = {name: child.name, parent: node.name, children: []};
@@ -819,17 +821,12 @@ export class Component {
 			});
 		}
 
-		// https://gist.github.com/d3noob/8375092
-		//console.log("tree", this.tree.buildTree().rootNode);
+		//console.log("tree", this.tree.rootNode);
 		//const chartTag = document.getElementById("chart") as HTMLDivElement;
 		const treeDataRootNode = {name: this.tree.rootNode.name, parent: null, children: []};
 		treeToData(this.tree.rootNode, treeDataRootNode);
 		//console.log("treeDataRootNode", JSON.stringify(treeDataRootNode, null, "\t"));
-
-		const margin = {top: 20, right: 100, bottom: 20, left: 100};
-		const width = 1000 - margin.right - margin.left;
-		const height = (treeDataRootNode.children.length * 30) - margin.top - margin.bottom;
-		//console.log("width", width, "height", height);
+		drawChart(treeDataRootNode);
 	}
 
 	private replacePrereq(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
@@ -948,11 +945,11 @@ export class Component {
 		//console.log(JSON.parse(deserializedData));
 
 		const encoded = encodeURIComponent(configDataString);
-		console.log(configDataString.length, encoded.length, compressedSerializedData.length);
-		const saveLink: HTMLLinkElement | null = document.getElementById("saveLink") as HTMLLinkElement;
-		saveLink!.href = "?source=" + this.source + "&cfg=" + encoded;
-		const saveLinkAlt: HTMLLinkElement | null = document.getElementById("saveLinkAlt") as HTMLLinkElement;
-		saveLinkAlt!.href = "?source=" + this.source + "&cfg=" + compressedSerializedData;
+		//console.log(configDataString.length, encoded.length, compressedSerializedData.length);
+		const saveLink = document.getElementById("saveLink") as HTMLLinkElement;
+		saveLink.href = "?source=" + this.source + "&cfg=" + encoded;
+		const saveLinkAlt = document.getElementById("saveLinkAlt") as HTMLLinkElement;
+		saveLinkAlt.href = "?source=" + this.source + "&cfg=" + compressedSerializedData;
 	}
 
 	private calcSkipAndSetMatchCount(costDiv: HTMLDivElement, j: number, matches: number, matchesDiv: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
@@ -1108,7 +1105,7 @@ export class Component {
 		document.body.appendChild(textAreaElement);
 		textAreaElement.select();
 		textAreaElement.setSelectionRange(0, 99999); // For mobile devices
-		console.log(textAreaElement.value);
+		// console.log(textAreaElement.value);
 		navigator.clipboard.writeText(textAreaElement.value);
 	}
 
