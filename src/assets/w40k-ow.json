@@ -863,7 +863,7 @@
 		{
 			"tier": 1,
 			"talent": "Modify Payload",
-			"prerequisites": "Tech-Use",
+			"prerequisites": "Tech Use",
 			"apt1": "Intelligence",
 			"apt2": "Tech",
 			"benefit": "Increase Damage, Blast Quality, and Smoke Quality of explosives."
@@ -1119,7 +1119,7 @@
 		{
 			"tier": 2,
 			"talent": "Accelerated Repairs",
-			"prerequisites": "Any Essential Repair Skill +20, Tech-Use +10",
+			"prerequisites": "Any Essential Repair Skill +20, Tech Use +10",
 			"apt1": "Intelligence",
 			"apt2": "Tech",
 			"benefit": "Character may conduct repairs more swiftly."
@@ -1127,7 +1127,7 @@
 		{
 			"tier": 2,
 			"talent": "Armour-Monger",
-			"prerequisites": "Intelligence 35, Tech-Use, Trade (Armourer)",
+			"prerequisites": "Intelligence 35, Tech Use, Trade (Armourer)",
 			"apt1": "Intelligence",
 			"apt2": "Tech",
 			"benefit": "Increase the efficacy of physical armour."
@@ -1154,7 +1154,7 @@
 			"prerequisites": "Any Essential Repair Skill +10, Willpower 35",
 			"apt1": "Willpower",
 			"apt2": "Tech",
-			"benefit": "Ignore penalties from distractions on Tech-Use and Repair Tests."
+			"benefit": "Ignore penalties from distractions on Tech Use and Repair Tests."
 		},
 		{
 			"tier": 2,
@@ -1231,7 +1231,7 @@
 		{
 			"tier": 2,
 			"talent": "Cybernetic Boost",
-			"prerequisites": "One or More Cybernetic Limbs, Tech-Use",
+			"prerequisites": "One or More Cybernetic Limbs, Tech Use",
 			"apt1": "Intelligence",
 			"apt2": "Tech",
 			"benefit": "Gain Unnatural Strength or Agility Traits by overcharging cybernetic limbs or mechadendrites."
@@ -1503,7 +1503,7 @@
 		{
 			"tier": 2,
 			"talent": "Rite of Static Overload",
-			"prerequisites": "One or More Cybernetic Limbs, Tech-Use +10",
+			"prerequisites": "One or More Cybernetic Limbs, Tech Use +10",
 			"apt1": "Intelligence",
 			"apt2": "Tech",
 			"benefit": "Gain Shocking Quality on melee attacks with a Cybernetic limb or mechadendrite."
@@ -1727,7 +1727,7 @@
 		{
 			"tier": 3,
 			"talent": "Bombardier",
-			"prerequisites": "Ballistic Skill 40, Weapon Training (Launcher), Tech-Use",
+			"prerequisites": "Ballistic Skill 40, Weapon Training (Launcher), Tech Use",
 			"apt1": "Offence",
 			"apt2": "Tech",
 			"benefit": "Bonus to attack with launchers and explosives, improved scatter."
@@ -1743,7 +1743,7 @@
 		{
 			"tier": 3,
 			"talent": "Cybernetic Calibrations",
-			"prerequisites": "Two or more Cybernetics, Tech-Use +10, Cybernetic Boost",
+			"prerequisites": "Two or more Cybernetics, Tech Use +10, Cybernetic Boost",
 			"apt1": "Intelligence",
 			"apt2": "Tech",
 			"benefit": "Improves Craftsmanship of all implanted cybernetics."
@@ -1919,10 +1919,10 @@
 		{
 			"tier": 3,
 			"talent": "Master Enginseer",
-			"prerequisites": "Tech-Use +20, Mechanicus Implants",
+			"prerequisites": "Tech Use +20, Mechanicus Implants",
 			"apt1": "Intelligence",
 			"apt2": "Tech",
-			"benefit": "Gain +10 to Tech-Use Tests, and spend Fate Points to automatically succeed on Tech-Use Tests."
+			"benefit": "Gain +10 to Tech Use Tests, and spend Fate Points to automatically succeed on Tech Use Tests."
 		},
 		{
 			"tier": 3,
@@ -2095,7 +2095,7 @@
 		{
 			"tier": 3,
 			"talent": "The Flesh is Weak",
-			"prerequisites": "Two or more Cybernetics, Tech-Use +10",
+			"prerequisites": "Two or more Cybernetics, Tech Use +10",
 			"apt1": "Tech",
 			"apt2": "Toughness",
 			"benefit": "Gain Machine Trait equal to half the number of Cybernetic implants."
