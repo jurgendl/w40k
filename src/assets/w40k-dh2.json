@@ -672,11 +672,11 @@
     },
     {
       "tier": 1,
-      "talent": "Enemy (choose)",
+      "talent": "Enemy",
       "prerequisites": "—",
       "apt1": "General",
       "apt2": "Social",
-      "benefit": "Suffers a -10 times X penalty to Fellowship and Influence tests when dealing with group.",
+      "benefit": "Choose enemy. Suffers a -10 times X penalty to Fellowship and Influence tests when dealing with group.",
       "ref": "PG 126 CB"
     },
     {
@@ -792,11 +792,11 @@
     },
     {
       "tier": 1,
-      "talent": "Peer (choose)",
+      "talent": "Peer",
       "prerequisites": "Fellowship 30",
       "apt1": "Fellowship",
       "apt2": "Social",
-      "benefit": "Character has good reputation amongst chosen group with bonus to Fellowship tests increases to +10 times X. Additionally, when the character acquires his talent, also increases his Influence by 1.",
+      "benefit": "Choose peer. Character has good reputation amongst chosen group with bonus to Fellowship tests increases to +10 times X. Additionally, when the character acquires his talent, also increases his Influence by 1.",
       "ref": "PG 130 CB"
     },
     {
@@ -819,11 +819,11 @@
     },
     {
       "tier": 1,
-      "talent": "Resistance (choose)",
+      "talent": "Resistance",
       "prerequisites": "—",
       "apt1": "Toughness",
       "apt2": "Defence",
-      "benefit": "Gain +10 bonus to particular resistance test.",
+      "benefit": "Choose type. Gain +10 bonus to particular resistance test.",
       "ref": "PG 131 CB"
     },
     {
@@ -874,11 +874,11 @@
     },
     {
       "tier": 1,
-      "talent": "Weapon Training (choose)",
+      "talent": "Weapon Training",
       "prerequisites": "—",
       "apt1": "General",
       "apt2": "Finesse",
-      "benefit": "Use Weapon Group without penalty.",
+      "benefit": "Choose Weapon Group. Use Weapon Group without penalty.",
       "ref": "PG 133 CB"
     },
     {
@@ -911,7 +911,7 @@
     {
       "tier": 2,
       "talent": "Armor-Monger",
-      "prerequisites": "Intelligence 35, Tech Use, Trade (Armourer)",
+      "prerequisites": "Intelligence 35, Tech Use +0, Trade (Armourer) +0",
       "apt1": "Intelligence",
       "apt2": "Tech",
       "benefit": "Gains an extra amount of Armor points equal to his Intelligence bonus. Takes an hour each day.",
@@ -955,11 +955,11 @@
     },
     {
       "tier": 2,
-      "talent": "Constant Vigilance (choose)",
+      "talent": "Constant Vigilance",
       "prerequisites": "Intelligence 35 or Perception 35, Awareness +10",
       "apt1": "Perception",
       "apt2": "Defence",
-      "benefit": "Can use Perception or Int instead of Agility for Initiative rolls, and rolls two dice (picking higher) for the result.",
+      "benefit": "Can use Perception or Intelligence instead of Agility for Initiative rolls, and rolls two dice (picking higher) for the result.",
       "ref": "PG 124 CB"
     },
     {
@@ -1002,7 +1002,7 @@
     {
       "tier": 2,
       "talent": "Daemonhunter",
-      "prerequisites": "Forbidden Lore (Daemonology), Willpower 40",
+      "prerequisites": "Forbidden Lore (Daemonology) +0, Willpower 40",
       "apt1": "Offence",
       "apt2": "Willpower",
       "benefit": "May re-roll failed Awareness and Psyniscience Tests to detect the presence of Daemons. In addition, his attacks against Daemons gain the Proven (3) quality.",
@@ -1011,7 +1011,7 @@
     {
       "tier": 2,
       "talent": "Daemonologist",
-      "prerequisites": "Psy rating 3, Willpower 45, Forbidden Lore (Daemonology)",
+      "prerequisites": "Psy rating 3, Willpower 45, Forbidden Lore (Daemonology) +0",
       "apt1": "Psyker",
       "apt2": "Willpower",
       "benefit": "When the character takes the Focus Power action and the target of the psychic power is a Daemon, he gains a +10 bonus to the Focus Power test. At the GM's discretion, this bonus may apply to other tests, such as rituals to summon or bind a Daemon.",
@@ -1066,7 +1066,7 @@
       "tier": 2,
       "talent": "Field Vivisection",
       "_prerequisites": "Ballistic Skill or Weapon Skill 40, Forbidden Lore (Xenos-Any), Rank 2 in the Medicae skill",
-      "prerequisites": "Ballistic Skill 40 or Weapon Skill 40, Forbidden Lore (Xenos-Any), Medicae +10",
+      "prerequisites": "Ballistic Skill 40 or Weapon Skill 40, Forbidden Lore (Xenos-Any) +0, Medicae +10",
       "apt1": "Ballistic Skill",
       "apt2": "Knowledge",
       "benefit": "When using the Called Shot action with a melee or ranged attack (depending on the Specialisation) against a target for which the character has the appropriate Forbidden Lore (Xenos) skill, he makes a Medicae (WS) or Medicae (BS) test in place of the normal Weapon Skill or Ballistic Skill test.",
@@ -1076,7 +1076,7 @@
       "tier": 2,
       "talent": "Field Vivisection",
       "_prerequisites": "Ballistic Skill or Weapon Skill 40, Forbidden Lore (Xenos-Any), Rank 2 in the Medicae skill",
-      "prerequisites": "Ballistic Skill 40 or Weapon Skill 40, Forbidden Lore (Xenos-Any), Medicae +10",
+      "prerequisites": "Ballistic Skill 40 or Weapon Skill 40, Forbidden Lore (Xenos-Any) +0, Medicae +10",
       "apt1": "Weapon Skill",
       "apt2": "Knowledge",
       "benefit": "When using the Called Shot action with a melee or ranged attack (depending on the Specialisation) against a target for which the character has the appropriate Forbidden Lore (Xenos) skill, he makes a Medicae (WS) or Medicae (BS) test in place of the normal Weapon Skill or Ballistic Skill test.",
@@ -1111,11 +1111,11 @@
     },
     {
       "tier": 2,
-      "talent": "Hatred (choose)",
+      "talent": "Hatred",
       "prerequisites": "—",
       "apt1": "Weapon Skill",
       "apt2": "Social",
-      "benefit": "Gain +10 bonus to attack Weapon Skill tests. Must make a Challenging (+0) Willpower test to retreat or surrender.",
+      "benefit": "Choose enemy. Gain +10 bonus to attack Weapon Skill tests. Must make a Challenging (+0) Willpower test to retreat or surrender.",
       "ref": "PG 128 CB"
     },
     {
@@ -1148,20 +1148,11 @@
     },
     {
       "tier": 2,
-      "talent": "Inescapable Attack (choose)",
+      "talent": "Inescapable Attack",
       "prerequisites": "Ballistic Skill 40 or Weapon Skill 40, Perception 35",
       "apt1": "Ballistic Skill",
       "apt2": "Finesse",
-      "benefit": "Attacker imposes penalty on all evasion attempts made against this attack equal to 10 times the total degrees of success scored on the attack test.",
-      "ref": "PG 128 CB"
-    },
-    {
-      "tier": 2,
-      "talent": "Inescapable Attack (choose)",
-      "prerequisites": "Ballistic Skill 40 or Weapon Skill 40, Perception 35",
-      "apt1": "Weapon Skill",
-      "apt2": "Finesse",
-      "benefit": "Attacker imposes penalty on all evasion attempts made against this attack equal to 10 times the total degrees of success scored on the attack test.",
+      "benefit": "Choose enemy. Attacker imposes penalty on all evasion attempts made against this attack equal to 10 times the total degrees of success scored on the attack test.",
       "ref": "PG 128 CB"
     },
     {
@@ -1230,11 +1221,11 @@
     },
     {
       "tier": 2,
-      "talent": "Mechadendrite Use (choose)",
+      "talent": "Mechadendrite Use",
       "prerequisites": "Mechanicus Implants",
       "apt1": "Intelligence",
       "apt2": "Tech",
-      "benefit": "Gain ability to use certain Mechadendrites. Weapon or Utility.",
+      "benefit": "Choose Mechadendrite Weapon or Utility. Gain ability to use certain Mechadendrite Weapon or Utility.",
       "ref": "PG 130 CB"
     },
     {
@@ -1257,20 +1248,11 @@
     },
     {
       "tier": 2,
-      "talent": "Precision Killer (choose)",
+      "talent": "Precision Killer",
       "prerequisites": "Ballistic Skill 40 or Weapon Skill 40",
       "apt1": "Ballistic Skill",
       "apt2": "Finesse",
-      "benefit": "No penalty to making Called Shot in either Ranged or Melee Combat.",
-      "ref": "PG 130 CB"
-    },
-    {
-      "tier": 2,
-      "talent": "Precision Killer (choose)",
-      "prerequisites": "Ballistic Skill 40 or Weapon Skill 40",
-      "apt1": "Weapon Skill",
-      "apt2": "Finesse",
-      "benefit": "No penalty to making Called Shot in either Ranged or Melee Combat.",
+      "benefit": "Choose Ranged or Melee. No penalty to making Called Shot in either Ranged or Melee Combat.",
       "ref": "PG 130 CB"
     },
     {
@@ -1294,7 +1276,7 @@
     {
       "tier": 2,
       "talent": "Rites of Banishment",
-      "prerequisites": "Common Lore (Imperial Creed) +10 or Forbidden Lore (Daemonology)",
+      "prerequisites": "Common Lore (Imperial Creed) +10 or Forbidden Lore (Daemonology) +0",
       "apt1": "Offence",
       "apt2": "Willpower",
       "benefit": "Once per round as a Half Action, the character may speak the litanies and invocations to disrupt Daemons. Until the beginning of his next turn, Daemons within a distance equal to twice the character's Willpower bonus in meters suffer a -10 penalty to Willpower tests.",
@@ -1330,7 +1312,7 @@
     },
     {
       "tier": 2,
-      "talent": "Two-Weapon Wielder (choose)",
+      "talent": "Two-Weapon Wielder",
       "prerequisites": "—",
       "apt1": "Ballistic Skill",
       "apt2": "Finesse",
@@ -1339,7 +1321,7 @@
     },
     {
       "tier": 2,
-      "talent": "Two-Weapon Wielder (choose)",
+      "talent": "Two-Weapon Wielder",
       "prerequisites": "—",
       "apt1": "Weapon Skill",
       "apt2": "Finesse",
@@ -1414,7 +1396,7 @@
     {
       "tier": 3,
       "talent": "Assassin Strike",
-      "prerequisites": "Agility 40, Acrobatics",
+      "prerequisites": "Agility 40, Acrobatics +0",
       "apt1": "Weapon Skill",
       "apt2": "Fieldcraft",
       "benefit": "After a melee attack, a Challenging (+0) Acrobatics skill test allows to move at half rate as a Free Action. Only once per round, and opponent does not receive a free attack.",
@@ -1559,7 +1541,7 @@
     {
       "tier": 3,
       "talent": "Infused Knowledge",
-      "prerequisites": "Intelligence 40, Lore (anyone)",
+      "prerequisites": "Intelligence 40, Lore (any) +0",
       "apt1": "Intelligence",
       "apt2": "Knowledge",
       "benefit": "counts as having all Common Lore and Scholastic Lore skills at rank 1 (Known).",
@@ -1612,11 +1594,11 @@
     },
     {
       "tier": 3,
-      "talent": "Mastery (choose)",
+      "talent": "Mastery",
       "prerequisites": "Rank 4 in selected skill",
       "apt1": "Intelligence",
       "apt2": "Knowledge",
-      "benefit": "May spend Fate point to succeed on test if the final modifier to his skill test is Challenging (+0) or better, score a number of degrees of success equal to the characteristic bonus.",
+      "benefit": "Choose skill. May spend Fate point to succeed on test if the final modifier to his skill test is Challenging (+0) or better, score a number of degrees of success equal to the characteristic bonus.",
       "ref": "PG 130 CB"
     },
     {
@@ -1650,7 +1632,7 @@
       "tier": 3,
       "talent": "Push the Limit",
       "_prerequisites": "Rank 2 in Survival or any Operate skill, Tech Use",
-      "prerequisites": "Survival +10 or Operate (any) +10, Tech Use",
+      "prerequisites": "Survival +10 or Operate (any) +10, Tech Use +0",
       "apt1": "Perception",
       "apt2": "Tech",
       "benefit": "Once per round, the character may add +20 to an Operate test however, if he fails the test by 4 or more degrees of failure, immediately roll 1d5 on Table 7-32: Motive Systems Critical Hit effects and apply the result. If he is riding a living mount, roll 1d5 on Table 7-18: Impact Critical effects - Leg",
@@ -1750,7 +1732,7 @@
     {
       "tier": 3,
       "talent": "Weapon Intuition",
-      "prerequisites": "Exotic Weapon Training (Any)",
+      "prerequisites": "Exotic Weapon Training (any)",
       "apt1": "Intelligence",
       "apt2": "Finesse",
       "benefit": "The character reduces the penalty for using a weapon without the proper training by 10.",
