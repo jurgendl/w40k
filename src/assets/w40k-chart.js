@@ -18,8 +18,8 @@ function eliminateDuplicates(arr) {
 	return out;
 }
 
-function drawChart(treeRootNode, count) {
-	document.getElementById("body").innerHTML = "";
+function drawChart(treeDivId, treeRootNode, count) {
+	document.getElementById(treeDivId).innerHTML = "";
 
 	var json_data = treeRootNode;
 
@@ -37,7 +37,7 @@ function drawChart(treeRootNode, count) {
 			return [d.y, d.x];
 		});
 
-	var vis = d3.select("#body").append("svg:svg")
+	var vis = d3.select("#"+treeDivId).append("svg:svg")
 		.attr("width", w + m[1] + m[3])
 		.attr("height", h + m[0] + m[2])
 		.append("svg:g")

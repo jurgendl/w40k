@@ -28,7 +28,7 @@
 <!-- ============================================================================================================ -->
 <!-- ============================================================================================================ -->
 
-<body>
+<body class="override">
 
 <div class='thetop'></div>
 
@@ -136,6 +136,7 @@ Bookmark (save) this page:
 	<div>
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
+		<div style="display: inline-block; float: right;">"<i class='fa-regular fa-eye'></i>" Click to see all prerequisites</div>
 	</div>
 	<div class="talent header">
 		<div>
@@ -147,7 +148,7 @@ Bookmark (save) this page:
 			<div title="aptitude">aptitude</div>
 			<div title="prerequisites">prerequisites</div>
 			<div title="description" style="display: none">description</div>
-			<div>x</div>
+			<div></div>
 		</div>
 	</div>
 	<div class="tablelike talent" id="talent"></div>
@@ -155,14 +156,14 @@ Bookmark (save) this page:
 
 <br><br>
 <div style="padding: 2em;">
-	<div id="body"></div>
+	<div id="selectedTree"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" integrity="sha512-oJp0DdQuQQrRsKVly+Ww6fAN1GwJN7d1bi8UubpEbzDUh84WrJ2CFPBnT4LqBCcfqTcHR5OGXFFhaPe3g1/bzQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="assets/w40k-chart.js"></script>
 
 <div class='scrolltop'>
 	<div class='scroll icon'>
-		<i class="fa-solid fa-circle-arrow-up"></i>
+		<i class="icon-as-button fa-solid fa-circle-arrow-up"></i>
 	</div>
 </div>
 <script>

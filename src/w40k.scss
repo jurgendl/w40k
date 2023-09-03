@@ -84,27 +84,27 @@ textarea {
 
 .talent > div {
 	display: grid;
-	grid-template-columns: 40px 20px 30px 250px 150px 150px 1fr 0px;
+	grid-template-columns: 40px 20px 30px 250px 150px 150px 1fr 0px 10px;
 	grid-template-rows: auto;
 	grid-gap: 10px;
 }
 
 @media (max-width: 1200px) and (min-width: 992px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 200px 125px 125px 1fr 0px;
+		grid-template-columns: 40px 20px 30px 200px 125px 125px 1fr 0px 10px;
 		grid-gap: 5px;
 	}
 }
 
 @media (max-width: 992px) and (min-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 150px 100px 100px 1fr 0px;
+		grid-template-columns: 40px 20px 30px 150px 100px 100px 1fr 0px 10px;
 	}
 }
 
 @media (max-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px;
+		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px 10px;
 	}
 }
 
@@ -191,17 +191,6 @@ textarea {
 /*::-webkit-scrollbar-thumb:window-inactive {
 }*/
 
-.tablelike ul {
-	/*list-style-type: none;*/
-	padding: 0;
-	margin: 0;
-}
-
-.tablelike ul li {
-	padding: 0;
-	margin: 0;
-}
-
 .jump-to-anchor,
 a.jump-to-anchor {
 	color: #eee;
@@ -245,9 +234,37 @@ a.jump-to-anchor {
 
 .scroll .fa-solid {
 	font-size: 28px;
+}
+
+
+.icon-as-button {
 	color: #dddddd77;
 }
 
-.scroll .fa-solid:hover {
+.icon-as-button:hover {
 	color: #ddddddee;
 }
+
+
+.unstyled-button {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+}
+
+.tiny-ul ,
+.tablelike ul {
+	/*list-style-type: none;*/
+	padding: 0;
+	margin: 0 0 0 10px;
+}
+
+.tablelike ul li {
+	padding: 0;
+	margin: 0;
+}
+

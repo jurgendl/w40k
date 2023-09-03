@@ -93,6 +93,28 @@ interface W40KClass {
 	aptitudes: Aptitude[];
 }
 
+class CharacteristicPick {
+	characteristic: W40KCharacteristic;
+	amount: number;
+
+	constructor(characteristic: W40KCharacteristic, amount: number) {
+		this.characteristic = characteristic;
+		this.amount = amount;
+	}
+}
+
+class SkillPick {
+	skill: W40KSkill;
+	choice: string | null;
+	amount: number;
+
+	constructor(skill: W40KSkill, choice: string, amount: number) {
+		this.skill = skill;
+		this.choice = choice;
+		this.amount = amount;
+	}
+}
+
 class WeightedClass {
 	class: W40KClass | null = null;
 	matches = 0;
@@ -166,7 +188,13 @@ class Tree {
 
 	nodeCount = 0;
 
-	lookup(name: string): Node {
+	treeBuild = false;
+
+	get(name: string): Node | undefined {
+		return this.nodeMap.get(name);
+	}
+
+	getOrCreate(name: string): Node {
 		let node = this.nodeMap.get(name);
 		if (!node) {
 			this.nodeCount++;
@@ -176,15 +204,19 @@ class Tree {
 		return node;
 	}
 
-	addChild(parent: Node, child: Node): void {
+	linkParentToChild(parent: Node, child: Node): void {
 		parent.children.push(child);
 		child.parents.push(parent);
 	}
 
-	buildTree(): Tree {
-		for (const node of this.nodeMap.values()) {
-			if (node.parents.length === 0) {
-				this.addChild(this.rootNode, node);
+	buildTree(createRootNode: boolean): Tree {
+		if (this.treeBuild) return this;
+
+		if (createRootNode) {
+			for (const node of this.nodeMap.values()) {
+				if (node.parents.length === 0) {
+					this.linkParentToChild(this.rootNode, node);
+				}
 			}
 		}
 
@@ -193,9 +225,20 @@ class Tree {
 			node.children.sort((a, b) => a.name.localeCompare(b.name));
 		}
 
-		this.rootNode.children.sort((a, b) => a.name.localeCompare(b.name));
+		if (createRootNode) this.rootNode.children.sort((a, b) => a.name.localeCompare(b.name));
+
+		this.treeBuild = true;
 
 		return this;
+	}
+
+	iterateParents(node: Node): Node[] {
+		const parents = [] as Node[];
+		for (const parent of node.parents) {
+			parents.push(...this.iterateParents(parent));
+			parents.push(parent);
+		}
+		return parents;
 	}
 }
 
@@ -215,6 +258,7 @@ class Node {
 
 export class App {
 	tree = new Tree();
+	fullTree = new Tree();
 	data!: W40KData;
 	configData: ConfigData = new ConfigData();
 	selectedAptitudes: Aptitude[] = [];
@@ -228,12 +272,14 @@ export class App {
 		const source = sourceParam ? sourceParam : "ow";
 		fetch('assets/w40k-' + source + '.json')
 			.then((response) => response.json())
-			.then((data) => this.app(data, source, configDateParam));
+			.then((data) => this.$start(data, source, configDateParam));
 	}
 
-	app(data: W40KData, source: string, configDateParam: string | null): void {
+	$start(data: W40KData, source: string, configDateParam: string | null): void {
 		this.data = data;
 		this.source = source;
+
+		this.buildFullTree();
 
 		const configDataString: string | null = localStorage.getItem("w40k-data-config-" + source);
 		if (configDateParam) {
@@ -417,15 +463,15 @@ export class App {
 
 		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_characteristic.addEventListener("click", (event) => this.copyToClipboard("characteristic"));
+		export_characteristic.addEventListener("click", (event) => this.copyToClipboardText("characteristic"));
 
 		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_skill.addEventListener("click", (event) => this.copyToClipboard("skill"));
+		export_skill.addEventListener("click", (event) => this.copyToClipboardText("skill"));
 
 		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_talent.addEventListener("click", (event) => this.copyToClipboard("talent"));
+		export_talent.addEventListener("click", (event) => this.copyToClipboardText("talent"));
 
 		const export_characteristic_wishlist = document.getElementById("export_characteristic_wishlist") as HTMLSelectElement;
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -468,6 +514,23 @@ export class App {
 		this.styleAptitudeMatches(null, data);
 	}
 
+	private buildFullTree() {
+		this.data.talents.forEach(parentTalent => {
+			const parentTalentName = parentTalent.talent.toLowerCase().trim();
+			this.data.talents.forEach(otherTalent => {
+				const otherTalentPrerequisites = otherTalent.prerequisites.toLowerCase();
+				if (otherTalentPrerequisites.includes(parentTalentName)) {
+					const parentTalentNode = this.fullTree.getOrCreate(parentTalent.talent);
+					parentTalentNode.data = parentTalent;
+					const otherTalentNode = this.fullTree.getOrCreate(otherTalent.talent);
+					otherTalentNode.data = otherTalent;
+					this.fullTree.linkParentToChild(parentTalentNode, otherTalentNode);
+				}
+			});
+		});
+		this.fullTree.buildTree(false);
+	}
+
 	scrollToAnchor(anchorId: string) {
 		const $toEl = document.getElementById(anchorId) as HTMLElement;
 		const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
@@ -492,7 +555,7 @@ export class App {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private triggerRecalc(event: Event | null) {
-		console.log("triggerRecalc");
+		//console.log("triggerRecalc");
 
 		this.tree = new Tree();
 
@@ -703,17 +766,16 @@ export class App {
 			if (amatches === bmatches) return a.tier - b.tier; // lower tier on top
 			return bmatches - amatches; // more matches on top
 		});
-
-		/*let matches2 = 0;
-		let matches1 = 0;
-		let matches0 = 0;*/
 		for (let i = 0; i < sortedTalents.length; i++) {
 			if (!(wishlistArray.length == 0 || wishlistArray.includes(sortedTalents[i].talent.toLowerCase().trim()))) {
 				continue;
 			}
 
 			const costDiv = document.createElement("div");
+			costDiv.setAttribute("data-export", "true");
+
 			const matchesDiv = document.createElement("div");
+			matchesDiv.setAttribute("data-export", "true");
 
 			let skip = false;
 			for (let j = 0; j < this.data.costs.length; j++) {
@@ -736,11 +798,13 @@ export class App {
 			recordDiv.appendChild(costDiv)
 			recordDiv.appendChild(matchesDiv);
 
-			const talentTier = document.createElement("div");
-			talentTier.innerHTML = "T" + sortedTalents[i].tier;
-			recordDiv.appendChild(talentTier);
+			const talentTierDiv = document.createElement("div");
+			talentTierDiv.setAttribute("data-export", "true");
+			talentTierDiv.innerHTML = "T" + sortedTalents[i].tier;
+			recordDiv.appendChild(talentTierDiv);
 
 			const talentNameDiv = document.createElement("div");
+			talentNameDiv.setAttribute("data-export", "true");
 			talentNameDiv.innerHTML = sortedTalents[i].talent;
 			recordDiv.appendChild(talentNameDiv);
 			talentNameDiv.title = sortedTalents[i].benefit;
@@ -748,23 +812,126 @@ export class App {
 			if (sortedTalents[i].ref) talentNameDiv.title += " ( " + sortedTalents[i].ref.replace("PG", "").trim() + " )";
 
 			const talentApt1Div = document.createElement("div");
+			talentApt1Div.setAttribute("data-export", "true");
 			talentApt1Div.innerHTML = sortedTalents[i].apt1;
 			recordDiv.appendChild(talentApt1Div);
 			if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) talentApt1Div.classList.add("m2");
 
 			const talentApt2Div = document.createElement("div");
+			talentApt2Div.setAttribute("data-export", "true");
 			talentApt2Div.innerHTML = sortedTalents[i].apt2;
 			recordDiv.appendChild(talentApt2Div);
 			if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) talentApt2Div.classList.add("m2");
 
 			const talentPrerequisitesDiv = document.createElement("div");
-			this.replacePrereq(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
+			talentPrerequisitesDiv.setAttribute("data-export", sortedTalents[i].prerequisites);
+			const hasTree = this.replacePrerequisites(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
 			recordDiv.appendChild(talentPrerequisitesDiv);
 
 			const talentDescriptionDiv = document.createElement("div");
+			talentDescriptionDiv.setAttribute("data-export", "true");
 			talentDescriptionDiv.innerHTML = sortedTalents[i].benefit;
 			talentDescriptionDiv.style.display = "none";
 			recordDiv.appendChild(talentDescriptionDiv);
+
+			const actionDiv = document.createElement("div");
+			actionDiv.setAttribute("data-export", "false");
+			const nodeLookup = this.fullTree.get(sortedTalents[i].talent);
+			const allPrerequisites = [] as string[];
+			if (nodeLookup && nodeLookup.parents.length > 0) {
+				this.fullTree.iterateParents(nodeLookup).forEach((parent) => {
+					if (parent.data && parent.data.prerequisites && '—' != parent.data.prerequisites && '-' != parent.data.prerequisites) {
+						const splitted = this.splitPrerequisites(parent.data.prerequisites);
+						for (let i = 0; i < splitted.length; i++) {
+							allPrerequisites.push(splitted[i]);
+						}
+					}
+				});
+				{
+					const splitted = this.splitPrerequisites(sortedTalents[i].prerequisites);
+					for (let i = 0; i < splitted.length; i++) {
+						allPrerequisites.push(splitted[i]);
+					}
+				}
+			}
+			let randomId = null;
+			if (allPrerequisites.length > 0) {
+				const characteristicPicks = [] as CharacteristicPick[];
+				const skillPicks = [] as SkillPick[];
+				const collapsedPrerequisites = [] as string[];
+				allPrerequisites.forEach((allPrerequisite) => {
+					let canReplace = false;
+					this.data.characteristic.forEach((characteristic) => {
+						// regular expression, allPrerequisite starts with characteristic name folled by numer to extra number
+						const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
+						if (regex.test(allPrerequisite)) {
+							const amount = parseInt(allPrerequisite.match(regex)![1]);
+							const matchPicks = characteristicPicks.filter((characteristicPick) => characteristicPick.characteristic.name === characteristic.name);
+							if (matchPicks.length > 0) {
+								const existingPick = matchPicks[0]; // should always be 1 element or 0
+								if (existingPick.amount < amount) existingPick.amount = amount;
+							} else {
+								characteristicPicks.push({characteristic, amount});
+							}
+							canReplace = true;
+						}
+					});
+					this.data.skills.forEach((skill) => {
+						// regex skillName (choice) +number
+						const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
+						// regular expression, allPrerequisite starts with characteristic name folled by numer to extra number
+						const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
+						let amount: number | null = null;
+						let choice: string | null = null;
+						if (regex2.test(allPrerequisite)) {
+							amount = parseInt(allPrerequisite.match(regex2)![2]);
+							choice = allPrerequisite.match(regex2)![1];
+							canReplace = true;
+						} else if (regex1.test(allPrerequisite)) {
+							amount = parseInt(allPrerequisite.match(regex1)![1]);
+							canReplace = true;
+						}
+						if (amount != null) {
+							const matchPicks = skillPicks.filter((skillPick) => skillPick.skill.name === skill.name && skillPick.choice === choice);
+							if (matchPicks.length > 0) {
+								const existingPick = matchPicks[0]; // should always be 1 element or 0
+								if (existingPick.amount < amount) existingPick.amount = amount;
+							} else {
+								skillPicks.push({skill, choice, amount});
+							}
+						}
+					});
+					if (!canReplace) {
+						const toAdd = `${allPrerequisite}`;
+						if (collapsedPrerequisites.indexOf(toAdd) === -1) collapsedPrerequisites.push(toAdd);
+					}
+				});
+				collapsedPrerequisites.sort((a, b) => a.localeCompare(b));
+				characteristicPicks.sort((a, b) => a.characteristic.name.localeCompare(b.characteristic.name)).forEach((characteristicPick) => {
+					collapsedPrerequisites.push(`Characteristic: ${characteristicPick.characteristic.name} ${characteristicPick.amount}`);
+				});
+				skillPicks.sort((a, b) => a.skill.name.localeCompare(b.skill.name)).forEach((skillPick) => {
+					if (skillPick.choice) {
+						collapsedPrerequisites.push(`Skill: ${skillPick.skill.name} (${skillPick.choice}) +${skillPick.amount}`);
+					} else {
+						collapsedPrerequisites.push(`Skill: ${skillPick.skill.name} ${skillPick.amount}`);
+					}
+				});
+				let strPrerequisites = "<b>All Prerequisites</b>:<br><ul class='tiny-ul'>";
+				for (let i = 0; i < collapsedPrerequisites.length; i++) {
+					strPrerequisites += "<li>" + collapsedPrerequisites[i] + "</li>";
+				}
+				strPrerequisites += "</ul>";
+				randomId = this.randomStr(10);
+				const pop = `
+				<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="${strPrerequisites}">
+					<i class='icon-as-button fa-regular fa-eye'></i>
+				</button>
+				`;
+				if (strPrerequisites !== "") actionDiv.innerHTML = pop;
+			}
+			recordDiv.appendChild(actionDiv);
+			if (randomId != null) ($('#' + randomId) as any).popover({trigger: 'focus', html: true});
 		}
 
 		// iterate over array this.data.skills
@@ -815,7 +982,7 @@ export class App {
 			}
 		}
 
-		this.buildChart();
+		this.buildSelectedTree();
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
@@ -823,8 +990,10 @@ export class App {
 		this.save();
 	}
 
-	private buildChart() {
-		this.tree.buildTree();
+	private buildSelectedTree() {
+		const treeToShow = this.tree;
+
+		treeToShow.buildTree(true);
 
 		function treeToData(node: Node, parentNodeData: any) {
 			node.children.forEach((child) => {
@@ -834,46 +1003,49 @@ export class App {
 			});
 		}
 
-		//console.log("tree", this.tree.rootNode);
-		//const chartTag = document.getElementById("chart") as HTMLDivElement;
-		const treeDataRootNode = {name: this.tree.rootNode.name, parent: null, children: []};
-		treeToData(this.tree.rootNode, treeDataRootNode);
+		const treeDataRootNode = {name: treeToShow.rootNode.name, parent: null, children: []};
+		treeToData(treeToShow.rootNode, treeDataRootNode);
 		//console.log("treeDataRootNode", JSON.stringify(treeDataRootNode, null, "\t"));
-		drawChart(treeDataRootNode, this.tree.nodeCount);
+		drawChart("selectedTree", treeDataRootNode, treeToShow.nodeCount);
 	}
 
-	private replacePrereq(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
+	private splitPrerequisites(prerequisites: string): string[] {
+		return prerequisites.split(/,(?![^()]*\))/).map((each) => each.trim());
+	}
+
+	private replacePrerequisites(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
 		if ('—' == str || '-' == str) {
 			const spanEl = document.createElement("span");
 			spanEl.innerHTML = "—";
 			talentPrerequisitesDiv.appendChild(spanEl);
-			return;
+			return false;
 		}
-
 		const listEl = document.createElement("ul");
-
+		let hasTree = false;
 		// split string by comma but not comma inside parenthesis
 		// https://stackoverflow.com/questions/11456850/split-a-string-by-commas-but-ignore-commas-within-double-quotes-using-javascript
 		// eslint-disable-next-line no-useless-escape
-		const parts = str.split(/,(?![^()]*\))/);
+		const parts = this.splitPrerequisites(str);
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i].trim();
 			const listItemTag = document.createElement("li");
-
 			const partLC = part.toLowerCase();
-			const rangesToReplace: { from: number, to: number, talent: W40KTalent }[] = [];
+			const rangesToReplace: {
+				from: number,
+				to: number,
+				talent: W40KTalent
+			}[] = [];
 			const talentsReplaced: string[] = [];
-			this.data.talents.forEach((t) => {
-				const loc = partLC.indexOf(t.talent.toLowerCase());
-				if (loc >= 0 && !talentsReplaced.includes(t.talent)) {
-					talentsReplaced.push(t.talent);
-					rangesToReplace.push({from: loc, to: t.talent.length, talent: t});
-
-					const parent = this.tree.lookup(t.talent);
-					parent.data = t;
-					const child = this.tree.lookup(talent.talent);
+			this.data.talents.forEach((eachTalent) => {
+				const loc = partLC.indexOf(eachTalent.talent.toLowerCase());
+				if (loc >= 0 && !talentsReplaced.includes(eachTalent.talent)) {
+					talentsReplaced.push(eachTalent.talent);
+					rangesToReplace.push({from: loc, to: eachTalent.talent.length, talent: eachTalent});
+					const parent = this.tree.getOrCreate(eachTalent.talent);
+					parent.data = eachTalent;
+					const child = this.tree.getOrCreate(talent.talent);
 					child.data = talent;
-					this.tree.addChild(parent, child);
+					this.tree.linkParentToChild(parent, child);
 				}
 			});
 			if (rangesToReplace.length > 0) {
@@ -891,6 +1063,7 @@ export class App {
 						listItemTag.appendChild(spanEl);
 						loc += rangesToReplace[0].to;
 						rangesToReplace.shift();
+						hasTree = true;
 					} else if (rangesToReplace.length > 0) {
 						const spanEl = document.createElement("span");
 						spanEl.innerText = part.substring(loc, rangesToReplace[0].from);
@@ -906,7 +1079,6 @@ export class App {
 			} else {
 				listItemTag.innerText = part;
 			}
-
 			/*
 			this.data.talents.forEach((t) => {
 				let title = t.benefit;
@@ -926,11 +1098,10 @@ export class App {
 				//p = p.replace(t.talent, `<span onclick='this.scrollToAnchor("${t.talent}")' class='jump-to-anchor' _href='#${t.talent}' title='${title}'>${t.talent}</span>`);
 			});
 			*/
-
 			listEl.appendChild(listItemTag);
 		}
-
 		talentPrerequisitesDiv.appendChild(listEl);
+		return hasTree;
 	}
 
 	private save() {
@@ -1027,13 +1198,14 @@ export class App {
 	}
 
 	private exportTableToExcelDef(divId: string) {
-		document.getElementById("exportTableToExcelDef")?.remove();
+		const dummyElementId = "exportTableToExcelDef_";
+		document.getElementById(dummyElementId)?.remove();
 		const tableHtml = this.exportDivToTable(divId);
 		if (!tableHtml) return;
 		const divElement = document.createElement("div");
 		divElement.innerHTML = tableHtml;
 		divElement.style.display = "none";
-		divElement.id = "exportTableToExcelDef";
+		divElement.id = dummyElementId;
 		document.body.appendChild(divElement);
 		this.exportTableToExcel(divElement.id, divId);
 	}
@@ -1049,8 +1221,10 @@ export class App {
 			const r = divElement.children[i] as HTMLDivElement;
 			for (let j = 0; j < r.children.length; j++) {
 				const c = r.children[j] as HTMLDivElement;
+				const dataExport = c.getAttribute("data-export") as string;
+				if (dataExport === "false") continue;
 				if (!plain) tab += "<td>";
-				tab += c.innerHTML;
+				tab += (dataExport === "true" || dataExport === null) ? c.innerHTML : dataExport;
 				if (!plain) tab += "</td>"; else tab += "\t";
 			}
 			if (!plain) tab += "</tr>"; else tab += "\n";
@@ -1087,14 +1261,15 @@ export class App {
 		}
 	}
 
-	private copyToClipboard(divId: string) {
-		const tableHtml = this.exportDivToTable(divId, true);
+	private copyToClipboardText(tableDivId: string) {
+		const tableHtml = this.exportDivToTable(tableDivId, true);
 		if (!tableHtml) return;
-		document.getElementById("textarea_c_" + divId)?.remove();
+		const dummyElPrefix = "1_textarea_copy_";
+		document.getElementById(dummyElPrefix + tableDivId)?.remove();
 		const textAreaElement: HTMLTextAreaElement = document.createElement("textarea");
 		textAreaElement.innerHTML = tableHtml;
 		textAreaElement.style.display = "none";
-		textAreaElement.id = "textarea_c_" + divId;
+		textAreaElement.id = dummyElPrefix + tableDivId;
 		document.body.appendChild(textAreaElement);
 		textAreaElement.select();
 		textAreaElement.setSelectionRange(0, 99999); // For mobile devices
@@ -1102,26 +1277,28 @@ export class App {
 	}
 
 	private copyToClipboardWishlist(id: string, colIndex: number) {
-		const div = document.getElementById(id);
-		if (!div) return;
+		const divElement = document.getElementById(id);
+		if (!divElement) return;
 		let tableHtml = "";
-		for (let i = 0; i < div.children.length; i++) {
-			const r = div.children[i] as HTMLDivElement;
-			const retain = (r.children[1] as HTMLInputElement).innerHTML == "0" || (r.children[1] as HTMLInputElement).innerHTML == "1";
-			if (retain) {
-				tableHtml += (r.children[colIndex] as HTMLDivElement).innerHTML + "\n";
-			}
+		for (let i = 0; i < divElement.children.length; i++) {
+			const childLevel1 = divElement.children[i] as HTMLDivElement;
+			const childLevel2 = childLevel1.children[1] as HTMLInputElement;
+			const retain = childLevel2.innerHTML == "0" || childLevel2.innerHTML == "1";
+			const retailChildLevel = childLevel1.children[colIndex] as HTMLInputElement;
+			if (retain) tableHtml += retailChildLevel.innerHTML + "\n";
 		}
-		document.getElementById("textarea_copy_" + id)?.remove();
+		const textAreaElementId = "2_textarea_copy_" + id;
+		document.getElementById(textAreaElementId)?.remove();
 		const textAreaElement: HTMLTextAreaElement = document.createElement("textarea");
 		textAreaElement.innerHTML = tableHtml;
 		textAreaElement.style.display = "none";
-		textAreaElement.id = "textarea_copy_" + id;
+		textAreaElement.id = textAreaElementId;
 		document.body.appendChild(textAreaElement);
 		textAreaElement.select();
 		textAreaElement.setSelectionRange(0, 99999); // For mobile devices
-		// console.log(textAreaElement.value);
-		navigator.clipboard.writeText(textAreaElement.value);
+		navigator.clipboard.writeText(textAreaElement.value).then(() => {
+			// completed
+		});
 	}
 
 	/*aptitude(key: string): Aptitude | null {
@@ -1144,26 +1321,17 @@ export class App {
 			const aptitudes: Aptitude[] = [];
 			const weightedWorlds: WeightedWorld[] = [];
 			for (let z = 0; z < selectedOptions.length; z++) {
-				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
-				aptitudes.push(aptitude);
+				aptitudes.push(this.data.optional[selectedOptions[z].index]);
 			}
 			console.log(aptitudes);
 			for (let i = 0; i < data.worlds.length; i++) {
-				const c = data.worlds[i];
 				let matches = 0;
-				const a = c.aptitude;
 				for (let k = 0; k < aptitudes.length; k++) {
-					const b = aptitudes[k];
-					if (a == b) {
-						matches++;
-					}
+					if (data.worlds[i].aptitude == aptitudes[k]) matches++;
 				}
-				const weightedWorld = new WeightedWorld(c, matches);
-				weightedWorlds.push(weightedWorld);
+				weightedWorlds.push(new WeightedWorld(data.worlds[i], matches));
 			}
-			weightedWorlds.sort((a, b) => {
-				return b.matches - a.matches;
-			});
+			weightedWorlds.sort((a, b) => b.matches - a.matches);
 			for (let i = 0; i < weightedWorlds.length; i++) {
 				console.log(weightedWorlds[i].world?.world, weightedWorlds[i].matches, weightedWorlds[i].world?.aptitude);
 			}
@@ -1179,26 +1347,17 @@ export class App {
 			const aptitudes: Aptitude[] = [];
 			const weightedBackgrounds: WeightedBackground[] = [];
 			for (let z = 0; z < selectedOptions.length; z++) {
-				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
-				aptitudes.push(aptitude);
+				aptitudes.push(this.data.optional[selectedOptions[z].index]);
 			}
 			console.log(aptitudes);
 			for (let i = 0; i < data.backgrounds.length; i++) {
-				const c = data.backgrounds[i];
 				let matches = 0;
-				const a = c.aptitude;
 				for (let k = 0; k < aptitudes.length; k++) {
-					const b = aptitudes[k];
-					if (a == b) {
-						matches++;
-					}
+					if (data.backgrounds[i].aptitude == aptitudes[k]) matches++;
 				}
-				const weightedBackground = new WeightedBackground(c, matches);
-				weightedBackgrounds.push(weightedBackground);
+				weightedBackgrounds.push(new WeightedBackground(data.backgrounds[i], matches));
 			}
-			weightedBackgrounds.sort((a, b) => {
-				return b.matches - a.matches;
-			});
+			weightedBackgrounds.sort((a, b) => b.matches - a.matches);
 			for (let i = 0; i < weightedBackgrounds.length; i++) {
 				console.log(weightedBackgrounds[i].background?.background, weightedBackgrounds[i].matches, weightedBackgrounds[i].background?.aptitude);
 			}
@@ -1214,28 +1373,19 @@ export class App {
 			const aptitudes: Aptitude[] = [];
 			const weightedRoles: WeightedRole[] = [];
 			for (let z = 0; z < selectedOptions.length; z++) {
-				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
-				aptitudes.push(aptitude);
+				aptitudes.push(this.data.optional[selectedOptions[z].index]);
 			}
 			console.log(aptitudes);
 			for (let i = 0; i < data.roles.length; i++) {
-				const c = data.roles[i];
 				let matches = 0;
-				for (let j = 0; j < c.aptitudes.length; j++) {
-					const a = c.aptitudes[j];
+				for (let j = 0; j < data.roles[i].aptitudes.length; j++) {
 					for (let k = 0; k < aptitudes.length; k++) {
-						const b = aptitudes[k];
-						if (a == b) {
-							matches++;
-						}
+						if (data.roles[i].aptitudes[j] == aptitudes[k]) matches++;
 					}
 				}
-				const weightedRole = new WeightedRole(c, matches);
-				weightedRoles.push(weightedRole);
+				weightedRoles.push(new WeightedRole(data.roles[i], matches));
 			}
-			weightedRoles.sort((a, b) => {
-				return b.matches - a.matches;
-			});
+			weightedRoles.sort((a, b) => b.matches - a.matches);
 			for (let i = 0; i < weightedRoles.length; i++) {
 				console.log(weightedRoles[i].role?.role, weightedRoles[i].matches, weightedRoles[i].role?.aptitudes);
 			}
@@ -1251,28 +1401,19 @@ export class App {
 			const aptitudes: Aptitude[] = [];
 			const weightedClasses: WeightedClass[] = [];
 			for (let z = 0; z < selectedOptions.length; z++) {
-				const aptitude = this.data.optional[selectedOptions[z].index] as Aptitude;
-				aptitudes.push(aptitude);
+				aptitudes.push(this.data.optional[selectedOptions[z].index]);
 			}
 			console.log(aptitudes);
 			for (let i = 0; i < data.classes.length; i++) {
-				const c = data.classes[i];
 				let matches = 0;
-				for (let j = 0; j < c.aptitudes.length; j++) {
-					const a = c.aptitudes[j];
+				for (let j = 0; j < data.classes[i].aptitudes.length; j++) {
 					for (let k = 0; k < aptitudes.length; k++) {
-						const b = aptitudes[k];
-						if (a == b) {
-							matches++;
-						}
+						if (data.classes[i].aptitudes[j] == aptitudes[k]) matches++;
 					}
 				}
-				const weightedClass = new WeightedClass(c, matches);
-				weightedClasses.push(weightedClass);
+				weightedClasses.push(new WeightedClass(data.classes[i], matches));
 			}
-			weightedClasses.sort((a, b) => {
-				return b.matches - a.matches;
-			});
+			weightedClasses.sort((a, b) => b.matches - a.matches);
 			for (let i = 0; i < weightedClasses.length; i++) {
 				console.log(weightedClasses[i].class?.class, weightedClasses[i].matches, weightedClasses[i].class?.aptitudes);
 			}
@@ -1307,5 +1448,17 @@ export class App {
 			}
 		}
 		this.save();
+	}
+
+	public randomStr(length: number) {
+		let result = '';
+		const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		const charactersLength = characters.length;
+		let counter = 0;
+		while (counter < length) {
+			result += characters.charAt(Math.floor(Math.random() * charactersLength));
+			counter += 1;
+		}
+		return result;
 	}
 }
