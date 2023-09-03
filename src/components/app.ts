@@ -914,7 +914,7 @@ export class App {
 					if (skillPick.choice) {
 						collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} (${skillPick.choice}) +${skillPick.amount}`);
 					} else {
-						collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} ${skillPick.amount}`);
+						collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} +${skillPick.amount}`);
 					}
 				});
 				let strPrerequisites = "<b>All Prerequisites</b>:<br><ul class='tiny-ul'>";

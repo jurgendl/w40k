@@ -136,7 +136,38 @@ Bookmark (save) this page:
 	<div>
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
-		<div style="display: inline-block; float: right;">"<i class='fa-regular fa-eye'></i>" Click to see all prerequisites</div>
+		<div style="display: inline-block; float: right;">
+			<div style="margin-left: 1em; margin-right: 1em; display: inline-block;">
+				Skill Ranks
+				<button id="skillRanksHelp" type="button" class="unstyled-button" data-toggle="popover" _title="Skill Ranks"
+						data-content="
+							<table>
+							<th><td><u>Rank</u></td><td></td><td><u>Bonus</u></td></th>
+							<tr><td>1</td><td>Known</td><td style='text-align: right;'>+0</td></tr>
+							<tr><td>2</td><td>Trained</td><td style='text-align: right;'>+10</td></tr>
+							<tr><td>3</td><td>Experienced</td><td style='text-align: right;'>+20</td></tr>
+							<tr><td>4</td><td>Veteran</td><td>+30</div></tr>
+							</table>">
+					<i class="fas fa-question-circle"></i>
+				</button>
+				<script>
+					$(function() {
+						$.fn.popover.Constructor.Default.whiteList.table = [];
+						$.fn.popover.Constructor.Default.whiteList.tr = [];
+						$.fn.popover.Constructor.Default.whiteList.td = [];
+						$.fn.popover.Constructor.Default.whiteList.div = [];
+						$.fn.popover.Constructor.Default.whiteList.tbody = [];
+						$.fn.popover.Constructor.Default.whiteList.thead = [];
+						$('#skillRanksHelp').popover({
+							html: true,
+							container: 'body'
+						})
+					})
+				</script>
+			</div>
+			|
+			<div style="margin-left: 1em; display: inline-block;">Click "<i class='fa-regular fa-eye'></i>" to see all prerequisites</div>
+		</div>
 	</div>
 	<div class="talent header">
 		<div>

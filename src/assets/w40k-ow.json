@@ -1639,7 +1639,7 @@
 		{
 			"tier": 2,
 			"talent": "Vengeful Protector",
-			"prerequisites": "Weapon Skill 45, S 45",
+			"prerequisites": "Weapon Skill 45, Strength 45",
 			"apt1": "Strength",
 			"apt2": "Offence",
 			"benefit": "Deal increased Damage to enemies that have harmed squad mates."
