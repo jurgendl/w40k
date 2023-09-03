@@ -1,4 +1,4 @@
-import { Component } from "../src/components/component";
+import { Component } from "../src/components/app";
 
 let item: Component;
 

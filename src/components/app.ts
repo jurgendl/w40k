@@ -213,14 +213,14 @@ class Node {
 	}
 }
 
-export class Component {
+export class App {
 	tree = new Tree();
 	data!: W40KData;
 	configData: ConfigData = new ConfigData();
 	selectedAptitudes: Aptitude[] = [];
 	source = "ow";
 
-	init(): void {
+	start(): void {
 		const queryString = window.location.search;
 		const urlParams = new URLSearchParams(queryString);
 		const sourceParam: string | null = urlParams.get('source');

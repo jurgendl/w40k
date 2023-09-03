@@ -1,5 +1,4 @@
 import './w40k.scss';
-import { Component } from './components/component';
+import {App} from './components/app';
 
-const component = new Component();
-component.init();
+new App().start();

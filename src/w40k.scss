@@ -32,8 +32,8 @@ textarea {
 	margin-bottom: 1.25em;
 }
 
-.skill:not(.header) ,
-.talent:not(.header) ,
+.skill:not(.header),
+.talent:not(.header),
 .characteristic:not(.header) {
 	margin-bottom: 2em;
 }
@@ -54,8 +54,8 @@ textarea {
 	background-color: rgba(255, 255, 255, .05);
 }
 
-.skill > div ,
-.talent > div ,
+.skill > div,
+.talent > div,
 .characteristic > div {
 	padding: 0.25em;
 }
@@ -88,17 +88,20 @@ textarea {
 	grid-template-rows: auto;
 	grid-gap: 10px;
 }
+
 @media (max-width: 1200px) and (min-width: 992px) {
 	.talent > div {
 		grid-template-columns: 40px 20px 30px 200px 125px 125px 1fr 0px;
 		grid-gap: 5px;
 	}
 }
+
 @media (max-width: 992px) and (min-width: 768px) {
 	.talent > div {
 		grid-template-columns: 40px 20px 30px 150px 100px 100px 1fr 0px;
 	}
 }
+
 @media (max-width: 768px) {
 	.talent > div {
 		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px;
@@ -199,15 +202,15 @@ textarea {
 	margin: 0;
 }
 
-.jump-to-anchor ,
+.jump-to-anchor,
 a.jump-to-anchor {
 	color: #eee;
 	text-decoration: underline;
 	cursor: pointer;
 }
 
-.characteristic:not(.header) > div > :nth-child(4n - 1) ,
-.skill:not(.header) > div > :nth-child(5n - 2) ,
+.characteristic:not(.header) > div > :nth-child(4n - 1),
+.skill:not(.header) > div > :nth-child(5n - 2),
 .talent:not(.header) > div > :nth-child(8n - 4) {
 	color: aqua;
 }
@@ -218,4 +221,33 @@ a.jump-to-anchor {
 
 .animate__animated {
 	--animate-duration: 4s !important;
+}
+
+
+.scrolltop {
+	display: none;
+	width: 100%;
+	margin: 0 auto;
+	position: fixed;
+	bottom: 10px;
+	right: 10px;
+}
+
+.scroll {
+	position: absolute;
+	right: 0px;
+	bottom: 0px;
+	padding: 5px;
+	text-align: center;
+	margin: 0 0 0 0;
+	cursor: pointer;
+}
+
+.scroll .fa-solid {
+	font-size: 28px;
+	color: #dddddd77;
+}
+
+.scroll .fa-solid:hover {
+	color: #ddddddee;
 }
