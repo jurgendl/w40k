@@ -908,13 +908,13 @@ export class App {
 				});
 				collapsedPrerequisites.sort((a, b) => a.localeCompare(b));
 				characteristicPicks.sort((a, b) => a.characteristic.name.localeCompare(b.characteristic.name)).forEach((characteristicPick) => {
-					collapsedPrerequisites.push(`Characteristic: ${characteristicPick.characteristic.name} ${characteristicPick.amount}`);
+					collapsedPrerequisites.push(`<i>Char</i>: ${characteristicPick.characteristic.name} ${characteristicPick.amount}`);
 				});
 				skillPicks.sort((a, b) => a.skill.name.localeCompare(b.skill.name)).forEach((skillPick) => {
 					if (skillPick.choice) {
-						collapsedPrerequisites.push(`Skill: ${skillPick.skill.name} (${skillPick.choice}) +${skillPick.amount}`);
+						collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} (${skillPick.choice}) +${skillPick.amount}`);
 					} else {
-						collapsedPrerequisites.push(`Skill: ${skillPick.skill.name} ${skillPick.amount}`);
+						collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} ${skillPick.amount}`);
 					}
 				});
 				let strPrerequisites = "<b>All Prerequisites</b>:<br><ul class='tiny-ul'>";
