@@ -102,6 +102,10 @@ class CharacteristicPick {
 		this.characteristic = characteristic;
 		this.amount = amount;
 	}
+
+	toString(): string {
+		return this.characteristic.name + " +" + this.amount;
+	}
 }
 
 class SkillPick {
@@ -114,6 +118,13 @@ class SkillPick {
 		this.choices = choices;
 		this.amount = amount;
 	}
+
+	toString(): string {
+		if (this.choices) {
+			return this.skill.name + " (" + this.choices.join(", ") + ") +" + this.amount;
+		}
+		return this.skill.name + " +" + this.amount;
+	}
 }
 
 class TalentPick {
@@ -123,6 +134,13 @@ class TalentPick {
 	constructor(talent: W40KTalent, choices: string[] | null) {
 		this.talent = talent;
 		this.choices = choices;
+	}
+
+	toString(): string {
+		if (this.choices) {
+			return this.talent.talent + " (" + this.choices.join(", ") + ")";
+		}
+		return this.talent.talent;
 	}
 }
 
@@ -278,7 +296,6 @@ class Prerequisite {
 	constructor(text: string) {
 		this.text = text;
 	}
-
 }
 
 export class App {
@@ -943,6 +960,9 @@ export class App {
 			if (listPrerequisitesAsTree != null) {
 				const combinePrerequisites = this.prerequisitesAsULCollapsed(sortedTalents[i]);
 				const randomId = this.randomStr(10);
+				console.log("listPrerequisitesAsTree", listPrerequisitesAsTree);
+				console.log("combinePrerequisites", combinePrerequisites);
+				this.iterateLog("", sortedTalents[i].prerequisiteTree);
 				actionDiv.innerHTML = `
 					<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="<b>All Prerequisites</b>:${listPrerequisitesAsTree}<b>Combined Prerequisites</b>:${combinePrerequisites}">
 						<i class='icon-as-button fa-regular fa-eye'></i>
@@ -1585,5 +1605,35 @@ export class App {
 			}
 		}
 		this.save();
+	}
+
+	private iterateLog(prefix: string, prerequisiteTree: Prerequisite) {
+		if (prerequisiteTree.and.length > 0) {
+			console.log(prefix + "AND");
+			prerequisiteTree.and.forEach((and) => {
+				this.iterateLog(prefix + "  ", and);
+				if (and.talentPick != null) {
+					this.iterateLog(prefix + "    ", and.talentPick.talent.prerequisiteTree);
+				}
+			});
+		} else if (prerequisiteTree.or.length > 0) {
+			console.log(prefix + "OR");
+			prerequisiteTree.or.forEach((or) => {
+				this.iterateLog(prefix + "  ", or);
+				if (or.talentPick != null) {
+					this.iterateLog(prefix + "    ", or.talentPick.talent.prerequisiteTree);
+				}
+			});
+		} else {
+			if (prerequisiteTree.characteristicPick != null) {
+				console.log(prefix + "C: " + prerequisiteTree.characteristicPick);
+			} else if (prerequisiteTree.skillPick != null) {
+				console.log(prefix + "S: " + prerequisiteTree.skillPick);
+			} else if (prerequisiteTree.talentPick != null) {
+				console.log(prefix + "T: " + prerequisiteTree.talentPick);
+			} else if(prerequisiteTree.text != null && prerequisiteTree.text != "") {
+				console.log(prefix + "*: " + prerequisiteTree.text);
+			}
+		}
 	}
 }
