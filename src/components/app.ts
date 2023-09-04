@@ -115,6 +115,16 @@ class SkillPick {
 	}
 }
 
+class TalentPick {
+	talent: W40KTalent;
+	choice: string | null;
+
+	constructor(talent: W40KTalent, choice: string) {
+		this.talent = talent;
+		this.choice = choice;
+	}
+}
+
 class WeightedClass {
 	class: W40KClass | null = null;
 	matches = 0;
@@ -514,6 +524,27 @@ export class App {
 		this.styleAptitudeMatches(null, data);
 	}
 
+	scrollToAnchor(anchorId: string) {
+		const $toEl = document.getElementById(anchorId) as HTMLElement;
+		const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
+		window.scrollTo({top: $offset, behavior: "auto"});
+		const classList = ["animate__animated", "animate__faster", "animate__flash"];
+		$toEl.classList.add(...classList);
+		$toEl.addEventListener("animationend", () => $toEl.classList.remove(...classList));
+	}
+
+	public randomStr(length: number) {
+		let result = '';
+		const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		const charactersLength = characters.length;
+		let counter = 0;
+		while (counter < length) {
+			result += characters.charAt(Math.floor(Math.random() * charactersLength));
+			counter += 1;
+		}
+		return result;
+	}
+
 	private buildFullTree() {
 		this.data.talents.forEach(parentTalent => {
 			const parentTalentName = parentTalent.talent.toLowerCase().trim();
@@ -529,15 +560,6 @@ export class App {
 			});
 		});
 		this.fullTree.buildTree(false);
-	}
-
-	scrollToAnchor(anchorId: string) {
-		const $toEl = document.getElementById(anchorId) as HTMLElement;
-		const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
-		window.scrollTo({top: $offset, behavior: "auto"});
-		const classList = ["animate__animated", "animate__faster", "animate__flash"];
-		$toEl.classList.add(...classList);
-		$toEl.addEventListener("animationend", () => $toEl.classList.remove(...classList));
 	}
 
 	private commonFunc2(apts: Aptitude[]) {
@@ -836,102 +858,18 @@ export class App {
 
 			const actionDiv = document.createElement("div");
 			actionDiv.setAttribute("data-export", "false");
-			const nodeLookup = this.fullTree.get(sortedTalents[i].talent);
-			const allPrerequisites = [] as string[];
-			if (nodeLookup && nodeLookup.parents.length > 0) {
-				this.fullTree.iterateParents(nodeLookup).forEach((parent) => {
-					if (parent.data && parent.data.prerequisites && '—' != parent.data.prerequisites && '-' != parent.data.prerequisites) {
-						const splitted = this.splitPrerequisites(parent.data.prerequisites);
-						for (let i = 0; i < splitted.length; i++) {
-							allPrerequisites.push(splitted[i]);
-						}
-					}
-				});
-				{
-					const splitted = this.splitPrerequisites(sortedTalents[i].prerequisites);
-					for (let i = 0; i < splitted.length; i++) {
-						allPrerequisites.push(splitted[i]);
-					}
-				}
-			}
-			let randomId = null;
-			if (allPrerequisites.length > 0) {
-				const characteristicPicks = [] as CharacteristicPick[];
-				const skillPicks = [] as SkillPick[];
-				const collapsedPrerequisites = [] as string[];
-				allPrerequisites.forEach((allPrerequisite) => {
-					let canReplace = false;
-					this.data.characteristic.forEach((characteristic) => {
-						// regular expression, allPrerequisite starts with characteristic name folled by numer to extra number
-						const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
-						if (regex.test(allPrerequisite)) {
-							const amount = parseInt(allPrerequisite.match(regex)![1]);
-							const matchPicks = characteristicPicks.filter((characteristicPick) => characteristicPick.characteristic.name === characteristic.name);
-							if (matchPicks.length > 0) {
-								const existingPick = matchPicks[0]; // should always be 1 element or 0
-								if (existingPick.amount < amount) existingPick.amount = amount;
-							} else {
-								characteristicPicks.push({characteristic, amount});
-							}
-							canReplace = true;
-						}
-					});
-					this.data.skills.forEach((skill) => {
-						// regex skillName (choice) +number
-						const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
-						// regular expression, allPrerequisite starts with characteristic name folled by numer to extra number
-						const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
-						let amount: number | null = null;
-						let choice: string | null = null;
-						if (regex2.test(allPrerequisite)) {
-							amount = parseInt(allPrerequisite.match(regex2)![2]);
-							choice = allPrerequisite.match(regex2)![1];
-							canReplace = true;
-						} else if (regex1.test(allPrerequisite)) {
-							amount = parseInt(allPrerequisite.match(regex1)![1]);
-							canReplace = true;
-						}
-						if (amount != null) {
-							const matchPicks = skillPicks.filter((skillPick) => skillPick.skill.name === skill.name && skillPick.choice === choice);
-							if (matchPicks.length > 0) {
-								const existingPick = matchPicks[0]; // should always be 1 element or 0
-								if (existingPick.amount < amount) existingPick.amount = amount;
-							} else {
-								skillPicks.push({skill, choice, amount});
-							}
-						}
-					});
-					if (!canReplace) {
-						const toAdd = `${allPrerequisite}`;
-						if (collapsedPrerequisites.indexOf(toAdd) === -1) collapsedPrerequisites.push(toAdd);
-					}
-				});
-				collapsedPrerequisites.sort((a, b) => a.localeCompare(b));
-				characteristicPicks.sort((a, b) => a.characteristic.name.localeCompare(b.characteristic.name)).forEach((characteristicPick) => {
-					collapsedPrerequisites.push(`<i>Char</i>: ${characteristicPick.characteristic.name} ${characteristicPick.amount}`);
-				});
-				skillPicks.sort((a, b) => a.skill.name.localeCompare(b.skill.name)).forEach((skillPick) => {
-					if (skillPick.choice) {
-						collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} (${skillPick.choice}) +${skillPick.amount}`);
-					} else {
-						collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} +${skillPick.amount}`);
-					}
-				});
-				let strPrerequisites = "<b>All Prerequisites</b>:<br><ul class='tiny-ul'>";
-				for (let i = 0; i < collapsedPrerequisites.length; i++) {
-					strPrerequisites += "<li>" + collapsedPrerequisites[i] + "</li>";
-				}
-				strPrerequisites += "</ul>";
-				randomId = this.randomStr(10);
-				const pop = `
-				<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="${strPrerequisites}">
-					<i class='icon-as-button fa-regular fa-eye'></i>
-				</button>
-				`;
-				if (strPrerequisites !== "") actionDiv.innerHTML = pop;
-			}
 			recordDiv.appendChild(actionDiv);
-			if (randomId != null) ($('#' + randomId) as any).popover({trigger: 'focus', html: true});
+			const listPrerequisitesAsTree = this.listPrerequisitesAsTree(sortedTalents[i]);
+			if (listPrerequisitesAsTree != null) {
+				const combinePrerequisites = this.combinePrerequisites(sortedTalents[i]);
+				const randomId = this.randomStr(10);
+				actionDiv.innerHTML = `
+					<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="<b>All Prerequisites</b>:${listPrerequisitesAsTree}<b>Combined Prerequisites</b>:${combinePrerequisites}">
+						<i class='icon-as-button fa-regular fa-eye'></i>
+					</button>
+					`;
+				($('#' + randomId) as any).popover({trigger: 'focus', html: true});
+			}
 		}
 
 		// iterate over array this.data.skills
@@ -988,6 +926,120 @@ export class App {
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
 
 		this.save();
+	}
+
+	private listPrerequisitesAsTree(talent: W40KTalent) {
+		const nodeLookup = this.fullTree.get(talent.talent);
+		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
+		return this.prerequisitesToLi(talent.prerequisites);
+	}
+
+	private combinePrerequisites(talent: W40KTalent) {
+		const nodeLookup = this.fullTree.get(talent.talent);
+		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
+		const allPrerequisites = [] as string[];
+		if (nodeLookup && nodeLookup.parents.length > 0) {
+			this.fullTree.iterateParents(nodeLookup).forEach((parent) => {
+				if (parent.data && parent.data.prerequisites && '—' != parent.data.prerequisites && '-' != parent.data.prerequisites) {
+					const splitted = this.splitPrerequisites(parent.data.prerequisites);
+					for (let i = 0; i < splitted.length; i++) {
+						allPrerequisites.push(splitted[i]);
+					}
+				}
+			});
+			{
+				const splitted = this.splitPrerequisites(talent.prerequisites);
+				for (let i = 0; i < splitted.length; i++) {
+					allPrerequisites.push(splitted[i]);
+				}
+			}
+		}
+		if (allPrerequisites.length == 0) return null;
+			const characteristicPicks = [] as CharacteristicPick[];
+			const skillPicks = [] as SkillPick[];
+			const collapsedPrerequisites = [] as string[];
+			allPrerequisites.forEach((allPrerequisite) => {
+				let canReplace = false;
+				this.data.characteristic.forEach((characteristic) => {
+					// regex characteristicName number
+					const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
+					if (regex.test(allPrerequisite)) {
+						const amount = parseInt(allPrerequisite.match(regex)![1]);
+						const matchPicks = characteristicPicks.filter((characteristicPick) => characteristicPick.characteristic.name === characteristic.name);
+						if (matchPicks.length > 0) {
+							const existingPick = matchPicks[0]; // should always be 1 element or 0
+							if (existingPick.amount < amount) existingPick.amount = amount;
+						} else {
+							characteristicPicks.push({characteristic, amount});
+						}
+						canReplace = true;
+					}
+				});
+				this.data.skills.forEach((skill) => {
+					// regex skillName (choice) +number
+					const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
+					// regular expression, allPrerequisite starts with characteristic name folled by numer to extra number
+					const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
+					let amount: number | null = null;
+					let choice: string | null = null;
+					if (regex2.test(allPrerequisite)) {
+						amount = parseInt(allPrerequisite.match(regex2)![2]);
+						choice = allPrerequisite.match(regex2)![1];
+						canReplace = true;
+					} else if (regex1.test(allPrerequisite)) {
+						amount = parseInt(allPrerequisite.match(regex1)![1]);
+						canReplace = true;
+					}
+					if (amount != null) {
+						const matchPicks = skillPicks.filter((skillPick) => skillPick.skill.name === skill.name && skillPick.choice === choice);
+						if (matchPicks.length > 0) {
+							const existingPick = matchPicks[0]; // should always be 1 element or 0
+							if (existingPick.amount < amount) existingPick.amount = amount;
+						} else {
+							skillPicks.push({skill, choice, amount});
+						}
+					}
+				});
+				if (!canReplace) {
+					const toAdd = `${allPrerequisite}`;
+					if (collapsedPrerequisites.indexOf(toAdd) === -1) collapsedPrerequisites.push(toAdd);
+				}
+			});
+			collapsedPrerequisites.sort((a, b) => a.localeCompare(b));
+			characteristicPicks.sort((a, b) => a.characteristic.name.localeCompare(b.characteristic.name)).forEach((characteristicPick) => {
+				collapsedPrerequisites.push(`<i>Char</i>: ${characteristicPick.characteristic.name} ${characteristicPick.amount}`);
+			});
+			skillPicks.sort((a, b) => a.skill.name.localeCompare(b.skill.name)).forEach((skillPick) => {
+				if (skillPick.choice) {
+					collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} (${skillPick.choice}) +${skillPick.amount}`);
+				} else {
+					collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} +${skillPick.amount}`);
+				}
+			});
+			let strPrerequisites = "<ul class='tiny-ul'>";
+			for (let i = 0; i < collapsedPrerequisites.length; i++) {
+				strPrerequisites += "<li>" + collapsedPrerequisites[i] + "</li>";
+			}
+			strPrerequisites += "</ul>";
+			return strPrerequisites;
+	}
+
+	private prerequisitesToLi(prerequisites: string): string {
+		const splitted = this.splitPrerequisites(prerequisites);
+		let strPrerequisites = "<ul class='tiny-ul'>";
+		for (let i = 0; i < splitted.length; i++) {
+			if ("-" == splitted[i] || "—" == splitted[i]) continue;
+			strPrerequisites += "<li>";
+			strPrerequisites += splitted[i];
+			this.data.talents.forEach((eachTalent) => {
+				if (splitted[i].toLowerCase().includes(eachTalent.talent.toLowerCase())) {
+					strPrerequisites += this.prerequisitesToLi(eachTalent.prerequisites);
+				}
+			});
+			strPrerequisites += "</li>";
+		}
+		strPrerequisites += "</ul>";
+		return strPrerequisites;
 	}
 
 	private buildSelectedTree() {
@@ -1156,41 +1208,44 @@ export class App {
 		if (!tableHtml2) return;
 		if (!tableHtml3) return;
 		const d = document.createElement("div");
-		d.innerHTML = "<table>"
-			+ "<tr><td>Characteristics</td></tr>"
-			+ "\t<tr>\n"
-			+ "\t\t<td>cost</td>\n"
-			+ "\t\t<td>m</td>\n"
-			+ "\t\t<td>skill</td>\n"
-			+ "\t\t<td>aptitude</td>\n"
-			+ "\t</tr>"
-			+ tableHtml1.replace("<table>", "").replace("</table>", "")
-			+ "<tr><td> </td></tr>"
-			+ "<tr><td> </td></tr>"
-			+ "<tr><td>Skills</td></tr>"
-			+ "\t<tr>\n"
-			+ "\t\t<td>cost</td>\n"
-			+ "\t\t<td>m</td>\n"
-			+ "\t\t<td>characteristic</td>\n"
-			+ "\t\t<td>aptitude</td>\n"
-			+ "\t\t<td>aptitude</td>\n"
-			+ "\t</tr>"
-			+ tableHtml2.replace("<table>", "").replace("</table>", "")
-			+ "<tr><td> </td></tr>"
-			+ "<tr><td> </td></tr>"
-			+ "<tr><td>Talents</td></tr>"
-			+ "\t<tr>\n"
-			+ "\t\t<td>cost</td>\n"
-			+ "\t\t<td>m</td>\n"
-			+ "\t\t<td>tier</td>\n"
-			+ "\t\t<td>talent</td>\n"
-			+ "\t\t<td>aptitude</td>\n"
-			+ "\t\t<td>aptitude</td>\n"
-			+ "\t\t<td>requirement</td>\n"
-			+ "\t\t<td>description</td>\n"
-			+ "\t</tr>"
-			+ tableHtml3.replace("<table>", "").replace("</table>", "")
-			+ "</table>";
+		const tableHtml1R = tableHtml1.replace("<table>", "").replace("</table>", "");
+		const tableHtml2R = tableHtml2.replace("<table>", "").replace("</table>", "");
+		const tableHtml3R = tableHtml3.replace("<table>", "").replace("</table>", "");
+		d.innerHTML = `<table>
+			<tr><td>Characteristics</td></tr>
+			<tr>
+				<td>cost</td>
+				<td>m</td>
+				<td>skill</td>
+				<td>aptitude</td>
+			</tr>
+			${tableHtml1R}
+			<tr><td> </td></tr>
+			<tr><td> </td></tr>
+			<tr><td>Skills</td></tr>
+			<tr>
+				<td>cost</td>
+				<td>m</td>
+				<td>characteristic</td>
+				<td>aptitude</td>
+				<td>aptitude</td>
+			</tr>
+			${tableHtml2R}
+			<tr><td> </td></tr>
+			<tr><td> </td></tr>
+			<tr><td>Talents</td></tr>
+			<tr>
+				<td>cost</td>
+				<td>m</td>
+				<td>tier</td>
+				<td>talent</td>
+				<td>aptitude</td>
+				<td>aptitude</td>
+				<td>requirement</td>
+				<td>description</td>
+			</tr>
+			${tableHtml3R}
+			</table>`;
 		d.style.display = "none";
 		d.id = "exportTableToExcelDef";
 		document.body.appendChild(d);
@@ -1276,16 +1331,29 @@ export class App {
 		navigator.clipboard.writeText(textAreaElement.value);
 	}
 
+	/*aptitude(key: string): Aptitude | null {
+		for (const value in Aptitude) {
+			if (key.replace("_", "").replace(" ", "") == value.replace("_", "").replace(" ", "")) {
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore
+				return Aptitude[value];
+			}
+		}
+		return null;
+	}*/
+
 	private copyToClipboardWishlist(id: string, colIndex: number) {
 		const divElement = document.getElementById(id);
 		if (!divElement) return;
+
 		let tableHtml = "";
 		for (let i = 0; i < divElement.children.length; i++) {
-			const childLevel1 = divElement.children[i] as HTMLDivElement;
-			const childLevel2 = childLevel1.children[1] as HTMLInputElement;
-			const retain = childLevel2.innerHTML == "0" || childLevel2.innerHTML == "1";
-			const retailChildLevel = childLevel1.children[colIndex] as HTMLInputElement;
-			if (retain) tableHtml += retailChildLevel.innerHTML + "\n";
+			const childI = divElement.children[i] as HTMLDivElement;
+			const childIchild1 = childI.children[1] as HTMLDivElement;
+			if (childIchild1.innerHTML == "0" || childIchild1.innerHTML == "1") {
+				const childIchildColIndex = childI.children[colIndex] as HTMLDivElement;
+				tableHtml += childIchildColIndex.innerHTML + "\n";
+			}
 		}
 		const textAreaElementId = "2_textarea_copy_" + id;
 		document.getElementById(textAreaElementId)?.remove();
@@ -1300,17 +1368,6 @@ export class App {
 			// completed
 		});
 	}
-
-	/*aptitude(key: string): Aptitude | null {
-		for (const value in Aptitude) {
-			if (key.replace("_", "").replace(" ", "") == value.replace("_", "").replace(" ", "")) {
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				return Aptitude[value];
-			}
-		}
-		return null;
-	}*/
 
 	private logMatchingWorlds(event: Event, data: W40KData) {
 		if (!data.worlds || data.worlds.length == 0) return;
@@ -1448,17 +1505,5 @@ export class App {
 			}
 		}
 		this.save();
-	}
-
-	public randomStr(length: number) {
-		let result = '';
-		const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-		const charactersLength = characters.length;
-		let counter = 0;
-		while (counter < length) {
-			result += characters.charAt(Math.floor(Math.random() * charactersLength));
-			counter += 1;
-		}
-		return result;
 	}
 }
