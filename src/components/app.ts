@@ -81,6 +81,7 @@ interface W40KTalent {
 	apt2: Aptitude,
 	benefit: string,
 	ref: string
+	prerequisiteTree: Prerequisite;
 }
 
 interface W40KSkill {
@@ -101,27 +102,45 @@ class CharacteristicPick {
 		this.characteristic = characteristic;
 		this.amount = amount;
 	}
+
+	toString(): string {
+		return this.characteristic.name + " +" + this.amount;
+	}
 }
 
 class SkillPick {
 	skill: W40KSkill;
-	choice: string | null;
+	choices: string[] | null;
 	amount: number;
 
-	constructor(skill: W40KSkill, choice: string, amount: number) {
+	constructor(skill: W40KSkill, choices: string[] | null, amount: number) {
 		this.skill = skill;
-		this.choice = choice;
+		this.choices = choices;
 		this.amount = amount;
+	}
+
+	toString(): string {
+		if (this.choices) {
+			return this.skill.name + " (" + this.choices.join(", ") + ") +" + this.amount;
+		}
+		return this.skill.name + " +" + this.amount;
 	}
 }
 
 class TalentPick {
 	talent: W40KTalent;
-	choice: string | null;
+	choices: string[] | null;
 
-	constructor(talent: W40KTalent, choice: string) {
+	constructor(talent: W40KTalent, choices: string[] | null) {
 		this.talent = talent;
-		this.choice = choice;
+		this.choices = choices;
+	}
+
+	toString(): string {
+		if (this.choices) {
+			return this.talent.talent + " (" + this.choices.join(", ") + ")";
+		}
+		return this.talent.talent;
 	}
 }
 
@@ -266,6 +285,19 @@ class Node {
 	}
 }
 
+class Prerequisite {
+	text = "" as string;
+	skillPick = null as SkillPick | null;
+	characteristicPick = null as CharacteristicPick | null;
+	talentPick = null as TalentPick | null;
+	and = [] as Prerequisite[];
+	or = [] as Prerequisite[];
+
+	constructor(text: string) {
+		this.text = text;
+	}
+}
+
 export class App {
 	tree = new Tree();
 	fullTree = new Tree();
@@ -288,7 +320,6 @@ export class App {
 	$start(data: W40KData, source: string, configDateParam: string | null): void {
 		this.data = data;
 		this.source = source;
-
 		this.buildFullTree();
 
 		const configDataString: string | null = localStorage.getItem("w40k-data-config-" + source);
@@ -545,7 +576,75 @@ export class App {
 		return result;
 	}
 
+	private resolvePreRequisiteText(parentTalent: W40KTalent, prerequisite: Prerequisite): Prerequisite {
+		if (prerequisite.text === "-" || prerequisite.text === "—") {
+			prerequisite.text = "";
+			return prerequisite;
+		}
+		let replaced = false;
+		this.data.talents.forEach((talent) => {
+			// regex talentName (choice)
+			const regex = new RegExp("^" + talent.talent + " \\((.+)\\)$", "i");
+			if (regex.test(prerequisite.text)) {
+				const choice = prerequisite.text.match(regex)![1];
+				prerequisite.talentPick = new TalentPick(talent, choice.split(",").map((each) => each.trim()));
+				replaced = true;
+			} else if (talent.talent.toLowerCase() == prerequisite.text.toLowerCase()) {
+				prerequisite.talentPick = new TalentPick(talent, null);
+				replaced = true;
+			}
+		});
+		this.data.characteristic.forEach((characteristic) => {
+			// regex characteristicName number
+			const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
+			if (regex.test(prerequisite.text)) {
+				const amount = parseInt(prerequisite.text.match(regex)![1]);
+				prerequisite.characteristicPick = new CharacteristicPick(characteristic, amount);
+				replaced = true;
+			}
+		});
+		this.data.skills.forEach((skill) => {
+			// regex skillName (choice) +number
+			const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
+			// regex skillName +number
+			const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
+			if (regex2.test(prerequisite.text)) {
+				const amount = parseInt(prerequisite.text.match(regex2)![2]);
+				const choice = prerequisite.text.match(regex2)![1];
+				prerequisite.skillPick = new SkillPick(skill, choice.split(",").map((each) => each.trim()), amount);
+				replaced = true;
+			} else if (regex1.test(prerequisite.text)) {
+				const amount = parseInt(prerequisite.text.match(regex1)![1]);
+				prerequisite.skillPick = new SkillPick(skill, null, amount);
+				replaced = true;
+			}
+		});
+		return prerequisite;
+	}
+
 	private buildFullTree() {
+		this.data.talents.forEach(talent => {
+			talent.prerequisiteTree = this.resolvePreRequisiteText(talent, new Prerequisite(talent.prerequisites));
+			if (!(talent.prerequisites === "-" || talent.prerequisites === "—")) {
+				const splitPrerequisites = this.splitPrerequisites(talent.prerequisites);
+				if (splitPrerequisites.length > 1) {
+					for (let i = 0; i < splitPrerequisites.length; i++) {
+						const andItem = splitPrerequisites[i];
+						const andPrerequisite = this.resolvePreRequisiteText(talent, new Prerequisite(andItem));
+						talent.prerequisiteTree.and.push(andPrerequisite);
+						const orlements = andItem.split(/ or (?!more\b)(?![^()]*\))/gi).map((each) => each.trim());
+						if (orlements.length > 1) {
+							for (let j = 0; j < orlements.length; j++) {
+								const orItem = orlements[j];
+								const orPrerequisite = this.resolvePreRequisiteText(talent, new Prerequisite(orItem));
+								andPrerequisite.or.push(orPrerequisite);
+							}
+						}
+					}
+				}
+			}
+		});
+
 		this.data.talents.forEach(parentTalent => {
 			const parentTalentName = parentTalent.talent.toLowerCase().trim();
 			this.data.talents.forEach(otherTalent => {
@@ -577,8 +676,6 @@ export class App {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private triggerRecalc(event: Event | null) {
-		//console.log("triggerRecalc");
-
 		this.tree = new Tree();
 
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
@@ -859,10 +956,13 @@ export class App {
 			const actionDiv = document.createElement("div");
 			actionDiv.setAttribute("data-export", "false");
 			recordDiv.appendChild(actionDiv);
-			const listPrerequisitesAsTree = this.listPrerequisitesAsTree(sortedTalents[i]);
+			const listPrerequisitesAsTree = this.prerequisitesAsUL(sortedTalents[i]);
 			if (listPrerequisitesAsTree != null) {
-				const combinePrerequisites = this.combinePrerequisites(sortedTalents[i]);
+				const combinePrerequisites = this.prerequisitesAsULCollapsed(sortedTalents[i]);
 				const randomId = this.randomStr(10);
+				console.log("listPrerequisitesAsTree", listPrerequisitesAsTree);
+				console.log("combinePrerequisites", combinePrerequisites);
+				this.iterateLog("", sortedTalents[i].prerequisiteTree);
 				actionDiv.innerHTML = `
 					<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="<b>All Prerequisites</b>:${listPrerequisitesAsTree}<b>Combined Prerequisites</b>:${combinePrerequisites}">
 						<i class='icon-as-button fa-regular fa-eye'></i>
@@ -928,13 +1028,13 @@ export class App {
 		this.save();
 	}
 
-	private listPrerequisitesAsTree(talent: W40KTalent) {
+	private prerequisitesAsUL(talent: W40KTalent) {
 		const nodeLookup = this.fullTree.get(talent.talent);
 		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
-		return this.prerequisitesToLi(talent.prerequisites);
+		return this.prerequisitesAsLi(talent.prerequisites);
 	}
 
-	private combinePrerequisites(talent: W40KTalent) {
+	private prerequisitesAsULCollapsed(talent: W40KTalent) {
 		const nodeLookup = this.fullTree.get(talent.talent);
 		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
 		const allPrerequisites = [] as string[];
@@ -955,76 +1055,76 @@ export class App {
 			}
 		}
 		if (allPrerequisites.length == 0) return null;
-			const characteristicPicks = [] as CharacteristicPick[];
-			const skillPicks = [] as SkillPick[];
-			const collapsedPrerequisites = [] as string[];
-			allPrerequisites.forEach((allPrerequisite) => {
-				let canReplace = false;
-				this.data.characteristic.forEach((characteristic) => {
-					// regex characteristicName number
-					const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
-					if (regex.test(allPrerequisite)) {
-						const amount = parseInt(allPrerequisite.match(regex)![1]);
-						const matchPicks = characteristicPicks.filter((characteristicPick) => characteristicPick.characteristic.name === characteristic.name);
-						if (matchPicks.length > 0) {
-							const existingPick = matchPicks[0]; // should always be 1 element or 0
-							if (existingPick.amount < amount) existingPick.amount = amount;
-						} else {
-							characteristicPicks.push({characteristic, amount});
-						}
-						canReplace = true;
+		const characteristicPicks = [] as CharacteristicPick[];
+		const skillPicks = [] as SkillPick[];
+		const collapsedPrerequisites = [] as string[];
+		allPrerequisites.forEach((allPrerequisite) => {
+			let canReplace = false;
+			this.data.characteristic.forEach((characteristic) => {
+				// regex characteristicName number
+				const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
+				if (regex.test(allPrerequisite)) {
+					const amount = parseInt(allPrerequisite.match(regex)![1]);
+					const matchPicks = characteristicPicks.filter((characteristicPick) => characteristicPick.characteristic.name === characteristic.name);
+					if (matchPicks.length > 0) {
+						const existingPick = matchPicks[0]; // should always be 1 element or 0
+						if (existingPick.amount < amount) existingPick.amount = amount;
+					} else {
+						characteristicPicks.push({characteristic, amount});
 					}
-				});
-				this.data.skills.forEach((skill) => {
-					// regex skillName (choice) +number
-					const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
-					// regular expression, allPrerequisite starts with characteristic name folled by numer to extra number
-					const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
-					let amount: number | null = null;
-					let choice: string | null = null;
-					if (regex2.test(allPrerequisite)) {
-						amount = parseInt(allPrerequisite.match(regex2)![2]);
-						choice = allPrerequisite.match(regex2)![1];
-						canReplace = true;
-					} else if (regex1.test(allPrerequisite)) {
-						amount = parseInt(allPrerequisite.match(regex1)![1]);
-						canReplace = true;
-					}
-					if (amount != null) {
-						const matchPicks = skillPicks.filter((skillPick) => skillPick.skill.name === skill.name && skillPick.choice === choice);
-						if (matchPicks.length > 0) {
-							const existingPick = matchPicks[0]; // should always be 1 element or 0
-							if (existingPick.amount < amount) existingPick.amount = amount;
-						} else {
-							skillPicks.push({skill, choice, amount});
-						}
-					}
-				});
-				if (!canReplace) {
-					const toAdd = `${allPrerequisite}`;
-					if (collapsedPrerequisites.indexOf(toAdd) === -1) collapsedPrerequisites.push(toAdd);
+					canReplace = true;
 				}
 			});
-			collapsedPrerequisites.sort((a, b) => a.localeCompare(b));
-			characteristicPicks.sort((a, b) => a.characteristic.name.localeCompare(b.characteristic.name)).forEach((characteristicPick) => {
-				collapsedPrerequisites.push(`<i>Char</i>: ${characteristicPick.characteristic.name} ${characteristicPick.amount}`);
-			});
-			skillPicks.sort((a, b) => a.skill.name.localeCompare(b.skill.name)).forEach((skillPick) => {
-				if (skillPick.choice) {
-					collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} (${skillPick.choice}) +${skillPick.amount}`);
-				} else {
-					collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} +${skillPick.amount}`);
+			this.data.skills.forEach((skill) => {
+				// regex skillName (choice) +number
+				const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
+				// regular expression, allPrerequisite starts with characteristic name folled by numer to extra number
+				const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
+				let amount: number | null = null;
+				let choices: string[] | null = null;
+				if (regex2.test(allPrerequisite)) {
+					amount = parseInt(allPrerequisite.match(regex2)![2]);
+					choices = allPrerequisite.match(regex2)![1].split(",").map((each) => each.trim());
+					canReplace = true;
+				} else if (regex1.test(allPrerequisite)) {
+					amount = parseInt(allPrerequisite.match(regex1)![1]);
+					canReplace = true;
+				}
+				if (amount != null) {
+					const matchPicks = skillPicks.filter((skillPick) => skillPick.skill.name === skill.name && skillPick.choices === choices);
+					if (matchPicks.length > 0) {
+						const existingPick = matchPicks[0]; // should always be 1 element or 0
+						if (existingPick.amount < amount) existingPick.amount = amount;
+					} else {
+						skillPicks.push({skill, choices, amount});
+					}
 				}
 			});
-			let strPrerequisites = "<ul class='tiny-ul'>";
-			for (let i = 0; i < collapsedPrerequisites.length; i++) {
-				strPrerequisites += "<li>" + collapsedPrerequisites[i] + "</li>";
+			if (!canReplace) {
+				const toAdd = `${allPrerequisite}`;
+				if (collapsedPrerequisites.indexOf(toAdd) === -1) collapsedPrerequisites.push(toAdd);
 			}
-			strPrerequisites += "</ul>";
-			return strPrerequisites;
+		});
+		collapsedPrerequisites.sort((a, b) => a.localeCompare(b));
+		characteristicPicks.sort((a, b) => a.characteristic.name.localeCompare(b.characteristic.name)).forEach((characteristicPick) => {
+			collapsedPrerequisites.push(`<i>Characteristic</i>: ${characteristicPick.characteristic.name} ${characteristicPick.amount}`);
+		});
+		skillPicks.sort((a, b) => a.skill.name.localeCompare(b.skill.name)).forEach((skillPick) => {
+			if (skillPick.choices && skillPick.choices.length > 0) {
+				collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} (${skillPick.choices}) +${skillPick.amount}`);
+			} else {
+				collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} +${skillPick.amount}`);
+			}
+		});
+		let strPrerequisites = "<ul class='tiny-ul'>";
+		for (let i = 0; i < collapsedPrerequisites.length; i++) {
+			strPrerequisites += "<li>" + collapsedPrerequisites[i] + "</li>";
+		}
+		strPrerequisites += "</ul>";
+		return strPrerequisites;
 	}
 
-	private prerequisitesToLi(prerequisites: string): string {
+	private prerequisitesAsLi(prerequisites: string): string {
 		const splitted = this.splitPrerequisites(prerequisites);
 		let strPrerequisites = "<ul class='tiny-ul'>";
 		for (let i = 0; i < splitted.length; i++) {
@@ -1033,7 +1133,7 @@ export class App {
 			strPrerequisites += splitted[i];
 			this.data.talents.forEach((eachTalent) => {
 				if (splitted[i].toLowerCase().includes(eachTalent.talent.toLowerCase())) {
-					strPrerequisites += this.prerequisitesToLi(eachTalent.prerequisites);
+					strPrerequisites += this.prerequisitesAsLi(eachTalent.prerequisites);
 				}
 			});
 			strPrerequisites += "</li>";
@@ -1505,5 +1605,35 @@ export class App {
 			}
 		}
 		this.save();
+	}
+
+	private iterateLog(prefix: string, prerequisiteTree: Prerequisite) {
+		if (prerequisiteTree.and.length > 0) {
+			console.log(prefix + "AND");
+			prerequisiteTree.and.forEach((and) => {
+				this.iterateLog(prefix + "  ", and);
+				if (and.talentPick != null) {
+					this.iterateLog(prefix + "    ", and.talentPick.talent.prerequisiteTree);
+				}
+			});
+		} else if (prerequisiteTree.or.length > 0) {
+			console.log(prefix + "OR");
+			prerequisiteTree.or.forEach((or) => {
+				this.iterateLog(prefix + "  ", or);
+				if (or.talentPick != null) {
+					this.iterateLog(prefix + "    ", or.talentPick.talent.prerequisiteTree);
+				}
+			});
+		} else {
+			if (prerequisiteTree.characteristicPick != null) {
+				console.log(prefix + "C: " + prerequisiteTree.characteristicPick);
+			} else if (prerequisiteTree.skillPick != null) {
+				console.log(prefix + "S: " + prerequisiteTree.skillPick);
+			} else if (prerequisiteTree.talentPick != null) {
+				console.log(prefix + "T: " + prerequisiteTree.talentPick);
+			} else if(prerequisiteTree.text != null && prerequisiteTree.text != "") {
+				console.log(prefix + "*: " + prerequisiteTree.text);
+			}
+		}
 	}
 }
