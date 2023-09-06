@@ -82,6 +82,7 @@ interface W40KTalent {
 	benefit: string,
 	ref: string
 	prerequisiteTree: Prerequisite;
+	expandsTo: W40KTalent[];
 }
 
 interface W40KSkill {
@@ -120,9 +121,7 @@ class SkillPick {
 	}
 
 	toString(): string {
-		if (this.choices) {
-			return this.skill.name + " (" + this.choices.join(", ") + ") +" + this.amount;
-		}
+		if (this.choices) return this.skill.name + " (" + this.choices.join(", ") + ") +" + this.amount;
 		return this.skill.name + " +" + this.amount;
 	}
 }
@@ -137,9 +136,7 @@ class TalentPick {
 	}
 
 	toString(): string {
-		if (this.choices) {
-			return this.talent.talent + " (" + this.choices.join(", ") + ")";
-		}
+		if (this.choices) return this.talent.talent + " (" + this.choices.join(", ") + ")";
 		return this.talent.talent;
 	}
 }
@@ -317,11 +314,76 @@ export class App {
 			.then((data) => this.$start(data, source, configDateParam));
 	}
 
-	$start(data: W40KData, source: string, configDateParam: string | null): void {
+	private $start(data: W40KData, source: string, configDateParam: string | null): void {
 		this.data = data;
+		this.data.talents.forEach(talent => {
+			talent.expandsTo = [];
+		});
 		this.source = source;
 		this.buildFullTree();
+		this.buildPrerequisitesTree();
+		this.loadConfigData(source, configDateParam);
+		this.createClassSelectContainer();
+		this.createWorldSelectContainer();
+		this.createBackgroundSelectContainer();
+		this.createRoleSelectContainer();
+		this.createAptitudeSelect();
+		this.createAptitudeWishlistSelect();
+		this.createSkip0Cb();
+		{
+			const characteristic_wishlist = this.createCharacteristicWishlist();
+			this.createExportCharacteristic();
+			this.createExportCharacteristicWishlist();
+			this.createCharacteristicWishlistClear(characteristic_wishlist);
+		}
+		{
+			const skill_wishlist = this.createSkillWishlist();
+			this.createExportSkill();
+			this.createExportSkillWishlist();
+			this.createSkillWishlistClear(skill_wishlist);
+		}
+		{
+			const wishlist = this.createTalentWishlist();
+			this.createExportTalent();
+			this.createExportTalentWishlist();
+			this.createTalentWishlistClear(wishlist);
+		}
+		this.createExportAll();
+		this.createSelectPicker();
+		this.rebuildTables(null);
+		this.styleAptitudeMatches(null, data);
+	}
 
+	private buildPrerequisitesTree() {
+		this.data.talents.forEach(talent => {
+			talent.prerequisiteTree = this.resolvePrerequisiteText(talent, new Prerequisite(talent.prerequisites));
+			if (!(talent.prerequisites === "-" || talent.prerequisites === "—")) {
+				const splitPrerequisites = this.splitPrerequisites(talent.prerequisites);
+				if (splitPrerequisites.length > 1) {
+					for (let i = 0; i < splitPrerequisites.length; i++) {
+						const andItem = splitPrerequisites[i];
+						const andPrerequisite = this.resolvePrerequisiteText(talent, new Prerequisite(andItem));
+						talent.prerequisiteTree.and.push(andPrerequisite);
+						const orlements = andItem.split(/ or (?!more\b)(?![^()]*\))/gi).map((each) => each.trim());
+						if (orlements.length > 1) {
+							for (let j = 0; j < orlements.length; j++) {
+								const orItem = orlements[j];
+								const orPrerequisite = this.resolvePrerequisiteText(talent, new Prerequisite(orItem));
+								andPrerequisite.or.push(orPrerequisite);
+							}
+						}
+					}
+				}
+			}
+		});
+	}
+
+	private createSelectPicker() {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		($('._selectpicker') as any).selectpicker();
+	}
+
+	private loadConfigData(source: string, configDateParam: string | null) {
 		const configDataString: string | null = localStorage.getItem("w40k-data-config-" + source);
 		if (configDateParam) {
 			if (configDateParam.startsWith("%7B") || configDateParam.startsWith("{")) {
@@ -336,7 +398,223 @@ export class App {
 			console.log("load-browser", "w40k-data-config-" + this.source, configDataString);
 			this.configData = JSON.parse(configDataString);
 		}
+	}
 
+	private createCharacteristicWishlistClear(characteristic_wishlist: HTMLTextAreaElement) {
+		const characteristic_wishlist_clear = document.getElementById("characteristic_wishlist_clear") as HTMLSelectElement;
+		characteristic_wishlist_clear.addEventListener("click", (event) => {
+			characteristic_wishlist.value = "";
+			this.rebuildTables(event);
+		});
+	}
+
+	private createSkillWishlistClear(skill_wishlist: HTMLTextAreaElement) {
+		const skill_wishlist_clear = document.getElementById("skill_wishlist_clear") as HTMLSelectElement;
+		skill_wishlist_clear.addEventListener("click", (event) => {
+			skill_wishlist.value = "";
+			this.rebuildTables(event);
+		});
+	}
+
+	private createTalentWishlistClear(wishlist: HTMLTextAreaElement) {
+		const wishlist_clear = document.getElementById("wishlist_clear") as HTMLSelectElement;
+		wishlist_clear.addEventListener("click", (event) => {
+			wishlist.value = "";
+			this.rebuildTables(event);
+		});
+	}
+
+	private createExportAll() {
+		const export_all = document.getElementById("export_all") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_all.addEventListener("click", (event) => this.exportAllTableToExcelDef("characteristic", "skill", "talent"));
+	}
+
+	private createExportTalentWishlist() {
+		const export_talent_wishlist = document.getElementById("export_talent_wishlist") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_talent_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("talent", 3));
+	}
+
+	private createExportSkillWishlist() {
+		const export_skill_wishlist = document.getElementById("export_skill_wishlist") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_skill_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("skill", 2));
+	}
+
+	private createExportCharacteristicWishlist() {
+		const export_characteristic_wishlist = document.getElementById("export_characteristic_wishlist") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_characteristic_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("characteristic", 2));
+	}
+
+	private createExportTalent() {
+		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_talent.addEventListener("click", (event) => this.copyTableDivToClipboard("talent"));
+	}
+
+	private createExportSkill() {
+		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_skill.addEventListener("click", (event) => this.copyTableDivToClipboard("skill"));
+	}
+
+	private createExportCharacteristic() {
+		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		export_characteristic.addEventListener("click", (event) => this.copyTableDivToClipboard("characteristic"));
+	}
+
+	private createTalentWishlist() {
+		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement; // talent_wishlist
+		wishlist.value = this.configData.wishlist;
+		wishlist.addEventListener("change", (event) => this.rebuildTables(event));
+		return wishlist;
+	}
+
+	private createSkillWishlist() {
+		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
+		skill_wishlist.value = this.configData.skill_wishlist;
+		skill_wishlist.addEventListener("change", (event) => this.rebuildTables(event));
+		return skill_wishlist;
+	}
+
+	private createCharacteristicWishlist() {
+		const characteristic_wishlist = document.getElementById("characteristic_wishlist") as HTMLTextAreaElement;
+		characteristic_wishlist.value = this.configData.characteristic_wishlist;
+		characteristic_wishlist.addEventListener("change", (event) => this.rebuildTables(event));
+		return characteristic_wishlist;
+	}
+
+	private createSkip0Cb() {
+		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
+		skip0Cb.checked = this.configData.skip0CbChecked;
+		skip0Cb.addEventListener("change", (event) => this.rebuildTables(event));
+	}
+
+	private createAptitudeWishlistSelect() {
+		const aptitudeWishlistSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
+		for (let i = 0; i < this.data.optional.length; i++) {
+			const aptitudeWishlistSelectOption = document.createElement("option");
+			aptitudeWishlistSelectOption.text = this.data.optional[i];
+			aptitudeWishlistSelectOption.value = this.data.optional[i];
+			if (this.configData.aptitudesWishlist && this.configData.aptitudesWishlist.includes(this.data.optional[i])) {
+				aptitudeWishlistSelectOption.selected = true;
+			}
+			aptitudeWishlistSelect.add(aptitudeWishlistSelectOption);
+		}
+		aptitudeWishlistSelect.addEventListener("change", (event) => {
+			this.logMatchingClasses(event, this.data);
+			this.logMatchingWorlds(event, this.data);
+			this.logMatchingBackgrounds(event, this.data);
+			this.logMatchingRoles(event, this.data);
+			this.styleAptitudeMatches(event, this.data);
+		});
+	}
+
+	private createAptitudeSelect() {
+		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
+		for (let i = 0; i < this.data.optional.length; i++) {
+			const aptitudeSelectOption = document.createElement("option");
+			aptitudeSelectOption.text = this.data.optional[i];
+			aptitudeSelectOption.value = this.data.optional[i];
+			if (this.configData.extraAptitudesSelected && this.configData.extraAptitudesSelected.includes(this.data.optional[i])) {
+				aptitudeSelectOption.selected = true;
+			}
+			aptitudeSelect.add(aptitudeSelectOption);
+		}
+		aptitudeSelect.addEventListener("change", (event) => this.rebuildTables(event));
+	}
+
+	private createRoleSelectContainer() {
+		const roleSelectContainer = document.getElementById("roleSelectContainer") as HTMLDivElement;
+		if (this.data.roles && this.data.roles.length > 0) {
+			const roleSelect = document.getElementById("roleSelect") as HTMLSelectElement;
+			{
+				const option = document.createElement("option");
+				option.text = "None";
+				roleSelect.add(option);
+			}
+			// add options to select element
+			for (let i = 0; i < this.data.roles.length; i++) {
+				const option = document.createElement("option");
+				const apts = this.data.roles[i].aptitudes;
+				const {apt, aptalt} = this.commonFunc2(apts);
+				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
+				option.setAttribute("data-content", this.data.roles[i].role + " " + aptalt);
+				option.value = this.data.roles[i].role;
+				if (this.configData.roleSelected && this.configData.roleSelected == this.data.roles[i].role) {
+					option.selected = true;
+				}
+				roleSelect.add(option);
+			}
+			// add event listener to select element
+			roleSelect.addEventListener("change", (event) => this.rebuildTables(event));
+		} else {
+			roleSelectContainer.style.display = "none";
+		}
+	}
+
+	private createBackgroundSelectContainer() {
+		const backgroundSelectContainer = document.getElementById("backgroundSelectContainer") as HTMLDivElement;
+		if (this.data.backgrounds && this.data.backgrounds.length > 0) {
+			const backgroundSelect = document.getElementById("backgroundSelect") as HTMLSelectElement;
+			{
+				const option = document.createElement("option");
+				option.text = "None";
+				backgroundSelect.add(option);
+			}
+			// add options to select element
+			for (let i = 0; i < this.data.backgrounds.length; i++) {
+				const option = document.createElement("option");
+				option.text = this.data.backgrounds[i].background + " (" + this.data.backgrounds[i].aptitude + ")";
+				option.setAttribute("data-content", this.data.backgrounds[i].background + " " + "<span class='badge badge-pill badge-secondary " + this.data.backgrounds[i].aptitude.replace(" ", "_") + "'>" + this.data.backgrounds[i].aptitude + "</span>");
+				option.value = this.data.backgrounds[i].background;
+				if (this.configData.backgroundSelected && this.configData.backgroundSelected == this.data.backgrounds[i].background) {
+					option.selected = true;
+				}
+				backgroundSelect.add(option);
+			}
+			// add event listener to select element
+			backgroundSelect.addEventListener("change", (event) => {
+				this.rebuildTables(event);
+			});
+		} else {
+			backgroundSelectContainer.style.display = "none";
+		}
+	}
+
+	private createWorldSelectContainer() {
+		const worldSelectContainer = document.getElementById("worldSelectContainer") as HTMLDivElement;
+		if (this.data.worlds && this.data.worlds.length > 0) {
+			const worldSelect = document.getElementById("worldSelect") as HTMLSelectElement;
+			{
+				const option = document.createElement("option");
+				option.text = "None";
+				worldSelect.add(option);
+			}
+			// add options to select element
+			for (let i = 0; i < this.data.worlds.length; i++) {
+				const option = document.createElement("option");
+				option.text = this.data.worlds[i].world + " (" + this.data.worlds[i].aptitude + ")";
+				option.setAttribute("data-content", this.data.worlds[i].world + " " + "<span class='badge badge-pill badge-secondary " + this.data.worlds[i].aptitude.replace(" ", "_") + "'>" + this.data.worlds[i].aptitude + "</span>");
+				option.value = this.data.worlds[i].world;
+				if (this.configData.worldSelected && this.configData.worldSelected == this.data.worlds[i].world) {
+					option.selected = true;
+				}
+				worldSelect.add(option);
+			}
+			// add event listener to select element
+			worldSelect.addEventListener("change", (event) => {
+				this.rebuildTables(event);
+			});
+		} else {
+			worldSelectContainer.style.display = "none";
+		}
+	}
+
+	private createClassSelectContainer() {
 		const classSelectContainer = document.getElementById("classSelectContainer") as HTMLDivElement;
 		if (this.data.classes && this.data.classes.length > 0) {
 			const classSelect = document.getElementById("classSelect") as HTMLSelectElement;
@@ -369,190 +647,11 @@ export class App {
 			}
 			// add event listener to select element
 			classSelect.addEventListener("change", (event) => {
-				this.triggerRecalc(event);
+				this.rebuildTables(event);
 			});
 		} else {
 			classSelectContainer.style.display = "none";
 		}
-
-		const worldSelectContainer = document.getElementById("worldSelectContainer") as HTMLDivElement;
-		if (this.data.worlds && this.data.worlds.length > 0) {
-			const worldSelect = document.getElementById("worldSelect") as HTMLSelectElement;
-			{
-				const option = document.createElement("option");
-				option.text = "None";
-				worldSelect.add(option);
-			}
-			// add options to select element
-			for (let i = 0; i < this.data.worlds.length; i++) {
-				const option = document.createElement("option");
-				option.text = this.data.worlds[i].world + " (" + this.data.worlds[i].aptitude + ")";
-				option.setAttribute("data-content", this.data.worlds[i].world + " " + "<span class='badge badge-pill badge-secondary " + this.data.worlds[i].aptitude.replace(" ", "_") + "'>" + this.data.worlds[i].aptitude + "</span>");
-				option.value = this.data.worlds[i].world;
-				if (this.configData.worldSelected && this.configData.worldSelected == this.data.worlds[i].world) {
-					option.selected = true;
-				}
-				worldSelect.add(option);
-			}
-			// add event listener to select element
-			worldSelect.addEventListener("change", (event) => {
-				this.triggerRecalc(event);
-			});
-		} else {
-			worldSelectContainer.style.display = "none";
-		}
-
-		const backgroundSelectContainer = document.getElementById("backgroundSelectContainer") as HTMLDivElement;
-		if (this.data.backgrounds && this.data.backgrounds.length > 0) {
-			const backgroundSelect = document.getElementById("backgroundSelect") as HTMLSelectElement;
-			{
-				const option = document.createElement("option");
-				option.text = "None";
-				backgroundSelect.add(option);
-			}
-			// add options to select element
-			for (let i = 0; i < this.data.backgrounds.length; i++) {
-				const option = document.createElement("option");
-				option.text = this.data.backgrounds[i].background + " (" + this.data.backgrounds[i].aptitude + ")";
-				option.setAttribute("data-content", this.data.backgrounds[i].background + " " + "<span class='badge badge-pill badge-secondary " + this.data.backgrounds[i].aptitude.replace(" ", "_") + "'>" + this.data.backgrounds[i].aptitude + "</span>");
-				option.value = this.data.backgrounds[i].background;
-				if (this.configData.backgroundSelected && this.configData.backgroundSelected == this.data.backgrounds[i].background) {
-					option.selected = true;
-				}
-				backgroundSelect.add(option);
-			}
-			// add event listener to select element
-			backgroundSelect.addEventListener("change", (event) => {
-				this.triggerRecalc(event);
-			});
-		} else {
-			backgroundSelectContainer.style.display = "none";
-		}
-
-		const roleSelectContainer = document.getElementById("roleSelectContainer") as HTMLDivElement;
-		if (this.data.roles && this.data.roles.length > 0) {
-			const roleSelect = document.getElementById("roleSelect") as HTMLSelectElement;
-			{
-				const option = document.createElement("option");
-				option.text = "None";
-				roleSelect.add(option);
-			}
-			// add options to select element
-			for (let i = 0; i < this.data.roles.length; i++) {
-				const option = document.createElement("option");
-				const apts = this.data.roles[i].aptitudes;
-				const {apt, aptalt} = this.commonFunc2(apts);
-				option.text = this.data.roles[i].role + " (" + apt.trim() + ")";
-				option.setAttribute("data-content", this.data.roles[i].role + " " + aptalt);
-				option.value = this.data.roles[i].role;
-				if (this.configData.roleSelected && this.configData.roleSelected == this.data.roles[i].role) {
-					option.selected = true;
-				}
-				roleSelect.add(option);
-			}
-			// add event listener to select element
-			roleSelect.addEventListener("change", (event) => this.triggerRecalc(event));
-		} else {
-			roleSelectContainer.style.display = "none";
-		}
-
-		const aptitudeSelect = document.getElementById("aptitudeSelect") as HTMLSelectElement;
-		for (let i = 0; i < this.data.optional.length; i++) {
-			const aptitudeSelectOption = document.createElement("option");
-			aptitudeSelectOption.text = this.data.optional[i];
-			aptitudeSelectOption.value = this.data.optional[i];
-			if (this.configData.extraAptitudesSelected && this.configData.extraAptitudesSelected.includes(this.data.optional[i])) {
-				aptitudeSelectOption.selected = true;
-			}
-			aptitudeSelect.add(aptitudeSelectOption);
-		}
-		aptitudeSelect.addEventListener("change", (event) => this.triggerRecalc(event));
-
-		const aptitudeWishlistSelect = document.getElementById("aptitudeWishlistSelect") as HTMLSelectElement;
-		for (let i = 0; i < this.data.optional.length; i++) {
-			const aptitudeWishlistSelectOption = document.createElement("option");
-			aptitudeWishlistSelectOption.text = this.data.optional[i];
-			aptitudeWishlistSelectOption.value = this.data.optional[i];
-			if (this.configData.aptitudesWishlist && this.configData.aptitudesWishlist.includes(this.data.optional[i])) {
-				aptitudeWishlistSelectOption.selected = true;
-			}
-			aptitudeWishlistSelect.add(aptitudeWishlistSelectOption);
-		}
-		aptitudeWishlistSelect.addEventListener("change", (event) => {
-			this.logMatchingClasses(event, data);
-			this.logMatchingWorlds(event, data);
-			this.logMatchingBackgrounds(event, data);
-			this.logMatchingRoles(event, data);
-			this.styleAptitudeMatches(event, data);
-		});
-
-		const skip0Cb = document.getElementById("skip0Cb") as HTMLInputElement;
-		skip0Cb.checked = this.configData.skip0CbChecked;
-		skip0Cb.addEventListener("change", (event) => this.triggerRecalc(event));
-
-		const characteristic_wishlist = document.getElementById("characteristic_wishlist") as HTMLTextAreaElement;
-		characteristic_wishlist.value = this.configData.characteristic_wishlist;
-		characteristic_wishlist.addEventListener("change", (event) => this.triggerRecalc(event));
-
-		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
-		skill_wishlist.value = this.configData.skill_wishlist;
-		skill_wishlist.addEventListener("change", (event) => this.triggerRecalc(event));
-
-		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement; // talent_wishlist
-		wishlist.value = this.configData.wishlist;
-		wishlist.addEventListener("change", (event) => this.triggerRecalc(event));
-
-		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_characteristic.addEventListener("click", (event) => this.copyToClipboardText("characteristic"));
-
-		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_skill.addEventListener("click", (event) => this.copyToClipboardText("skill"));
-
-		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_talent.addEventListener("click", (event) => this.copyToClipboardText("talent"));
-
-		const export_characteristic_wishlist = document.getElementById("export_characteristic_wishlist") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_characteristic_wishlist.addEventListener("click", (event) => this.copyToClipboardWishlist("characteristic", 2));
-
-		const export_skill_wishlist = document.getElementById("export_skill_wishlist") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_skill_wishlist.addEventListener("click", (event) => this.copyToClipboardWishlist("skill", 2));
-
-		const export_talent_wishlist = document.getElementById("export_talent_wishlist") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_talent_wishlist.addEventListener("click", (event) => this.copyToClipboardWishlist("talent", 3));
-
-		const export_all = document.getElementById("export_all") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		export_all.addEventListener("click", (event) => this.exportAllTableToExcelDef("characteristic", "skill", "talent"));
-
-		const wishlist_clear = document.getElementById("wishlist_clear") as HTMLSelectElement;
-		wishlist_clear.addEventListener("click", (event) => {
-			wishlist.value = "";
-			this.triggerRecalc(event);
-		});
-
-		const skill_wishlist_clear = document.getElementById("skill_wishlist_clear") as HTMLSelectElement;
-		skill_wishlist_clear.addEventListener("click", (event) => {
-			skill_wishlist.value = "";
-			this.triggerRecalc(event);
-		});
-
-		const characteristic_wishlist_clear = document.getElementById("characteristic_wishlist_clear") as HTMLSelectElement;
-		characteristic_wishlist_clear.addEventListener("click", (event) => {
-			characteristic_wishlist.value = "";
-			this.triggerRecalc(event);
-		});
-
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		($('._selectpicker') as any).selectpicker();
-
-		this.triggerRecalc(null);
-		this.styleAptitudeMatches(null, data);
 	}
 
 	scrollToAnchor(anchorId: string) {
@@ -576,7 +675,7 @@ export class App {
 		return result;
 	}
 
-	private resolvePreRequisiteText(parentTalent: W40KTalent, prerequisite: Prerequisite): Prerequisite {
+	private resolvePrerequisiteText(parentTalent: W40KTalent, prerequisite: Prerequisite): Prerequisite {
 		if (prerequisite.text === "-" || prerequisite.text === "—") {
 			prerequisite.text = "";
 			return prerequisite;
@@ -588,9 +687,11 @@ export class App {
 			if (regex.test(prerequisite.text)) {
 				const choice = prerequisite.text.match(regex)![1];
 				prerequisite.talentPick = new TalentPick(talent, choice.split(",").map((each) => each.trim()));
+				parentTalent.expandsTo.push(talent);
 				replaced = true;
 			} else if (talent.talent.toLowerCase() == prerequisite.text.toLowerCase()) {
 				prerequisite.talentPick = new TalentPick(talent, null);
+				parentTalent.expandsTo.push(talent);
 				replaced = true;
 			}
 		});
@@ -623,28 +724,6 @@ export class App {
 	}
 
 	private buildFullTree() {
-		this.data.talents.forEach(talent => {
-			talent.prerequisiteTree = this.resolvePreRequisiteText(talent, new Prerequisite(talent.prerequisites));
-			if (!(talent.prerequisites === "-" || talent.prerequisites === "—")) {
-				const splitPrerequisites = this.splitPrerequisites(talent.prerequisites);
-				if (splitPrerequisites.length > 1) {
-					for (let i = 0; i < splitPrerequisites.length; i++) {
-						const andItem = splitPrerequisites[i];
-						const andPrerequisite = this.resolvePreRequisiteText(talent, new Prerequisite(andItem));
-						talent.prerequisiteTree.and.push(andPrerequisite);
-						const orlements = andItem.split(/ or (?!more\b)(?![^()]*\))/gi).map((each) => each.trim());
-						if (orlements.length > 1) {
-							for (let j = 0; j < orlements.length; j++) {
-								const orItem = orlements[j];
-								const orPrerequisite = this.resolvePreRequisiteText(talent, new Prerequisite(orItem));
-								andPrerequisite.or.push(orPrerequisite);
-							}
-						}
-					}
-				}
-			}
-		});
-
 		this.data.talents.forEach(parentTalent => {
 			const parentTalentName = parentTalent.talent.toLowerCase().trim();
 			this.data.talents.forEach(otherTalent => {
@@ -675,7 +754,7 @@ export class App {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	private triggerRecalc(event: Event | null) {
+	private rebuildTables(event: Event | null) {
 		this.tree = new Tree();
 
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
@@ -956,15 +1035,34 @@ export class App {
 			const actionDiv = document.createElement("div");
 			actionDiv.setAttribute("data-export", "false");
 			recordDiv.appendChild(actionDiv);
-			const listPrerequisitesAsTree = this.prerequisitesAsUL(sortedTalents[i]);
-			if (listPrerequisitesAsTree != null) {
-				const combinePrerequisites = this.prerequisitesAsULCollapsed(sortedTalents[i]);
+			let prerequisitesAsTree = this.prerequisitesAsTree(sortedTalents[i]);
+			// TODO
+			if (prerequisitesAsTree == null) prerequisitesAsTree = "";
+			/*if (prerequisitesAsTree != null)*/
+			{
+				let prerequisitesAsList = this.prerequisitesAsList(sortedTalents[i]);
+				if (prerequisitesAsList == null) prerequisitesAsList = "";
 				const randomId = this.randomStr(10);
-				console.log("listPrerequisitesAsTree", listPrerequisitesAsTree);
-				console.log("combinePrerequisites", combinePrerequisites);
-				this.iterateLog("", sortedTalents[i].prerequisiteTree);
+				console.log("prerequisitesAsTree", prerequisitesAsTree);
+				console.log("prerequisitesAsList", prerequisitesAsList);
+				let newPrerequisitesAsTree = "";
+				{
+					const parentHtmlElement = document.createElement("div");
+					this.newPrerequisitesAsTree(sortedTalents[i].prerequisiteTree, parentHtmlElement);
+					newPrerequisitesAsTree = parentHtmlElement.innerHTML;
+					console.log("newPrerequisitesAsTree", newPrerequisitesAsTree);
+				}
+				let newPrerequisitesAsList = "";
+				{
+					const parentHtmlElement = document.createElement("div");
+					this.newPrerequisitesAsList(sortedTalents[i].prerequisiteTree, parentHtmlElement);
+					newPrerequisitesAsList = parentHtmlElement.innerHTML;
+					console.log("newPrerequisitesAsList", newPrerequisitesAsList);
+				}
+				this.logPrerequisiteTree("", sortedTalents[i].prerequisiteTree);
 				actionDiv.innerHTML = `
-					<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="<b>All Prerequisites</b>:${listPrerequisitesAsTree}<b>Combined Prerequisites</b>:${combinePrerequisites}">
+					<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left"
+						data-content="<span class='tiny-ul'><b>All Prerequisites</b>:${newPrerequisitesAsTree}</span>">
 						<i class='icon-as-button fa-regular fa-eye'></i>
 					</button>
 					`;
@@ -1028,13 +1126,31 @@ export class App {
 		this.save();
 	}
 
-	private prerequisitesAsUL(talent: W40KTalent) {
+	private prerequisitesAsTree(talent: W40KTalent) {
 		const nodeLookup = this.fullTree.get(talent.talent);
 		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
-		return this.prerequisitesAsLi(talent.prerequisites);
+		return this.prerequisitesAsTreeNested(talent.prerequisites);
 	}
 
-	private prerequisitesAsULCollapsed(talent: W40KTalent) {
+	private prerequisitesAsTreeNested(prerequisites: string): string {
+		const splitted = this.splitPrerequisites(prerequisites);
+		let strPrerequisites = "<ul>";
+		for (let i = 0; i < splitted.length; i++) {
+			if ("-" == splitted[i] || "—" == splitted[i]) continue;
+			strPrerequisites += "<li>";
+			strPrerequisites += splitted[i];
+			this.data.talents.forEach((eachTalent) => {
+				if (splitted[i].toLowerCase().includes(eachTalent.talent.toLowerCase())) {
+					strPrerequisites += this.prerequisitesAsTreeNested(eachTalent.prerequisites);
+				}
+			});
+			strPrerequisites += "</li>";
+		}
+		strPrerequisites += "</ul>";
+		return strPrerequisites;
+	}
+
+	private prerequisitesAsList(talent: W40KTalent) {
 		const nodeLookup = this.fullTree.get(talent.talent);
 		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
 		const allPrerequisites = [] as string[];
@@ -1116,27 +1232,9 @@ export class App {
 				collapsedPrerequisites.push(`<i>Skill</i>: ${skillPick.skill.name} +${skillPick.amount}`);
 			}
 		});
-		let strPrerequisites = "<ul class='tiny-ul'>";
+		let strPrerequisites = "<ul>";
 		for (let i = 0; i < collapsedPrerequisites.length; i++) {
 			strPrerequisites += "<li>" + collapsedPrerequisites[i] + "</li>";
-		}
-		strPrerequisites += "</ul>";
-		return strPrerequisites;
-	}
-
-	private prerequisitesAsLi(prerequisites: string): string {
-		const splitted = this.splitPrerequisites(prerequisites);
-		let strPrerequisites = "<ul class='tiny-ul'>";
-		for (let i = 0; i < splitted.length; i++) {
-			if ("-" == splitted[i] || "—" == splitted[i]) continue;
-			strPrerequisites += "<li>";
-			strPrerequisites += splitted[i];
-			this.data.talents.forEach((eachTalent) => {
-				if (splitted[i].toLowerCase().includes(eachTalent.talent.toLowerCase())) {
-					strPrerequisites += this.prerequisitesAsLi(eachTalent.prerequisites);
-				}
-			});
-			strPrerequisites += "</li>";
 		}
 		strPrerequisites += "</ul>";
 		return strPrerequisites;
@@ -1416,7 +1514,7 @@ export class App {
 		}
 	}
 
-	private copyToClipboardText(tableDivId: string) {
+	private copyTableDivToClipboard(tableDivId: string) {
 		const tableHtml = this.exportDivToTable(tableDivId, true);
 		if (!tableHtml) return;
 		const dummyElPrefix = "1_textarea_copy_";
@@ -1442,7 +1540,7 @@ export class App {
 		return null;
 	}*/
 
-	private copyToClipboardWishlist(id: string, colIndex: number) {
+	private copyWishlistToClipboard(id: string, colIndex: number) {
 		const divElement = document.getElementById(id);
 		if (!divElement) return;
 
@@ -1607,32 +1705,87 @@ export class App {
 		this.save();
 	}
 
-	private iterateLog(prefix: string, prerequisiteTree: Prerequisite) {
+	private logPrerequisiteTree(prefix: string, prerequisiteTree: Prerequisite) {
 		if (prerequisiteTree.and.length > 0) {
 			console.log(prefix + "AND");
 			prerequisiteTree.and.forEach((and) => {
-				this.iterateLog(prefix + "  ", and);
+				this.logPrerequisiteTree(prefix + "  ", and);
 				if (and.talentPick != null) {
-					this.iterateLog(prefix + "    ", and.talentPick.talent.prerequisiteTree);
+					this.logPrerequisiteTree(prefix + "    ", and.talentPick.talent.prerequisiteTree);
 				}
 			});
 		} else if (prerequisiteTree.or.length > 0) {
 			console.log(prefix + "OR");
 			prerequisiteTree.or.forEach((or) => {
-				this.iterateLog(prefix + "  ", or);
+				this.logPrerequisiteTree(prefix + "  ", or);
 				if (or.talentPick != null) {
-					this.iterateLog(prefix + "    ", or.talentPick.talent.prerequisiteTree);
+					this.logPrerequisiteTree(prefix + "    ", or.talentPick.talent.prerequisiteTree);
 				}
 			});
 		} else {
-			if (prerequisiteTree.characteristicPick != null) {
-				console.log(prefix + "C: " + prerequisiteTree.characteristicPick);
+			if (prerequisiteTree.talentPick != null) {
+				console.log(prefix + "T: " + prerequisiteTree.talentPick);
 			} else if (prerequisiteTree.skillPick != null) {
 				console.log(prefix + "S: " + prerequisiteTree.skillPick);
-			} else if (prerequisiteTree.talentPick != null) {
-				console.log(prefix + "T: " + prerequisiteTree.talentPick);
-			} else if(prerequisiteTree.text != null && prerequisiteTree.text != "") {
+			} else if (prerequisiteTree.characteristicPick != null) {
+				console.log(prefix + "C: " + prerequisiteTree.characteristicPick);
+			} else if (prerequisiteTree.text != null && prerequisiteTree.text != "") {
 				console.log(prefix + "*: " + prerequisiteTree.text);
+			}
+		}
+	}
+
+	private newPrerequisitesAsList(prerequisiteTree: Prerequisite, parentHtmlElement: HTMLElement) {
+		//
+	}
+
+	private prerequisiteToString(prerequisite: Prerequisite): string | null {
+		if (prerequisite.and && prerequisite.and.length > 0) {
+			return null;
+		} else if (prerequisite.or && prerequisite.or.length > 0) {
+			return null;
+		} else if (prerequisite.characteristicPick) {
+			return prerequisite.characteristicPick.toString();
+		} else if (prerequisite.skillPick) {
+			return prerequisite.skillPick.toString();
+		} else if (prerequisite.talentPick) {
+			return prerequisite.talentPick.toString();
+		} else if (prerequisite.text) {
+			return prerequisite.text;
+		} else {
+			return null;
+		}
+	}
+
+	private newPrerequisitesAsTree(prerequisiteTree: Prerequisite, parentHtmlElement: HTMLElement) {
+		if (prerequisiteTree.and != null && prerequisiteTree.and.length > 0) {
+			const ul = parentHtmlElement.appendChild(document.createElement("ul"));
+			prerequisiteTree.and.forEach((item) => {
+				const text = this.prerequisiteToString(item);
+				const li = document.createElement("li");
+				if (text != null) {
+					ul.appendChild(li).appendChild(document.createElement("span")).innerHTML = text;
+				}
+				if (item.talentPick != null) {
+					this.newPrerequisitesAsTree(item.talentPick.talent.prerequisiteTree, li);
+				}
+			});
+		} else if (prerequisiteTree.or != null && prerequisiteTree.or.length > 0) {
+			const ul = parentHtmlElement.appendChild(document.createElement("ul"));
+			prerequisiteTree.or.forEach((item) => {
+				const text = this.prerequisiteToString(item);
+				const li = document.createElement("li");
+				if (text != null) {
+					ul.appendChild(li).appendChild(document.createElement("span")).innerHTML = text;
+				}
+				if (item.talentPick != null) {
+					this.newPrerequisitesAsTree(item.talentPick.talent.prerequisiteTree, li);
+				}
+			});
+		} else {
+			const text = this.prerequisiteToString(prerequisiteTree);
+			if (text != null) {
+				parentHtmlElement.appendChild(document.createElement("span")).innerHTML = text;
 			}
 		}
 	}

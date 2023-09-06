@@ -256,7 +256,8 @@ a.jump-to-anchor {
 	outline: inherit;
 }
 
-.tiny-ul ,
+.tiny-ul ul ,
+ul.tiny-ul ,
 .tablelike ul {
 	/*list-style-type: none;*/
 	padding: 0;
