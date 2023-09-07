@@ -298,7 +298,8 @@ function scrollToAnchor(anchorId: string) {
 // must cast as any to set property on window
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _global = (window /* browser */ || global /* node */) as any;
-_global.scrollToAnchor = scrollToAnchor;
+_global.$scrollToAnchor = scrollToAnchor;
+_global.$tippy = tippy;
 
 export class App {
 	//tree = new Tree();
@@ -908,7 +909,6 @@ export class App {
 			recordDiv.appendChild(actionDiv);
 
 			if (sortedTalents[i].prerequisites !== "-" && sortedTalents[i].prerequisites !== "—") {
-				const randomId = this.randomStr(10);
 				/*const prerequisitesAsTree =*/ /*this.prerequisitesAsTree(sortedTalents[i])*/ /*|| ""*//*;*/
 				/*const prerequisitesAsList =*/ /*this.prerequisitesAsList(sortedTalents[i])*/ /*|| ""*//*;*/
 				const newPrerequisitesAsTree = this.newPrerequisitesAsTree(sortedTalents[i], document.createElement("div")).innerHTML;
@@ -922,8 +922,10 @@ export class App {
 				if (newPrerequisitesAsTree == newPrerequisitesAsList) popup += `<h6>Prerequisites</h6>${newPrerequisitesAsTree}`;
 				else popup += `<h6>Prerequisite Tree</h6>${newPrerequisitesAsTree}<hr><h6>Prerequisite List</h6>${newPrerequisitesAsList}`;
 				popup += `</span>`;
-				actionDiv.innerHTML = `<button id="popId_${randomId}" class="unstyled-button"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
-				tippy('#popId_' + randomId, {
+				// replace all non alphanumeric characters with _ in sortedTalents[i].talent
+				const randomId = "popId_" + sortedTalents[i].talent.replace(/[^a-zA-Z0-9]/g, '_');
+				actionDiv.innerHTML = `<button id="${randomId}" class="unstyled-button"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
+				tippy('#' + randomId, {
 					content: `${popup}`,
 					allowHTML: true,
 					theme: 'light-border',
@@ -1729,7 +1731,7 @@ export class App {
 		prerequisiteList.forEach((prerequisite) => {
 			const li = document.createElement("li");
 			ul.appendChild(li);
-			this.prerequisiteToString(prerequisite, li);
+			this.prerequisiteToString(talent, prerequisite, li);
 		});
 		return parentHtmlElement;
 	}
@@ -1772,7 +1774,7 @@ export class App {
 		if (prerequisite.talentPick != null) this.newPrerequisitesAsList$(prerequisite.talentPick.talent.prerequisiteTree, prerequisiteList);
 	}
 
-	private prerequisiteToString(prerequisite: Prerequisite, parentElement: HTMLElement): boolean {
+	private prerequisiteToString(talent: W40KTalent, prerequisite: Prerequisite, parentElement: HTMLElement): boolean {
 		if (prerequisite.and && prerequisite.and.length > 0) {
 			return false;
 		} else if (prerequisite.or && prerequisite.or.length > 0) {
@@ -1804,7 +1806,11 @@ export class App {
 			spanJump.innerHTML = `<talent>${talentName}</talent>`;
 			spanJump.setAttribute("data-talent", talentName);
 			//spanJump.onclick = () => this.scrollToAnchor(talentName);
-			spanJump.setAttribute("onclick", "(window||global).scrollToAnchor('" + talentName + "');");//
+			const randomId = "popId_" + talent.talent.replace(/[^a-zA-Z0-9]/g, '_');
+			spanJump.setAttribute("onclick", `
+				(window||global).$scrollToAnchor('${talentName}');
+				(window||global).$tippy(document.getElementById('${randomId}')).hide();
+				`);
 			span.appendChild(spanJump);
 			if (prerequisite.talentPick.choices) {
 				const spanChoices = document.createElement("span");
@@ -1857,7 +1863,7 @@ export class App {
 		} else {
 			const ul = document.createElement("ul");
 			const li = document.createElement("li");
-			this.prerequisiteToString(prerequisite, li);
+			this.prerequisiteToString(talent, prerequisite, li);
 			ul.appendChild(li);
 			parentHtmlElement.appendChild(ul);
 		}
@@ -1865,7 +1871,7 @@ export class App {
 	}
 
 	private newPrerequisitesAsTree$(talent: W40KTalent, prerequisite: Prerequisite, parentHtmlElement: HTMLElement) {
-		this.prerequisiteToString(prerequisite, parentHtmlElement);
+		this.prerequisiteToString(talent, prerequisite, parentHtmlElement);
 		if (prerequisite.talentPick) {
 			this.newPrerequisitesAsTree(prerequisite.talentPick.talent, parentHtmlElement);
 		}
