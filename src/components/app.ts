@@ -307,6 +307,7 @@ export class App {
 	}
 
 	scrollToAnchor(anchorId: string) {
+		console.log("scrollToAnchor", anchorId);
 		const $toEl = document.getElementById(anchorId) as HTMLElement;
 		const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
 		window.scrollTo({top: $offset, behavior: "auto"});
@@ -1790,18 +1791,24 @@ export class App {
 				`;
 			return true;
 		} else if (prerequisite.talentPick) {
-			const choicesText = prerequisite.talentPick.choices ? "[" + prerequisite.talentPick.choices.join(", ") + "]" : "";
-			parentElement.appendChild(document.createElement("span")).innerHTML = `
-				<span class="jump-to-anchor" data-talent="${prerequisite.talentPick.talent.talent}">
-					<talent>
-					${prerequisite.talentPick.talent.talent}
-					</talent>
-				</span>
-				${choicesText}
-				<span class='text-muted'>
-					(${prerequisite.talentPick.talent.benefit})
-				</span>
-				`;
+			const span = document.createElement("span");
+			parentElement.appendChild(span);
+			const spanJump = document.createElement("span");
+			spanJump.classList.add("jump-to-anchor");
+			const talentName = prerequisite.talentPick.talent.talent;
+			spanJump.innerHTML = `<talent>${talentName}</talent>`;
+			spanJump.setAttribute("data-talent", talentName);
+			spanJump.onclick = () => this.scrollToAnchor(talentName);
+			span.appendChild(spanJump);
+			if (prerequisite.talentPick.choices) {
+				const spanChoices = document.createElement("span");
+				spanChoices.innerText = " [" + prerequisite.talentPick.choices.join(", ") + "]";
+				span.appendChild(spanChoices);
+			}
+			const benefitText = document.createElement("span");
+			benefitText.classList.add("text-muted");
+			benefitText.innerText = " (" + prerequisite.talentPick.talent.benefit + ")";
+			span.appendChild(benefitText);
 			return true;
 		} else if (prerequisite.text && prerequisite.text !== "-" && prerequisite.text !== "—") {
 			parentElement.appendChild(document.createElement("span")).innerHTML = prerequisite.text;
