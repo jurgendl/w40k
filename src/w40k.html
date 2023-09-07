@@ -150,20 +150,6 @@ Bookmark (save) this page:
 							</table>">
 					<i class="fas fa-question-circle"></i>
 				</button>
-				<script>
-					$(function() {
-						$.fn.popover.Constructor.Default.whiteList.table = [];
-						$.fn.popover.Constructor.Default.whiteList.tr = [];
-						$.fn.popover.Constructor.Default.whiteList.td = [];
-						$.fn.popover.Constructor.Default.whiteList.div = [];
-						$.fn.popover.Constructor.Default.whiteList.tbody = [];
-						$.fn.popover.Constructor.Default.whiteList.thead = [];
-						$('#skillRanksHelp').popover({
-							html: true,
-							container: 'body'
-						})
-					})
-				</script>
 			</div>
 			|
 			<div style="margin-left: 1em; display: inline-block;">Click "<i class='fa-regular fa-eye'></i>" to see all prerequisites</div>
@@ -208,10 +194,28 @@ Bookmark (save) this page:
 	$(function () {
 		$(".scroll").click(function () {
 			$("html,body").animate({scrollTop: $(".thetop").offset().top}, "0");
-			return false
+			return false;
 		})
 	})
 </script>
+<script>
+	$(function() {
+		$.fn.popover.Constructor.Default.whiteList.table = [];
+		$.fn.popover.Constructor.Default.whiteList.tr = [];
+		$.fn.popover.Constructor.Default.whiteList.td = [];
+		$.fn.popover.Constructor.Default.whiteList.div = [];
+		$.fn.popover.Constructor.Default.whiteList.tbody = [];
+		$.fn.popover.Constructor.Default.whiteList.thead = [];
+		$.fn.popover.Constructor.Default.whiteList.talent = [];
+		$.fn.popover.Constructor.Default.whiteList.skill = [];
+		$.fn.popover.Constructor.Default.whiteList.characteristic = [];
 
+		$('#skillRanksHelp').popover({
+			html: true,
+			sanitize: false,
+			container: 'body'
+		});
+	})
+</script>
 </body>
 </html>
