@@ -272,7 +272,8 @@ class Node {
 	name: string;
 	parents: Node[];
 	children: Node[];
-	data: any;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	data: any | null;
 
 	constructor(name: string) {
 		this.name = name;
@@ -665,7 +666,7 @@ export class App {
 			prerequisite.text = "";
 			return prerequisite;
 		}
-		let replaced = false;
+		//let replaced0 = false;
 		this.data.talents.forEach((talent) => {
 			// regex talentName (choice)
 			const regex = new RegExp("^" + talent.talent + " \\((.+)\\)$", "i");
@@ -673,11 +674,11 @@ export class App {
 				const choice = prerequisite.text.match(regex)![1];
 				prerequisite.talentPick = new TalentPick(talent, choice.split(",").map((each) => each.trim()));
 				parentTalent.expandsTo.push(talent);
-				replaced = true;
+				//replaced0 = true;
 			} else if (talent.talent.toLowerCase() == prerequisite.text.toLowerCase()) {
 				prerequisite.talentPick = new TalentPick(talent);
 				parentTalent.expandsTo.push(talent);
-				replaced = true;
+				//replaced0 = true;
 			}
 		});
 		this.data.characteristic.forEach((characteristic) => {
@@ -686,7 +687,7 @@ export class App {
 			if (regex.test(prerequisite.text)) {
 				const amount = parseInt(prerequisite.text.match(regex)![1]);
 				prerequisite.characteristicPick = new CharacteristicPick(characteristic, amount);
-				replaced = true;
+				//replaced0 = true;
 			}
 		});
 		this.data.skills.forEach((skill) => {
@@ -698,11 +699,11 @@ export class App {
 				const amount = parseInt(prerequisite.text.match(regex2)![2]);
 				const choice = prerequisite.text.match(regex2)![1];
 				prerequisite.skillPick = new SkillPick(skill, amount, choice.split(",").map((each) => each.trim()));
-				replaced = true;
+				//replaced0 = true;
 			} else if (regex1.test(prerequisite.text)) {
 				const amount = parseInt(prerequisite.text.match(regex1)![1]);
 				prerequisite.skillPick = new SkillPick(skill, amount);
-				replaced = true;
+				//replaced0 = true;
 			}
 		});
 		return prerequisite;
@@ -889,7 +890,7 @@ export class App {
 
 			const talentPrerequisitesDiv = document.createElement("div");
 			talentPrerequisitesDiv.setAttribute("data-export", sortedTalents[i].prerequisites);
-			const hasTree = this.replacePrerequisites(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
+			/*const hasTree =*/ this.replacePrerequisites(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
 			recordDiv.appendChild(talentPrerequisitesDiv);
 
 			const talentDescriptionDiv = document.createElement("div");
@@ -905,14 +906,15 @@ export class App {
 			if (sortedTalents[i].prerequisites != "-" && sortedTalents[i].prerequisites !== "—") {
 				const randomId = this.randomStr(10);
 				this.logPrerequisiteTree("", sortedTalents[i].prerequisiteTree);
-				const prerequisitesAsTree = this.prerequisitesAsTree(sortedTalents[i]) || "";
-				const prerequisitesAsList = this.prerequisitesAsList(sortedTalents[i]) || "";
+				/*const prerequisitesAsTree =*/ this.prerequisitesAsTree(sortedTalents[i]) /*|| ""*/;
+				/*const prerequisitesAsList =*/ this.prerequisitesAsList(sortedTalents[i]) /*|| ""*/;
 				const newPrerequisitesAsTree = this.newPrerequisitesAsTree(sortedTalents[i].prerequisiteTree, document.createElement("div")).innerHTML;
 				const newPrerequisitesAsList = this.newPrerequisitesAsList(sortedTalents[i].prerequisiteTree, document.createElement("div")).innerHTML;
 				//console.log("prerequisitesAsTree", prerequisitesAsTree);
 				//console.log("prerequisitesAsList", prerequisitesAsList);
 				//console.log("newPrerequisitesAsTree", newPrerequisitesAsTree);
 				//console.log("newPrerequisitesAsList", newPrerequisitesAsList);
+
 				let popup;
 				if (newPrerequisitesAsTree == newPrerequisitesAsList) {
 					popup = `
@@ -935,6 +937,8 @@ export class App {
 						`;
 				}
 				actionDiv.innerHTML = `<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="${popup}"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
+
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				($('#' + randomId) as any).popover({trigger: 'focus', html: true});
 			}
 		}
@@ -1271,6 +1275,7 @@ export class App {
 
 		treeToShow.buildTree(true);
 
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		function treeToData(node: Node, parentNodeData: any) {
 			node.children.forEach((child) => {
 				const childData = {name: child.name, parent: node.name, children: [], data: child.data};
@@ -1800,10 +1805,12 @@ export class App {
 				matchFound = true;
 			});
 		} else if (item.talentPick) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			prerequisiteList.filter((each) => each.talentPick && item.talentPick && each.talentPick.talent == item.talentPick.talent && each.talentPick.choices === item.talentPick.choices).forEach((match) => {
 				matchFound = true;
 			});
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			prerequisiteList.filter((each) => each.text && item.text && each.text == item.text).forEach((match) => {
 				matchFound = true;
 			});
