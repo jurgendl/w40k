@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--https://html-online.com/articles/blinking-text-css-animation/-->
+<!--
+https://github.com/atomiks/tippyjs
+https://atomiks.github.io/tippyjs/
+-->
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,37 +14,35 @@
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.css" integrity="sha512-gOfBez3ehpchNxj4TfBZfX1MDLKLRif67tFJNLQSpF13lXM1t9ffMNCbZfZNBfcN2/SaWvOf+7CvIHtQ0Nci2A==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+	<link rel="stylesheet" href="assets/w40k-chart.css">
 	<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/js/sb-admin-2.js" integrity="sha512-M82XdXhPLLSki+Ld1MsafNzOgHQB3txZr8+SQlGXSwn6veeqtYhPLbQeAfk9Y/Q9/gXcfa1jWT4YYUeoei6Uow==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
 	<script src="https://unpkg.com/lzutf8@0.6.3/build/production/lzutf8.js"></script>
-	<!--https://html-online.com/articles/blinking-text-css-animation/-->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
-	<link rel="stylesheet" href="assets/w40k-chart.css">
-	<style>
-		html body {
-			font-family: "Helvetica Neue", Helvetica;
-		}
-	</style>
+	<script src="assets/w40k-chart.js"></script>
+	<!--
+	<script src="https://unpkg.com/@popperjs/core@2"></script>
+	<script src="https://unpkg.com/tippy.js@6"></script>
+	-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" integrity="sha512-oJp0DdQuQQrRsKVly+Ww6fAN1GwJN7d1bi8UubpEbzDUh84WrJ2CFPBnT4LqBCcfqTcHR5OGXFFhaPe3g1/bzQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
-
-<!-- ============================================================================================================ -->
-<!-- ============================================================================================================ -->
 
 <body class="override">
 
-<div class='thetop'></div>
+<div class='thetop'>
+	<a href="?source=ow">Only War</a>,
+	<a href="?source=dh2">Dark Heresy 2</a>
+	,
+	Bookmark (save) this page:
+	<a id="saveLink" href="?">[json]</a> or
+	<a id="saveLinkAlt" href="?">[compressed]</a>
+</div>
+<br>
+<br>
 
-<a href="?source=ow">Only War</a>,
-<a href="?source=dh2">Dark Heresy 2</a>
-<br>
-Bookmark (save) this page:
-<a id="saveLink" href="?">[json]</a>,
-<a id="saveLinkAlt" href="?">[compressed]</a>
-<br>
-<br>
 <h1>Aptitudes</h1>
 <div>
 	<div class="form-group">
@@ -138,18 +141,8 @@ Bookmark (save) this page:
 		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
 		<div style="display: inline-block; float: right;">
 			<div style="margin-left: 1em; margin-right: 1em; display: inline-block;">
-				Skill Ranks
-				<button id="skillRanksHelp" type="button" class="unstyled-button" data-toggle="popover" _title="Skill Ranks"
-						data-content="
-							<table>
-							<th><td><u>Rank</u></td><td></td><td><u>Bonus</u></td></th>
-							<tr><td>1</td><td>Known</td><td style='text-align: right;'>+0</td></tr>
-							<tr><td>2</td><td>Trained</td><td style='text-align: right;'>+10</td></tr>
-							<tr><td>3</td><td>Experienced</td><td style='text-align: right;'>+20</td></tr>
-							<tr><td>4</td><td>Veteran</td><td>+30</div></tr>
-							</table>">
-					<i class="fas fa-question-circle"></i>
-				</button>
+				Click to see skill ranks
+				<button id="skillRanksHelp" class="unstyled-button"><i class="icon-as-button fas fa-question-circle"></i></button>
 			</div>
 			|
 			<div style="margin-left: 1em; display: inline-block;">Click "<i class='fa-regular fa-eye'></i>" to see all prerequisites</div>
@@ -171,18 +164,16 @@ Bookmark (save) this page:
 	<div class="tablelike talent" id="talent"></div>
 </div>
 
-<br><br>
 <div style="padding: 2em;">
 	<div id="selectedTree"></div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" integrity="sha512-oJp0DdQuQQrRsKVly+Ww6fAN1GwJN7d1bi8UubpEbzDUh84WrJ2CFPBnT4LqBCcfqTcHR5OGXFFhaPe3g1/bzQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/w40k-chart.js"></script>
 
 <div class='scrolltop'>
 	<div class='scroll icon'>
 		<i class="icon-as-button fa-solid fa-circle-arrow-up"></i>
 	</div>
 </div>
+
 <script>
 	$(window).scroll(function () {
 		if ($(this).scrollTop() > 50) {
@@ -198,24 +189,6 @@ Bookmark (save) this page:
 		})
 	})
 </script>
-<script>
-	$(function() {
-		$.fn.popover.Constructor.Default.whiteList.table = [];
-		$.fn.popover.Constructor.Default.whiteList.tr = [];
-		$.fn.popover.Constructor.Default.whiteList.td = [];
-		$.fn.popover.Constructor.Default.whiteList.div = [];
-		$.fn.popover.Constructor.Default.whiteList.tbody = [];
-		$.fn.popover.Constructor.Default.whiteList.thead = [];
-		$.fn.popover.Constructor.Default.whiteList.talent = [];
-		$.fn.popover.Constructor.Default.whiteList.skill = [];
-		$.fn.popover.Constructor.Default.whiteList.characteristic = [];
 
-		$('#skillRanksHelp').popover({
-			html: true,
-			sanitize: false,
-			container: 'body'
-		});
-	})
-</script>
 </body>
 </html>

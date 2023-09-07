@@ -5,6 +5,10 @@ body {
 	scroll-behavior: smooth;
 }
 
+html body {
+	font-family: "Helvetica Neue", Helvetica;
+}
+
 @media screen and (prefers-reduced-motion: reduce) {
 	body {
 		scroll-behavior: auto;
@@ -198,6 +202,10 @@ a.jump-to-anchor {
 	cursor: pointer;
 }
 
+.tiny-ul .jump-to-anchor {
+	color: unset;
+}
+
 .characteristic:not(.header) > div > :nth-child(4n - 1) {
 	color: aqua;
 }
@@ -256,11 +264,12 @@ talent {
 
 
 .icon-as-button {
-	color: #dddddd77;
+	color: #ffffffbb;
+	transition: color 0.2s ease-in-out;
 }
 
 .icon-as-button:hover {
-	color: #ddddddee;
+	color: #ffffffee;
 }
 
 

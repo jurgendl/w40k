@@ -3,11 +3,14 @@
 // https://apps.ajott.io/quickref/character.html
 
 // javascript breakpoint
-// // eslint-disable-next-line no-debugger
+// eslint-disable-next-line no-debugger
 //debugger;
 
 import {compressUrlSafe, decompressUrlSafe} from './lzma-url.mjs'
 import 'animate.css';
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/themes/light-border.css';
 
 export enum Aptitude {
 	/* common */
@@ -103,10 +106,6 @@ class CharacteristicPick {
 		this.characteristic = characteristic;
 		this.amount = amount;
 	}
-
-	toString(): string {
-		return "<characteristic>" + this.characteristic.name + " " + this.amount + "</characteristic>";
-	}
 }
 
 class SkillPick {
@@ -119,11 +118,6 @@ class SkillPick {
 		this.choices = choices;
 		this.amount = amount;
 	}
-
-	toString(): string {
-		if (this.choices) return "<skill>" + this.skill.name + " (" + this.choices.join(", ") + ") +" + this.amount + "</skill>";
-		return "<skill>" + this.skill.name + " +" + this.amount + "</skill>";
-	}
 }
 
 class TalentPick {
@@ -133,11 +127,6 @@ class TalentPick {
 	constructor(talent: W40KTalent, choices?: string[]) {
 		this.talent = talent;
 		this.choices = choices;
-	}
-
-	toString(): string {
-		if (this.choices) return "<talent>" + this.talent.talent + " (" + this.choices.join(", ") + ")" + "</talent>";
-		return "<talent>" + this.talent.talent + "</talent>";
 	}
 }
 
@@ -207,7 +196,7 @@ class ConfigData {
 	}
 }
 
-class Tree {
+/*class Tree {
 	nodeMap = new Map<string, Node>();
 
 	rootNode = new Node("");
@@ -281,7 +270,7 @@ class Node {
 		this.parents = [];
 		this.children = [];
 	}
-}
+}*/
 
 class Prerequisite {
 	text = "" as string;
@@ -297,12 +286,14 @@ class Prerequisite {
 }
 
 export class App {
-	tree = new Tree();
-	fullTree = new Tree();
+	//tree = new Tree();
+	//fullTree = new Tree();
 	data!: W40KData;
 	configData: ConfigData = new ConfigData();
 	selectedAptitudes: Aptitude[] = [];
 	source = "ow";
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	dollar: any;
 
 	start(): void {
 		const queryString = window.location.search;
@@ -337,12 +328,31 @@ export class App {
 	}
 
 	private $start(data: W40KData, source: string, configDateParam: string | null): void {
+		tippy('#skillRanksHelp', {
+			content: `<table>
+					<tr>
+						<th colspan="2"><u>Rank</u></th>
+						<th><u>Bonus</u></th>
+					</tr>
+					<tr><td style="padding-right:0.5em">1</td><td>Known</td><td style='text-align: right;'>+0</td></tr>
+					<tr><td>2</td><td>Trained</td><td style='text-align: right;'>+10</td></tr>
+					<tr><td>3</td><td>Experienced</td><td style='text-align: right;'>+20</td></tr>
+					<tr><td>4</td><td>Veteran</td><td style='text-align: right;'>+30</div></tr>
+				</table>`,
+			allowHTML: true,
+			theme: 'light-border',
+			arrow: true,
+			trigger: 'click',
+			interactive: true,
+			animation: 'scale',
+		});
+
 		this.data = data;
 		this.data.talents.forEach(talent => {
 			talent.expandsTo = [];
 		});
 		this.source = source;
-		this.buildFullTree();
+		//this.buildFullTree();
 		this.buildPrerequisitesTree();
 		this.loadConfigData(source, configDateParam);
 		this.createClassSelectContainer();
@@ -377,27 +387,15 @@ export class App {
 	}
 
 	private buildPrerequisitesTree() {
-		this.data.talents.forEach(talent => {
-			talent.prerequisiteTree = this.resolvePrerequisiteText(talent, new Prerequisite(talent.prerequisites));
-			if (!(talent.prerequisites === "-" || talent.prerequisites === "—")) {
-				const splitPrerequisites = this.splitPrerequisites(talent.prerequisites);
-				if (splitPrerequisites.length > 1) {
-					for (let i = 0; i < splitPrerequisites.length; i++) {
-						const andItem = splitPrerequisites[i];
-						const andPrerequisite = this.resolvePrerequisiteText(talent, new Prerequisite(andItem));
-						talent.prerequisiteTree.and.push(andPrerequisite);
-						const orlements = andItem.split(/ or (?!more\b)(?![^()]*\))/gi).map((each) => each.trim());
-						if (orlements.length > 1) {
-							for (let j = 0; j < orlements.length; j++) {
-								const orItem = orlements[j];
-								const orPrerequisite = this.resolvePrerequisiteText(talent, new Prerequisite(orItem));
-								andPrerequisite.or.push(orPrerequisite);
-							}
-						}
-					}
-				}
-			}
-		});
+		this.data.talents.forEach(talent => this.buildPrerequisitesTree$(talent));
+	}
+
+	private noPrerequisitesTalent(talent: W40KTalent) {
+		return this.noPrerequisitesText(talent.prerequisites);
+	}
+
+	private noPrerequisitesText(prerequisites: string) {
+		return prerequisites === "-" || prerequisites === "—";
 	}
 
 	private createSelectPicker() {
@@ -661,10 +659,9 @@ export class App {
 		}
 	}
 
-	private resolvePrerequisiteText(parentTalent: W40KTalent, prerequisite: Prerequisite): Prerequisite {
+	private resolvePrerequisiteText(parentTalent: W40KTalent, prerequisite: Prerequisite): Prerequisite | null {
 		if (prerequisite.text === "-" || prerequisite.text === "—") {
-			prerequisite.text = "";
-			return prerequisite;
+			return null;
 		}
 		//let replaced0 = false;
 		this.data.talents.forEach((talent) => {
@@ -709,7 +706,7 @@ export class App {
 		return prerequisite;
 	}
 
-	private buildFullTree() {
+	/*private buildFullTree() {
 		this.data.talents.forEach(parentTalent => {
 			const parentTalentName = parentTalent.talent.toLowerCase().trim();
 			this.data.talents.forEach(otherTalent => {
@@ -724,7 +721,7 @@ export class App {
 			});
 		});
 		this.fullTree.buildTree(false);
-	}
+	}*/
 
 	private aptitudesToTextAndHtml(aptitudes: Aptitude[]) {
 		let aptitudesToText = "";
@@ -741,7 +738,7 @@ export class App {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private rebuildTables(event: Event | null) {
-		this.tree = new Tree();
+		//this.tree = new Tree();
 
 		const wishlistArray = this.rebuildTalentWishlist();
 		const skill_wishlistArray = this.rebuildSkillWishlist();
@@ -759,7 +756,7 @@ export class App {
 		this.rebuildTablesTalents(wishlistArray, skipZeroMatches);
 		this.rebuildTablesSkills(skill_wishlistArray, skipZeroMatches);
 
-		this.buildSelectedTree();
+		//this.buildSelectedTree();
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
@@ -890,7 +887,8 @@ export class App {
 
 			const talentPrerequisitesDiv = document.createElement("div");
 			talentPrerequisitesDiv.setAttribute("data-export", sortedTalents[i].prerequisites);
-			/*const hasTree =*/ this.replacePrerequisites(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
+			/*const hasTree =*/
+			this.replacePrerequisites(sortedTalents[i], talentPrerequisitesDiv, sortedTalents[i].prerequisites);
 			recordDiv.appendChild(talentPrerequisitesDiv);
 
 			const talentDescriptionDiv = document.createElement("div");
@@ -903,43 +901,30 @@ export class App {
 			actionDiv.setAttribute("data-export", "false");
 			recordDiv.appendChild(actionDiv);
 
-			if (sortedTalents[i].prerequisites != "-" && sortedTalents[i].prerequisites !== "—") {
+			if (sortedTalents[i].prerequisites !== "-" && sortedTalents[i].prerequisites !== "—") {
 				const randomId = this.randomStr(10);
-				this.logPrerequisiteTree("", sortedTalents[i].prerequisiteTree);
-				/*const prerequisitesAsTree =*/ this.prerequisitesAsTree(sortedTalents[i]) /*|| ""*/;
-				/*const prerequisitesAsList =*/ this.prerequisitesAsList(sortedTalents[i]) /*|| ""*/;
-				const newPrerequisitesAsTree = this.newPrerequisitesAsTree(sortedTalents[i].prerequisiteTree, document.createElement("div")).innerHTML;
-				const newPrerequisitesAsList = this.newPrerequisitesAsList(sortedTalents[i].prerequisiteTree, document.createElement("div")).innerHTML;
+				/*const prerequisitesAsTree =*/ /*this.prerequisitesAsTree(sortedTalents[i])*/ /*|| ""*//*;*/
+				/*const prerequisitesAsList =*/ /*this.prerequisitesAsList(sortedTalents[i])*/ /*|| ""*//*;*/
+				const newPrerequisitesAsTree = this.newPrerequisitesAsTree(sortedTalents[i], document.createElement("div")).innerHTML;
+				const newPrerequisitesAsList = this.newPrerequisitesAsList(sortedTalents[i], document.createElement("div")).innerHTML;
 				//console.log("prerequisitesAsTree", prerequisitesAsTree);
 				//console.log("prerequisitesAsList", prerequisitesAsList);
 				//console.log("newPrerequisitesAsTree", newPrerequisitesAsTree);
 				//console.log("newPrerequisitesAsList", newPrerequisitesAsList);
 
-				let popup;
-				if (newPrerequisitesAsTree == newPrerequisitesAsList) {
-					popup = `
-						<h5>${sortedTalents[i].talent}</h5>
-						<span class='tiny-ul'>
-							<h6>Prerequisites</h6>
-							${newPrerequisitesAsTree}
-						</span>
-						`;
-				} else {
-					popup = `
-						<h5>${sortedTalents[i].talent}</h5>
-						<span class='tiny-ul'>
-							<h6>Prerequisite Tree</h6>
-							${newPrerequisitesAsTree}
-							<hr>
-							<h6>Prerequisite List</h6>
-							${newPrerequisitesAsList}
-						</span>
-						`;
-				}
-				actionDiv.innerHTML = `<button id="${randomId}" type="button" class="unstyled-button" data-container="body" data-toggle="popover" data-placement="left" data-content="${popup}"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
-
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				($('#' + randomId) as any).popover({trigger: 'focus', html: true});
+				let popup = `<h5>${sortedTalents[i].talent}</h5><div class="text-muted">${sortedTalents[i].benefit}</div><br><span class='tiny-ul'>`;
+				if (newPrerequisitesAsTree == newPrerequisitesAsList) popup += `<h6>Prerequisites</h6>${newPrerequisitesAsTree}`;
+				else popup += `<h6>Prerequisite Tree</h6>${newPrerequisitesAsTree}<hr><h6>Prerequisite List</h6>${newPrerequisitesAsList}`;
+				popup += `</span>`;
+				actionDiv.innerHTML = `<button id="popId_${randomId}" class="unstyled-button"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
+				tippy('#popId_' + randomId, {
+					content: `${popup}`,
+					allowHTML: true,
+					theme: 'light-border',
+					arrow: true,
+					trigger: 'click',
+					interactive: true,
+				});
 			}
 		}
 	}
@@ -1156,13 +1141,13 @@ export class App {
 		return wishlistArray;
 	}
 
-	private prerequisitesAsTree(talent: W40KTalent) {
+	/*private prerequisitesAsTree(talent: W40KTalent) {
 		const nodeLookup = this.fullTree.get(talent.talent);
 		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
 		return this.prerequisitesAsTreeNested(talent.prerequisites);
-	}
+	}*/
 
-	private prerequisitesAsTreeNested(prerequisites: string): string {
+	/*private prerequisitesAsTreeNested(prerequisites: string): string {
 		const splitted = this.splitPrerequisites(prerequisites);
 		let strPrerequisites = "<ul>";
 		for (let i = 0; i < splitted.length; i++) {
@@ -1178,9 +1163,9 @@ export class App {
 		}
 		strPrerequisites += "</ul>";
 		return strPrerequisites;
-	}
+	}*/
 
-	private prerequisitesAsList(talent: W40KTalent) {
+	/*private prerequisitesAsList(talent: W40KTalent) {
 		const nodeLookup = this.fullTree.get(talent.talent);
 		if (nodeLookup == undefined || nodeLookup.parents.length == 0) return null;
 		const allPrerequisites = [] as string[];
@@ -1268,9 +1253,9 @@ export class App {
 		}
 		strPrerequisites += "</ul>";
 		return strPrerequisites;
-	}
+	}*/
 
-	private buildSelectedTree() {
+	/*private buildSelectedTree() {
 		const treeToShow = this.tree;
 
 		treeToShow.buildTree(true);
@@ -1288,11 +1273,7 @@ export class App {
 		treeToData(treeToShow.rootNode, treeDataRootNode);
 		//console.log("treeDataRootNode", JSON.stringify(treeDataRootNode, null, "\t"));
 		drawChart("selectedTree", treeDataRootNode, treeToShow.nodeCount);
-	}
-
-	private splitPrerequisites(prerequisites: string): string[] {
-		return prerequisites.split(/,(?![^()]*\))/).map((each) => each.trim());
-	}
+	}*/
 
 	private replacePrerequisites(talent: W40KTalent, talentPrerequisitesDiv: HTMLDivElement, str: string) {
 		if ('—' == str || '-' == str) {
@@ -1306,7 +1287,7 @@ export class App {
 		// split string by comma but not comma inside parenthesis
 		// https://stackoverflow.com/questions/11456850/split-a-string-by-commas-but-ignore-commas-within-double-quotes-using-javascript
 		// eslint-disable-next-line no-useless-escape
-		const parts = this.splitPrerequisites(str);
+		const parts = this.splitPrerequisitesToAnd(str);
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i].trim();
 			const listItemTag = document.createElement("li");
@@ -1322,11 +1303,11 @@ export class App {
 				if (loc >= 0 && !talentsReplaced.includes(eachTalent.talent)) {
 					talentsReplaced.push(eachTalent.talent);
 					rangesToReplace.push({from: loc, to: eachTalent.talent.length, talent: eachTalent});
-					const parent = this.tree.getOrCreate(eachTalent.talent);
+					/*const parent = this.tree.getOrCreate(eachTalent.talent);
 					parent.data = eachTalent;
 					const child = this.tree.getOrCreate(talent.talent);
 					child.data = talent;
-					this.tree.linkParentToChild(parent, child);
+					this.tree.linkParentToChild(parent, child);*/
 				}
 			});
 			if (rangesToReplace.length > 0) {
@@ -1735,162 +1716,227 @@ export class App {
 		this.save();
 	}
 
-	private logPrerequisiteTree(prefix: string, prerequisiteTree: Prerequisite) {
-		if (prerequisiteTree.and.length > 0) {
-			console.log(prefix + "AND");
-			prerequisiteTree.and.forEach((and) => {
-				this.logPrerequisiteTree(prefix + "  ", and);
-				if (and.talentPick != null) {
-					this.logPrerequisiteTree(prefix + "    ", and.talentPick.talent.prerequisiteTree);
-				}
-			});
-		} else if (prerequisiteTree.or.length > 0) {
-			console.log(prefix + "OR");
-			prerequisiteTree.or.forEach((or) => {
-				this.logPrerequisiteTree(prefix + "  ", or);
-				if (or.talentPick != null) {
-					this.logPrerequisiteTree(prefix + "    ", or.talentPick.talent.prerequisiteTree);
-				}
-			});
-		} else {
-			if (prerequisiteTree.talentPick != null) {
-				console.log(prefix + "T: " + prerequisiteTree.talentPick);
-			} else if (prerequisiteTree.skillPick != null) {
-				console.log(prefix + "S: " + prerequisiteTree.skillPick);
-			} else if (prerequisiteTree.characteristicPick != null) {
-				console.log(prefix + "C: " + prerequisiteTree.characteristicPick);
-			} else if (prerequisiteTree.text != null && prerequisiteTree.text != "") {
-				console.log(prefix + "*: " + prerequisiteTree.text);
-			}
-		}
-	}
-
-	private newPrerequisitesAsList(prerequisiteTree: Prerequisite, parentHtmlElement: HTMLElement) {
+	private newPrerequisitesAsList(talent: W40KTalent, parentHtmlElement: HTMLElement) {
 		const prerequisiteList = [] as Prerequisite[];
-		this.flattenPrerequisitesAsList(prerequisiteTree, prerequisiteList);
+		this.newPrerequisitesAsList$(talent.prerequisiteTree, prerequisiteList);
 		const ul = parentHtmlElement.appendChild(document.createElement("ul"));
 		prerequisiteList.forEach((prerequisite) => {
-			const text = this.prerequisiteToString(prerequisite);
-			if (text != null) {
-				ul.appendChild(document.createElement("li")).innerHTML = text;
-			}
+			const li = document.createElement("li");
+			ul.appendChild(li);
+			this.prerequisiteToString(prerequisite, li);
 		});
 		return parentHtmlElement;
 	}
 
-	private flattenPrerequisitesAsList(prerequisiteTree: Prerequisite, prerequisiteList: Prerequisite[]) {
-		if (prerequisiteTree.and != null && prerequisiteTree.and.length > 0) {
-			prerequisiteTree.and.forEach((item) => {
-				this.flattenPrerequisitesAsListEach(prerequisiteList, item);
-			});
-		} else if (prerequisiteTree.or != null && prerequisiteTree.or.length > 0) {
-			prerequisiteTree.or.forEach((item) => {
-				this.flattenPrerequisitesAsListEach(prerequisiteList, item);
-			});
-		} else {
-			this.flattenPrerequisitesAsListEach(prerequisiteList, prerequisiteTree);
-		}
-	}
-
-	private flattenPrerequisitesAsListEach(prerequisiteList: Prerequisite[], item: Prerequisite) {
-		let matchFound = false;
-		if (item.characteristicPick) {
-			prerequisiteList.filter((each) => each.characteristicPick && item.characteristicPick && each.characteristicPick.characteristic == item.characteristicPick.characteristic).forEach((match) => {
-				match.characteristicPick!.amount = Math.max(match.characteristicPick!.amount, item.characteristicPick!.amount);
-				matchFound = true;
-			});
-		} else if (item.skillPick) {
-			prerequisiteList.filter((each) => each.skillPick && item.skillPick && each.skillPick.skill == item.skillPick.skill && each.skillPick.choices === item.skillPick.choices).forEach((match) => {
-				match.skillPick!.amount = Math.max(match.skillPick!.amount, item.skillPick!.amount);
-				matchFound = true;
-			});
-		} else if (item.talentPick) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			prerequisiteList.filter((each) => each.talentPick && item.talentPick && each.talentPick.talent == item.talentPick.talent && each.talentPick.choices === item.talentPick.choices).forEach((match) => {
-				matchFound = true;
-			});
-		} else {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			prerequisiteList.filter((each) => each.text && item.text && each.text == item.text).forEach((match) => {
-				matchFound = true;
-			});
-		}
-		if (!matchFound) prerequisiteList.push(item);
-		if (item.talentPick != null) this.flattenPrerequisitesAsList(item.talentPick.talent.prerequisiteTree, prerequisiteList);
-	}
-
-	private prerequisiteToString(prerequisite: Prerequisite): string | null {
+	private newPrerequisitesAsList$(prerequisite: Prerequisite, prerequisiteList: Prerequisite[]) {
+		if (!prerequisite) return;
 		if (prerequisite.and && prerequisite.and.length > 0) {
-			return null;
+			prerequisite.and.forEach((item) => this.newPrerequisitesAsList$(item, prerequisiteList));
 		} else if (prerequisite.or && prerequisite.or.length > 0) {
-			return null;
-		} else if (prerequisite.characteristicPick) {
-			return prerequisite.characteristicPick.toString();
-		} else if (prerequisite.skillPick) {
-			return prerequisite.skillPick.toString();
-		} else if (prerequisite.talentPick) {
-			return prerequisite.talentPick.toString();
-		} else if (prerequisite.text) {
-			return prerequisite.text;
+			prerequisite.or.forEach((item) => this.newPrerequisitesAsList$(item, prerequisiteList));
 		} else {
-			return null;
+			this.newPrerequisitesAsList$$(prerequisiteList, prerequisite);
 		}
 	}
 
-	private newPrerequisitesAsTree(prerequisiteTree: Prerequisite, parentHtmlElement: HTMLElement) {
-		this.newPrerequisitesAsTreeIterate(prerequisiteTree, parentHtmlElement);
-		if (!parentHtmlElement.innerHTML.includes("ul")) {
-			const li = document.createElement("li");
-			li.innerHTML = parentHtmlElement.innerHTML;
+	private newPrerequisitesAsList$$(prerequisiteList: Prerequisite[], prerequisite: Prerequisite) {
+		let matchFound = false;
+		if (prerequisite.characteristicPick) {
+			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.characteristicPick && prerequisite.characteristicPick && eachPrerequisite.characteristicPick.characteristic == prerequisite.characteristicPick.characteristic).forEach((matchPrerequisite) => {
+				matchPrerequisite.characteristicPick!.amount = Math.max(matchPrerequisite.characteristicPick!.amount, prerequisite.characteristicPick!.amount);
+				matchFound = true;
+			});
+		} else if (prerequisite.skillPick) {
+			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.skillPick && prerequisite.skillPick && eachPrerequisite.skillPick.skill == prerequisite.skillPick.skill && eachPrerequisite.skillPick.choices === prerequisite.skillPick.choices).forEach((matchPrerequisite) => {
+				matchPrerequisite.skillPick!.amount = Math.max(matchPrerequisite.skillPick!.amount, prerequisite.skillPick!.amount);
+				matchFound = true;
+			});
+		} else if (prerequisite.talentPick) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.talentPick && prerequisite.talentPick && eachPrerequisite.talentPick.talent == prerequisite.talentPick.talent && eachPrerequisite.talentPick.choices === prerequisite.talentPick.choices).forEach((matchPrerequisite) => {
+				matchFound = true;
+			});
+		} else {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.text && prerequisite.text && eachPrerequisite.text == prerequisite.text).forEach((matchPrerequisite) => {
+				matchFound = true;
+			});
+		}
+		if (!matchFound) prerequisiteList.push(prerequisite);
+		if (prerequisite.talentPick != null) this.newPrerequisitesAsList$(prerequisite.talentPick.talent.prerequisiteTree, prerequisiteList);
+	}
+
+	private prerequisiteToString(prerequisite: Prerequisite, parentElement: HTMLElement): boolean {
+		if (prerequisite.and && prerequisite.and.length > 0) {
+			return false;
+		} else if (prerequisite.or && prerequisite.or.length > 0) {
+			return false;
+		} else if (prerequisite.characteristicPick) {
+			parentElement.appendChild(document.createElement("span")).innerHTML = `
+				<characteristic>
+					${prerequisite.characteristicPick.characteristic.name}
+				</characteristic>
+				${prerequisite.characteristicPick.amount}
+				`;
+			return true;
+		} else if (prerequisite.skillPick) {
+			const choicesText = prerequisite.skillPick.choices ? "[" + prerequisite.skillPick.choices.join(", ") + "]" : "";
+			parentElement.appendChild(document.createElement("span")).innerHTML = `
+				<skill>
+					${prerequisite.skillPick.skill.name}
+				</skill>
+				${choicesText}
+				+${prerequisite.skillPick.amount}
+				`;
+			return true;
+		} else if (prerequisite.talentPick) {
+			const choicesText = prerequisite.talentPick.choices ? "[" + prerequisite.talentPick.choices.join(", ") + "]" : "";
+			parentElement.appendChild(document.createElement("span")).innerHTML = `
+				<span class="jump-to-anchor" data-talent="${prerequisite.talentPick.talent.talent}">
+					<talent>
+					${prerequisite.talentPick.talent.talent}
+					</talent>
+				</span>
+				${choicesText}
+				<span class='text-muted'>
+					(${prerequisite.talentPick.talent.benefit})
+				</span>
+				`;
+			return true;
+		} else if (prerequisite.text && prerequisite.text !== "-" && prerequisite.text !== "—") {
+			parentElement.appendChild(document.createElement("span")).innerHTML = prerequisite.text;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private newPrerequisitesAsTree(talent: W40KTalent, parentHtmlElement: HTMLElement) {
+		const prerequisite = talent.prerequisiteTree;
+		if (!prerequisite) return parentHtmlElement;
+		if (prerequisite.and && prerequisite.and.length > 0) {
 			const ul = document.createElement("ul");
-			ul.appendChild(li);
-			// remove all children from parentHtmlElement
-			while (parentHtmlElement.firstChild) {
-				parentHtmlElement.removeChild(parentHtmlElement.firstChild);
+			for (let i = 0; i < prerequisite.and.length; i++) {
+				const item = prerequisite.and[i];
+				if (item.or && item.or.length > 0) {
+					for (let j = 0; j < item.or.length; j++) {
+						const itemOr = item.or[j];
+						const li = document.createElement("li");
+						this.newPrerequisitesAsTree$(talent, itemOr, li);
+						ul.appendChild(li);
+					}
+				} else {
+					const li = document.createElement("li");
+					this.newPrerequisitesAsTree$(talent, item, li);
+					ul.appendChild(li);
+				}
 			}
+			parentHtmlElement.appendChild(ul);
+		} else if (prerequisite.or && prerequisite.or.length > 0) {
+			const ul = document.createElement("ul");
+			for (let i = 0; i < prerequisite.or.length; i++) {
+				const item = prerequisite.or[i];
+				const li = document.createElement("li");
+				this.newPrerequisitesAsTree$(talent, item, li);
+				ul.appendChild(li);
+			}
+			parentHtmlElement.appendChild(ul);
+		} else {
+			const ul = document.createElement("ul");
+			const li = document.createElement("li");
+			this.prerequisiteToString(prerequisite, li);
+			ul.appendChild(li);
 			parentHtmlElement.appendChild(ul);
 		}
 		return parentHtmlElement;
 	}
 
-	private newPrerequisitesAsTreeIterate(prerequisiteTree: Prerequisite, parentHtmlElement: HTMLElement) {
-		if (prerequisiteTree.and != null && prerequisiteTree.and.length > 0) {
-			const ul = parentHtmlElement.appendChild(document.createElement("ul"));
-			prerequisiteTree.and.forEach((item) => {
-				const text = this.prerequisiteToString(item);
-				const li = document.createElement("li");
-				if (text != null) {
-					ul.appendChild(li).innerHTML = text;
-				}
-				if (item.talentPick != null) {
-					this.newPrerequisitesAsTreeIterate(item.talentPick.talent.prerequisiteTree, li);
-				}
-			});
-		} else if (prerequisiteTree.or != null && prerequisiteTree.or.length > 0) {
-			const ul = parentHtmlElement.appendChild(document.createElement("ul"));
-			prerequisiteTree.or.forEach((item) => {
-				const text = this.prerequisiteToString(item);
-				const li = document.createElement("li");
-				if (text != null) {
-					ul.appendChild(li).innerHTML = text;
-				}
-				if (item.talentPick != null) {
-					this.newPrerequisitesAsTreeIterate(item.talentPick.talent.prerequisiteTree, li);
-				}
-			});
-		} else {
-			const text = this.prerequisiteToString(prerequisiteTree);
-			if (text != null || prerequisiteTree.talentPick != null) {
-				const ul = parentHtmlElement.appendChild(document.createElement("ul"));
-				const li = document.createElement("li");
-				if (text != null) {
-					ul.appendChild(li).innerHTML = text;
-				}
-				if (prerequisiteTree.talentPick != null) {
-					this.newPrerequisitesAsTreeIterate(prerequisiteTree.talentPick.talent.prerequisiteTree, li);
-				}
-			}
+	private newPrerequisitesAsTree$(talent: W40KTalent, prerequisite: Prerequisite, parentHtmlElement: HTMLElement) {
+		this.prerequisiteToString(prerequisite, parentHtmlElement);
+		if (prerequisite.talentPick) {
+			this.newPrerequisitesAsTree(prerequisite.talentPick.talent, parentHtmlElement);
 		}
-		return parentHtmlElement;
+	}
+
+	private splitPrerequisitesToAnd(prerequisites: string): string[] {
+		return prerequisites.split(/,(?![^()]*\))/).map((each) => each.trim());
+	}
+
+	private splitPrerequisitesToOr(prerequisites: string): string[] {
+		return prerequisites.split(/ or (?!more\b)(?![^()]*\))/gi).map((each) => each.trim());
+	}
+
+	private buildPrerequisitesTree$$(parentTalent: W40KTalent, prerequisite: Prerequisite) {
+		this.data.talents.forEach((talent) => {
+			// regex talentName (choice)
+			const regex = new RegExp("^" + talent.talent + " \\((.+)\\)$", "i");
+			if (regex.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(regex);
+				const choice = matcher![1];
+				prerequisite.talentPick = new TalentPick(talent, choice.split(",").map((each) => each.trim()));
+				parentTalent.expandsTo.push(talent);
+			} else if (talent.talent.toLowerCase() == prerequisite.text.toLowerCase()) {
+				prerequisite.talentPick = new TalentPick(talent);
+				parentTalent.expandsTo.push(talent);
+			}
+		});
+		this.data.characteristic.forEach((characteristic) => {
+			// regex characteristicName number
+			const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
+			if (regex.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(regex);
+				const amount = parseInt(matcher![1]);
+				prerequisite.characteristicPick = new CharacteristicPick(characteristic, amount);
+			}
+		});
+		this.data.skills.forEach((skill) => {
+			// regex skillName (choice) +number
+			const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
+			// regex skillName +number
+			const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
+			if (regex2.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(regex2);
+				const amount = parseInt(matcher![2]);
+				const choice = matcher![1];
+				prerequisite.skillPick = new SkillPick(skill, amount, choice.split(",").map((each) => each.trim()));
+			} else if (regex1.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(regex1);
+				const amount = parseInt(matcher![1]);
+				prerequisite.skillPick = new SkillPick(skill, amount);
+			}
+		});
+	}
+
+	private buildPrerequisitesTree$(talent: W40KTalent) {
+		if (this.noPrerequisitesTalent(talent)) return;
+
+		talent.prerequisiteTree = new Prerequisite(talent.prerequisites);
+		const andParts = this.splitPrerequisitesToAnd(talent.prerequisites);
+		const orParts = this.splitPrerequisitesToOr(talent.prerequisites);
+		if (andParts.length == 1 && orParts.length == 1) {
+			this.buildPrerequisitesTree$$(talent, talent.prerequisiteTree);
+		} else if (andParts.length > 1) {
+			andParts.forEach((andPart) => {
+				const andPrerequisite = new Prerequisite(andPart);
+				talent.prerequisiteTree.and.push(andPrerequisite);
+				const andOrParts = this.splitPrerequisitesToOr(andPart);
+				if (andOrParts.length == 1) {
+					this.buildPrerequisitesTree$$(talent, andPrerequisite);
+				} else {
+					andOrParts.forEach((andOrPart) => {
+						const andOrPrerequisite = new Prerequisite(andOrPart);
+						andPrerequisite.or.push(andOrPrerequisite);
+						this.buildPrerequisitesTree$$(talent, andOrPrerequisite);
+					});
+				}
+			});
+		} else if (orParts.length > 1) {
+			orParts.forEach((orPart) => {
+				const orPrerequisite = new Prerequisite(orPart);
+				talent.prerequisiteTree.or.push(orPrerequisite);
+				this.buildPrerequisitesTree$$(talent, orPrerequisite);
+			});
+		}
+		console.log(talent.talent, " -- ", talent.prerequisites, " -- ", talent.prerequisiteTree);
 	}
 }
