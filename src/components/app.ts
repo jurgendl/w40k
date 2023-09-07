@@ -285,6 +285,21 @@ class Prerequisite {
 	}
 }
 
+function scrollToAnchor(anchorId: string) {
+	console.log("scrollToAnchor", anchorId);
+	const $toEl = document.getElementById(anchorId) as HTMLElement;
+	const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
+	window.scrollTo({top: $offset, behavior: "auto"});
+	const classList = ["animate__animated", "animate__faster", "animate__flash"];
+	$toEl.classList.add(...classList);
+	$toEl.addEventListener("animationend", () => $toEl.classList.remove(...classList));
+}
+
+// must cast as any to set property on window
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _global = (window /* browser */ || global /* node */) as any;
+_global.scrollToAnchor = scrollToAnchor;
+
 export class App {
 	//tree = new Tree();
 	//fullTree = new Tree();
@@ -304,16 +319,6 @@ export class App {
 		fetch('assets/w40k-' + source + '.json')
 			.then((response) => response.json())
 			.then((data) => this.$start(data, source, configDateParam));
-	}
-
-	scrollToAnchor(anchorId: string) {
-		console.log("scrollToAnchor", anchorId);
-		const $toEl = document.getElementById(anchorId) as HTMLElement;
-		const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
-		window.scrollTo({top: $offset, behavior: "auto"});
-		const classList = ["animate__animated", "animate__faster", "animate__flash"];
-		$toEl.classList.add(...classList);
-		$toEl.addEventListener("animationend", () => $toEl.classList.remove(...classList));
 	}
 
 	public randomStr(length: number) {
@@ -1322,7 +1327,7 @@ export class App {
 						const talentName = rangesToReplace[0].talent.talent;
 						spanEl.innerText = talentName;
 						spanEl.setAttribute("data-talent", talentName);
-						spanEl.onclick = () => this.scrollToAnchor(talentName);
+						spanEl.onclick = () => scrollToAnchor(talentName);
 						listItemTag.appendChild(spanEl);
 						loc += rangesToReplace[0].to;
 						rangesToReplace.shift();
@@ -1798,7 +1803,8 @@ export class App {
 			const talentName = prerequisite.talentPick.talent.talent;
 			spanJump.innerHTML = `<talent>${talentName}</talent>`;
 			spanJump.setAttribute("data-talent", talentName);
-			spanJump.onclick = () => this.scrollToAnchor(talentName);
+			//spanJump.onclick = () => this.scrollToAnchor(talentName);
+			spanJump.setAttribute("onclick", "(window||global).scrollToAnchor('" + talentName + "');");//
 			span.appendChild(spanJump);
 			if (prerequisite.talentPick.choices) {
 				const spanChoices = document.createElement("span");
