@@ -402,7 +402,10 @@ export class App {
 	}
 
 	private buildPrerequisitesTree() {
-		this.data.talents.forEach(talent => this.buildPrerequisitesTree$(talent));
+		for (let i = 0; i < this.data.talents.length; i++) {
+			const talent = this.data.talents[i];
+			this.buildPrerequisitesTree$(talent);
+		}
 	}
 
 	private noPrerequisitesTalent(talent: W40KTalent) {
@@ -928,14 +931,14 @@ export class App {
 
 			let popup = `<br><h5>${sortedTalents[i].talent}</h5><div class="text-muted">${sortedTalents[i].benefit}</div><hr><span class='tiny-ul'>`;
 			if (newPrerequisitesAsTreeDiv.innerText.length > 0) {
-				if (newPrerequisitesAsTreeDiv.innerText == newPrerequisitesAsListDiv.innerText) {
+				if (newPrerequisitesAsTreeDiv.innerHTML == newPrerequisitesAsListDiv.innerHTML) {
 					popup += `<h6>Prerequisites</h6>${newPrerequisitesAsTreeDiv.innerHTML}<hr>`;
 				} else {
 					popup += `<h6>Prerequisite Tree</h6>${newPrerequisitesAsTreeDiv.innerHTML}<hr>`;
 				}
 			}
 			if (newPrerequisitesAsListDiv.innerText.length > 0) {
-				if (newPrerequisitesAsTreeDiv.innerText == newPrerequisitesAsListDiv.innerText) {
+				if (newPrerequisitesAsTreeDiv.innerHTML == newPrerequisitesAsListDiv.innerHTML) {
 					//
 				} else {
 					popup += `<h6>Prerequisite List</h6>${newPrerequisitesAsListDiv.innerHTML}<hr>`;
@@ -1787,28 +1790,34 @@ export class App {
 	private prerequisitesAsList$$(prerequisiteList: Prerequisite[], prerequisite: Prerequisite) {
 		let matchFound = false;
 		if (prerequisite.characteristicPick) {
-			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.characteristicPick && prerequisite.characteristicPick && eachPrerequisite.characteristicPick.characteristic == prerequisite.characteristicPick.characteristic).forEach((matchPrerequisite) => {
+			const matches = prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.characteristicPick && prerequisite.characteristicPick && eachPrerequisite.characteristicPick.characteristic == prerequisite.characteristicPick.characteristic);
+			matches.forEach((matchPrerequisite) => {
 				matchPrerequisite.characteristicPick!.amount = Math.max(matchPrerequisite.characteristicPick!.amount, prerequisite.characteristicPick!.amount);
 				matchFound = true;
 			});
 		} else if (prerequisite.skillPick) {
-			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.skillPick && prerequisite.skillPick && eachPrerequisite.skillPick.skill == prerequisite.skillPick.skill && eachPrerequisite.skillPick.choices === prerequisite.skillPick.choices).forEach((matchPrerequisite) => {
+			const matches = prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.skillPick && prerequisite.skillPick && eachPrerequisite.skillPick.skill == prerequisite.skillPick.skill && this.arrayEquals(eachPrerequisite.skillPick.choices, prerequisite.skillPick.choices));
+			matches.forEach((matchPrerequisite) => {
 				matchPrerequisite.skillPick!.amount = Math.max(matchPrerequisite.skillPick!.amount, prerequisite.skillPick!.amount);
 				matchFound = true;
 			});
 		} else if (prerequisite.talentPick) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.talentPick && prerequisite.talentPick && eachPrerequisite.talentPick.talent == prerequisite.talentPick.talent && eachPrerequisite.talentPick.choices === prerequisite.talentPick.choices).forEach((matchPrerequisite) => {
-				matchFound = true;
-			});
+			const matches = prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.talentPick && prerequisite.talentPick && eachPrerequisite.talentPick.talent == prerequisite.talentPick.talent && this.arrayEquals(eachPrerequisite.talentPick.choices, prerequisite.talentPick.choices));
+			if (matches.length > 0) matchFound = true;
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.text && prerequisite.text && eachPrerequisite.text == prerequisite.text).forEach((matchPrerequisite) => {
-				matchFound = true;
-			});
+			const matches = prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.text && prerequisite.text && eachPrerequisite.text == prerequisite.text);
+			if (matches.length > 0) matchFound = true;
 		}
 		if (!matchFound) prerequisiteList.push(prerequisite);
 		if (prerequisite.talentPick != null) this.prerequisitesAsList$(prerequisite.talentPick.talent.prerequisiteTree, prerequisiteList);
+	}
+
+	private arrayEquals(arr1: string[] | undefined, arr2: string[] | undefined) {
+		if (arr1 == undefined && arr2 == undefined) return true;
+		if (arr1 == undefined || arr2 == undefined) return false;
+		if (arr1.length != arr2.length) return false;
+		for (let i = 0; i < arr1.length; i++) if (arr1[i].trim() != arr2[i].trim()) return false;
+		return true;
 	}
 
 	private prerequisiteToString(talent: W40KTalent, prerequisite: Prerequisite, parentElement: HTMLElement): boolean {
@@ -1857,8 +1866,8 @@ export class App {
 		//spanJump.onclick = () => this.scrollToAnchor(talentName);
 		const randomId = "popId_" + talent.talent.replace(/[^a-zA-Z0-9]/g, '_');
 		spanJump.setAttribute("onclick", `
+				document.getElementById('${randomId}')._tippy.hide();
 				(window||global).$scrollToAnchor('${talentName}');
-				(window||global).$tippy(document.getElementById('${randomId}')).hide();
 				`);
 		span.appendChild(spanJump);
 		if (talentPick.choices) {
@@ -1905,7 +1914,7 @@ export class App {
 		} else {
 			const ul = document.createElement("ul");
 			const li = document.createElement("li");
-			this.prerequisiteToString(talent, prerequisite, li);
+			this.prerequisitesAsTree$(talent, prerequisite, li);
 			ul.appendChild(li);
 			parentHtmlElement.appendChild(ul);
 		}
@@ -1928,20 +1937,22 @@ export class App {
 	}
 
 	private buildPrerequisitesTree$$(parentTalent: W40KTalent, prerequisite: Prerequisite) {
-		this.data.talents.forEach((talent) => {
+		for (let i = 0; i < this.data.talents.length; i++) {
+			const talent = this.data.talents[i];
 			// regex talentName (choice)
 			const regex = new RegExp("^" + talent.talent + " \\((.+)\\)$", "i");
 			if (regex.test(prerequisite.text)) {
 				const matcher = prerequisite.text.match(regex);
 				const choice = matcher![1];
-				prerequisite.talentPick = new TalentPick(talent, choice.split(",").map((each) => each.trim()));
+				prerequisite.talentPick = new TalentPick(talent, choice.split(",").map((each) => each.trim()).sort());
 				talent.expandsTo.push(parentTalent);
 			} else if (talent.talent.toLowerCase() == prerequisite.text.toLowerCase()) {
 				prerequisite.talentPick = new TalentPick(talent);
 				talent.expandsTo.push(parentTalent);
 			}
-		});
-		this.data.characteristic.forEach((characteristic) => {
+		}
+		for (let i = 0; i < this.data.characteristic.length; i++) {
+			const characteristic = this.data.characteristic[i];
 			// regex characteristicName number
 			const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
 			if (regex.test(prerequisite.text)) {
@@ -1949,8 +1960,9 @@ export class App {
 				const amount = parseInt(matcher![1]);
 				prerequisite.characteristicPick = new CharacteristicPick(characteristic, amount);
 			}
-		});
-		this.data.skills.forEach((skill) => {
+		}
+		for (let i = 0; i < this.data.skills.length; i++) {
+			const skill = this.data.skills[i];
 			// regex skillName (choice) +number
 			const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
 			// regex skillName +number
@@ -1959,13 +1971,13 @@ export class App {
 				const matcher = prerequisite.text.match(regex2);
 				const amount = parseInt(matcher![2]);
 				const choice = matcher![1];
-				prerequisite.skillPick = new SkillPick(skill, amount, choice.split(",").map((each) => each.trim()));
+				prerequisite.skillPick = new SkillPick(skill, amount, choice.split(",").map((each) => each.trim()).sort());
 			} else if (regex1.test(prerequisite.text)) {
 				const matcher = prerequisite.text.match(regex1);
 				const amount = parseInt(matcher![1]);
 				prerequisite.skillPick = new SkillPick(skill, amount);
 			}
-		});
+		}
 	}
 
 	private buildPrerequisitesTree$(talent: W40KTalent) {
@@ -1998,6 +2010,6 @@ export class App {
 				this.buildPrerequisitesTree$$(talent, orPrerequisite);
 			});
 		}
-		console.log(talent.talent, " -- ", talent.prerequisites, " -- ", talent.prerequisiteTree);
+		//console.log(talent.talent, " -- ", talent.prerequisites, " -- ", talent.prerequisiteTree);
 	}
 }
