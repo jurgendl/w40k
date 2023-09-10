@@ -283,15 +283,33 @@ talent {
 	outline: inherit;
 }
 
-.tiny-ul ul ,
-ul.tiny-ul ,
-.tablelike ul {
-	/*list-style-type: none;*/
-	padding: 0;
-	margin: 0 0 0 20px;
+.tablelike {
+	ul {
+		padding: 0;
+		margin: 0 0 0 20px;
+
+		li {
+			padding: 0;
+			margin: 0;
+		}
+	}
 }
 
-.tablelike ul li {
-	padding: 0;
-	margin: 0;
+.tiny-ul {
+	ul {
+		padding: 0 0 0 0;
+		margin: 0 0 0 20px;
+	}
+
+	hr {
+		margin-bottom: 8px;
+		margin-top: 8px;
+	}
+
+	ul.limited-list {
+		max-height: 300px;
+		overflow-y: auto;
+		padding-left: 20px;
+		margin-left: 0px;
+	}
 }

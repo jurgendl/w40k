@@ -289,9 +289,9 @@ class Prerequisite {
 }
 
 function scrollToAnchor(anchorId: string) {
-	console.log("scrollToAnchor", anchorId);
+	//console.log("scrollToAnchor", anchorId);
 	const $toEl = document.getElementById(anchorId) as HTMLElement;
-	const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 100;
+	const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 3;
 	window.scrollTo({top: $offset, behavior: "auto"});
 	const classList = ["animate__animated", "animate__faster", "animate__flash"];
 	$toEl.classList.add(...classList);
@@ -1745,8 +1745,7 @@ export class App {
 		const expandsToList = [] as W40KTalent[];
 		this.expandsToAsList$(talent, expandsToList);
 		const ul = parentHtmlElement.appendChild(document.createElement("ul"));
-		ul.style.maxHeight = "300px";
-		ul.style.overflowY = "scroll";
+		ul.classList.add("limited-list");
 		expandsToList.forEach((expand) => {
 			const li = document.createElement("li");
 			ul.appendChild(li);
@@ -1767,6 +1766,42 @@ export class App {
 	private prerequisitesAsList(talent: W40KTalent, parentHtmlElement: HTMLElement) {
 		const prerequisiteList = [] as Prerequisite[];
 		this.prerequisitesAsList$(talent.prerequisiteTree, prerequisiteList);
+		/*prerequisiteList.sort((a, b) => {
+			// sort by characteristicPick first
+			if (a.characteristicPick && b.characteristicPick) {
+				if (a.characteristicPick.characteristic.name < b.characteristicPick.characteristic.name) return -1;
+				if (a.characteristicPick.characteristic.name > b.characteristicPick.characteristic.name) return 1;
+				return 0;
+			}
+			// sort by skillPick second
+			if (a.skillPick && b.skillPick) {
+				if (a.skillPick.skill.name < b.skillPick.skill.name) return -1;
+				if (a.skillPick.skill.name > b.skillPick.skill.name) return 1;
+				return 0;
+			}
+			// sort by talentPick third
+			if (a.talentPick && b.talentPick) {
+				if (a.talentPick.talent.talent < b.talentPick.talent.talent) return -1;
+				if (a.talentPick.talent.talent > b.talentPick.talent.talent) return 1;
+				return 0;
+			}
+			// sort by text fourth
+			if (a.text && b.text) {
+				if (a.text < b.text) return -1;
+				if (a.text > b.text) return 1;
+				return 0;
+			}
+			// sort by type
+			if (a.characteristicPick) return -1;
+			if (b.characteristicPick) return 1;
+			if (a.skillPick) return -1;
+			if (b.skillPick) return 1;
+			if (a.talentPick) return -1;
+			if (b.talentPick) return 1;
+			if (a.text) return -1;
+			if (b.text) return 1;
+			return 0;
+		});*/
 		const ul = parentHtmlElement.appendChild(document.createElement("ul"));
 		prerequisiteList.forEach((prerequisite) => {
 			const li = document.createElement("li");
