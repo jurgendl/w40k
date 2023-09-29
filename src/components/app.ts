@@ -261,7 +261,7 @@ class Node {
 	name: string;
 	parents: Node[];
 	children: Node[];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	data: any | null;
 
 	constructor(name: string) {
@@ -296,7 +296,7 @@ function scrollToAnchor(anchorId: string) {
 }
 
 // must cast as any to set property on window
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const _global = (window /* browser */ || global /* node */) as any;
 _global.$scrollToAnchor = scrollToAnchor;
 _global.$tippy = tippy;
@@ -308,7 +308,7 @@ export class App {
 	configData: ConfigData = new ConfigData();
 	selectedAptitudes: Aptitude[] = [];
 	source = "ow";
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	dollar: any;
 
 	start(): void {
@@ -406,7 +406,7 @@ export class App {
 	}
 
 	private createSelectPicker() {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 		($('._selectpicker') as any).selectpicker();
 	}
 
@@ -453,43 +453,43 @@ export class App {
 
 	private createExportAll() {
 		const export_all = document.getElementById("export_all") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 		export_all.addEventListener("click", (event) => this.exportAllTableToExcelDef("characteristic", "skill", "talent"));
 	}
 
 	private createExportTalentWishlist() {
 		const export_talent_wishlist = document.getElementById("export_talent_wishlist") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 		export_talent_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("talent", 3));
 	}
 
 	private createExportSkillWishlist() {
 		const export_skill_wishlist = document.getElementById("export_skill_wishlist") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 		export_skill_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("skill", 2));
 	}
 
 	private createExportCharacteristicWishlist() {
 		const export_characteristic_wishlist = document.getElementById("export_characteristic_wishlist") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 		export_characteristic_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("characteristic", 2));
 	}
 
 	private createExportTalent() {
 		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 		export_talent.addEventListener("click", (event) => this.copyTableDivToClipboard("talent"));
 	}
 
 	private createExportSkill() {
 		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 		export_skill.addEventListener("click", (event) => this.copyTableDivToClipboard("skill"));
 	}
 
 	private createExportCharacteristic() {
 		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 		export_characteristic.addEventListener("click", (event) => this.copyTableDivToClipboard("characteristic"));
 	}
 
@@ -743,7 +743,7 @@ export class App {
 		return {aptitudesToText, aptitudesToHtml};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	private rebuildTables(event: Event | null) {
 		//this.tree = new Tree();
 
@@ -765,7 +765,7 @@ export class App {
 
 		//this.buildSelectedTree();
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
 
 		this.save();
@@ -1268,7 +1268,7 @@ export class App {
 
 		treeToShow.buildTree(true);
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 		function treeToData(node: Node, parentNodeData: any) {
 			node.children.forEach((child) => {
 				const childData = {name: child.name, parent: node.name, children: [], data: child.data};
@@ -1294,7 +1294,6 @@ export class App {
 		let hasTree = false;
 		// split string by comma but not comma inside parenthesis
 		// https://stackoverflow.com/questions/11456850/split-a-string-by-commas-but-ignore-commas-within-double-quotes-using-javascript
-		// eslint-disable-next-line no-useless-escape
 		const parts = this.splitPrerequisitesToAnd(str);
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i].trim();
@@ -1517,12 +1516,12 @@ export class App {
 		const downloadLink = document.createElement("a");
 		downloadLink.id = "downloadLinkId";
 		document.body.appendChild(downloadLink);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 		if ((navigator as any).msSaveOrOpenBlob) {
 			const blob = new Blob(['\ufeff', tableHTML], {
 				type: dataType
 			});
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 			(navigator as any).msSaveOrOpenBlob(blob, filename);
 		} else {
 			// Create a link to the file
@@ -1760,12 +1759,12 @@ export class App {
 				matchFound = true;
 			});
 		} else if (prerequisite.talentPick) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.talentPick && prerequisite.talentPick && eachPrerequisite.talentPick.talent == prerequisite.talentPick.talent && eachPrerequisite.talentPick.choices === prerequisite.talentPick.choices).forEach((matchPrerequisite) => {
 				matchFound = true;
 			});
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 			prerequisiteList.filter((eachPrerequisite) => eachPrerequisite.text && prerequisite.text && eachPrerequisite.text == prerequisite.text).forEach((matchPrerequisite) => {
 				matchFound = true;
 			});
