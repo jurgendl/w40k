@@ -1,12 +1,20 @@
+:root {
+	--boldest: 500;
+	--bolder: 400;
+	--normal: 300;
+	--light: 200;
+}
+
 body {
 	padding: 3em;
 	background-color: #111;
 	color: #eee;
 	scroll-behavior: smooth;
+	font-weight: var(--normal);
 }
 
 html body {
-	font-family: "Helvetica Neue", Helvetica;
+	font-family: 'Roboto', "Helvetica Neue", Helvetica, sans-serif;
 }
 
 @media screen and (prefers-reduced-motion: reduce) {
@@ -45,7 +53,7 @@ textarea {
 .header {
 	background-color: desaturate(maroon, 50%);
 	color: #ddd;
-	font-weight: 600;
+	font-weight: var(--boldest);
 }
 
 .tablelike {
@@ -69,23 +77,23 @@ textarea {
 	grid-template-columns: 50px 20px 150px 150px;
 	grid-template-rows: auto;
 }
-
+/*
 .characteristic > div :nth-child(4n),
 .characteristic > div :nth-child(4n - 1) {
-	font-weight: 500;
+	font-weight: var(--bolder);
 }
-
+*/
 .skill > div {
 	display: grid;
 	grid-template-columns: 50px 20px 150px 150px 150px;
 	grid-template-rows: auto;
 }
-
+/*
 .skill > div :nth-child(5n),
 .skill > div :nth-child(5n - 1) {
-	font-weight: 500;
+	font-weight: var(--bolder);
 }
-
+*/
 .talent > div {
 	display: grid;
 	grid-template-columns: 40px 20px 30px 250px 150px 150px 1fr 0px 10px;
@@ -111,12 +119,12 @@ textarea {
 		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px 10px;
 	}
 }
-
+/*
 .talent > div :nth-child(8n - 2),
 .talent > div :nth-child(8n - 3) {
-	font-weight: 500;
+	font-weight: var(--bolder);
 }
-
+*/
 .m2 {
 	color: darken(lightgreen, 30%);
 }
@@ -132,7 +140,7 @@ textarea {
 .badge {
 	font-size: 100%;
 	padding: 0.35em 0.5em;
-	font-weight: 400;
+	font-weight: var(--normal);
 	margin: 4px 4px 4px 0px;
 }
 
@@ -283,15 +291,33 @@ talent {
 	outline: inherit;
 }
 
-.tiny-ul ul ,
-ul.tiny-ul ,
-.tablelike ul {
-	/*list-style-type: none;*/
-	padding: 0;
-	margin: 0 0 0 20px;
+.tablelike {
+	ul {
+		padding: 0;
+		margin: 0 0 0 20px;
+
+		li {
+			padding: 0;
+			margin: 0;
+		}
+	}
 }
 
-.tablelike ul li {
-	padding: 0;
-	margin: 0;
+.tiny-ul {
+	ul {
+		padding: 0 0 0 0;
+		margin: 0 0 0 20px;
+	}
+
+	hr {
+		margin-bottom: 8px;
+		margin-top: 8px;
+	}
+
+	ul.limited-list {
+		max-height: 300px;
+		overflow-y: auto;
+		padding-left: 20px;
+		margin-left: 0px;
+	}
 }

@@ -45,7 +45,9 @@
     "not dead"
   ],
   "dependencies": {
+    "@types/bootstrap-select": "^1.13.4",
     "animate.css": "^4.1.1",
+    "bootstrap-select": "^1.13.18",
     "tippy.js": "^6.3.7"
   }
 }
