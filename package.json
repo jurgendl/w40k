@@ -12,7 +12,7 @@
 		"build": "set NODE_ENV=production&&webpack --config webpack.prod.js",
 		"test": "npx jest",
 		"clean": "node clean.js",
-		"csv2json-build": "tsc --esModuleInterop data-csv2json && ren data-csv2json.js data-csv2json.cjs && node data-csv2json.cjs"
+		"csv2json-build": "del data-csv2json.cjs & tsc --esModuleInterop data-csv2json && ren data-csv2json.js data-csv2json.cjs && node data-csv2json.cjs"
 	},
 	"keywords": [],
 	"author": "",
