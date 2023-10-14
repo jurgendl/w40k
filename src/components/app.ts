@@ -2,6 +2,11 @@
 // https://developer.snapappointments.com/bootstrap-select/
 // https://apps.ajott.io/quickref/character.html
 
+// https://github.com/atomiks/tippyjs
+// https://atomiks.github.io/tippyjs/
+// https://www.npmjs.com/package/tippy.js/v/6.2.5
+// npm i tippy.js
+
 // javascript breakpoint
 // eslint-disable-next-line no-debugger
 //debugger;
