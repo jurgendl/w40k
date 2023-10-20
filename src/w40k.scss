@@ -101,10 +101,15 @@ textarea {
 	grid-gap: 10px;
 }
 
+@media (max-width: 1200px) {
+	.talent > div {
+		grid-gap: 5px;
+	}
+}
+
 @media (max-width: 1200px) and (min-width: 992px) {
 	.talent > div {
 		grid-template-columns: 40px 20px 30px 200px 125px 125px 1fr 0px 10px;
-		grid-gap: 5px;
 	}
 }
 

@@ -301,7 +301,6 @@ function scrollToAnchor(anchorId: string) {
 }
 
 // must cast as any to set property on window
-
 const _global = (window /* browser */ || global /* node */) as any;
 _global.$scrollToAnchor = scrollToAnchor;
 _global.$tippy = tippy;
@@ -313,18 +312,19 @@ export class App {
 	configData: ConfigData = new ConfigData();
 	selectedAptitudes: Aptitude[] = [];
 	source = "ow";
-
+	urlParams: URLSearchParams | null = null;
 	dollar: any;
 
+	getUrlParam(parameter: string): string | null {
+		if (!this.urlParams) this.urlParams = new URLSearchParams(window.location.search);
+		return this.urlParams?.get(parameter);
+	}
+
 	start(): void {
-		const queryString = window.location.search;
-		const urlParams = new URLSearchParams(queryString);
-		const sourceParam: string | null = urlParams.get('source');
-		const configDateParam: string | null = urlParams.get('cfg');
-		const source = sourceParam ? sourceParam : "ow";
+		const source = this.getUrlParam('source') || "ow";
 		fetch(`assets/w40k-${source}.json`)
 			.then((response) => response.json())
-			.then((data) => this.$start(data, source, configDateParam));
+			.then((data) => this.$start(data, source, this.getUrlParam('cfg')));
 	}
 
 	public randomStr(length: number) {
@@ -396,10 +396,11 @@ export class App {
 						<th colspan="2"><u>Rank</u></th>
 						<th><u>Bonus</u></th>
 					</tr>
-					<tr><td style="padding-right:0.5em">1</td><td>Known</td><td style='text-align: right;'>+0</td></tr>
-					<tr><td>2</td><td>Trained</td><td style='text-align: right;'>+10</td></tr>
-					<tr><td>3</td><td>Experienced</td><td style='text-align: right;'>+20</td></tr>
-					<tr><td>4</td><td>Veteran</td><td style='text-align: right;'>+30</div></tr>
+					<tr><td style="padding-right:0.5em">0</td><td>Untrained</td><td style='text-align: right;'>-20</td></tr>
+					<tr><td style="padding-right:0.5em">1</td><td>Known</td><td style='text-align: right;'>0</td></tr>
+					<tr><td style="padding-right:0.5em">2</td><td>Trained</td><td style='text-align: right;'>+10</td></tr>
+					<tr><td style="padding-right:0.5em">3</td><td>Experienced</td><td style='text-align: right;'>+20</td></tr>
+					<tr><td style="padding-right:0.5em">4</td><td>Veteran</td><td style='text-align: right;'>+30</div></tr>
 				</table>`);
 	}
 
@@ -419,7 +420,6 @@ export class App {
 	}
 
 	private createSelectPicker(id: string) {
-
 		($(id) as any).selectpicker();
 	}
 
@@ -466,43 +466,36 @@ export class App {
 
 	private createExportAll() {
 		const export_all = document.getElementById("export_all") as HTMLSelectElement;
-
 		export_all.addEventListener("click", (event) => this.exportAllTableToExcelDef("characteristic", "skill", "talent"));
 	}
 
 	private createExportTalentWishlist() {
 		const export_talent_wishlist = document.getElementById("export_talent_wishlist") as HTMLSelectElement;
-
 		export_talent_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("talent", 3));
 	}
 
 	private createExportSkillWishlist() {
 		const export_skill_wishlist = document.getElementById("export_skill_wishlist") as HTMLSelectElement;
-
 		export_skill_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("skill", 2));
 	}
 
 	private createExportCharacteristicWishlist() {
 		const export_characteristic_wishlist = document.getElementById("export_characteristic_wishlist") as HTMLSelectElement;
-
 		export_characteristic_wishlist.addEventListener("click", (event) => this.copyWishlistToClipboard("characteristic", 2));
 	}
 
 	private createExportTalent() {
 		const export_talent = document.getElementById("export_talent") as HTMLSelectElement;
-
 		export_talent.addEventListener("click", (event) => this.copyTableDivToClipboard("talent"));
 	}
 
 	private createExportSkill() {
 		const export_skill = document.getElementById("export_skill") as HTMLSelectElement;
-
 		export_skill.addEventListener("click", (event) => this.copyTableDivToClipboard("skill"));
 	}
 
 	private createExportCharacteristic() {
 		const export_characteristic = document.getElementById("export_characteristic") as HTMLSelectElement;
-
 		export_characteristic.addEventListener("click", (event) => this.copyTableDivToClipboard("characteristic"));
 	}
 
@@ -778,7 +771,6 @@ export class App {
 
 		//this.buildSelectedTree();
 
-
 		($('[title]:not(.dropdown-toggle)') as any).tooltip();
 
 		this.save();
@@ -950,7 +942,7 @@ export class App {
 				popup += `<h6>Expands To</h6>${expandsToAsListDiv.innerHTML}<hr>`;
 			}
 			popup += `</span>`;
-			// replace all non alphanumeric characters with _ in sortedTalents[i].talent
+			// replace all non-alphanumeric characters with _ in sortedTalents[i].talent
 			const popId = "popId_" + sortedTalents[i].talent.replace(/[^a-zA-Z0-9]/g, '_');
 			actionDiv.innerHTML = `<button id="${popId}" class="unstyled-button"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
 			this.createPopOver(popId, popup);
@@ -1176,10 +1168,10 @@ export class App {
 	}*/
 
 	/*private prerequisitesAsTreeNested(prerequisites: string): string {
-		const splitted = this.splitPrerequisites(prerequisites);
+		const split = this.splitPrerequisites(prerequisites);
 		let strPrerequisites = "<ul>";
 		for (let i = 0; i < splitted.length; i++) {
-			if ("-" == splitted[i] || "—" == splitted[i]) continue;
+			if ("-" == split[i] || "—" == split[i]) continue;
 			strPrerequisites += "<li>";
 			strPrerequisites += splitted[i];
 			this.data.talents.forEach((eachTalent) => {
@@ -1431,7 +1423,7 @@ export class App {
 	private calcSkipAndSetMatchCount(costDiv: HTMLDivElement, j: number, matches: number, matchesDiv: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
 		costDiv.innerHTML = "" + this.data.costs[j].cost[2 - matches][0];
 		costDiv.classList.add(`m${matches}`);
-		matchesDiv.innerHTML = "" + matches;
+		matchesDiv.innerHTML = `${matches}`;
 		matchesDiv.classList.add(`m${matches}`);
 		if (matches === 0 && skip0CbChecked) skip = true;
 		return skip;
@@ -1531,7 +1523,7 @@ export class App {
 		const tableSelect = document.getElementById(tableID);
 		if (!tableSelect) return;
 		const tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
-		filename = filename ? filename + '.html.xls' : 'w40k.html.xls';
+		filename = (filename || 'w40k') + '.html.xls';
 		document.getElementById("downloadLinkId")?.remove();
 		const downloadLink = document.createElement("a");
 		downloadLink.id = "downloadLinkId";
@@ -1545,7 +1537,7 @@ export class App {
 			(navigator as any).msSaveOrOpenBlob(blob, filename);
 		} else {
 			// Create a link to the file
-			downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+			downloadLink.href = `data:${dataType}, ${tableHTML}`;
 			// Setting the file name
 			downloadLink.download = filename;
 			//triggering the function
