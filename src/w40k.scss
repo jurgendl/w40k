@@ -322,7 +322,8 @@ talent {
 .tablelike {
 	ul {
 		padding: 0;
-		margin: 0 0 0 20px;
+		margin: 0;
+		list-style-position: inside;
 
 		li {
 			padding: 0;
