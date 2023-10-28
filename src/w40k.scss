@@ -6,11 +6,34 @@
 }
 
 body {
-	padding: 3em;
+	padding: 2em 2em;
 	background-color: #111;
 	color: #eee;
 	scroll-behavior: smooth;
 	font-weight: var(--normal);
+}
+@media (max-width: 1200px) {
+	body {
+		//
+	}
+}
+
+@media (max-width: 1200px) and (min-width: 992px) {
+	body {
+		padding: 2em 2em;
+	}
+}
+
+@media (max-width: 992px) and (min-width: 768px) {
+	body {
+		padding: 2em 1em;
+	}
+}
+
+@media (max-width: 768px) {
+	body {
+		padding: 2em .5em;
+	}
 }
 
 html body {
@@ -74,7 +97,7 @@ textarea {
 
 .characteristic > div {
 	display: grid;
-	grid-template-columns: 50px 20px 150px 150px;
+	grid-template-columns: 50px 20px 150px 1fr;
 	grid-template-rows: auto;
 }
 /*
@@ -85,7 +108,7 @@ textarea {
 */
 .skill > div {
 	display: grid;
-	grid-template-columns: 50px 20px 150px 150px 150px;
+	grid-template-columns: 50px 20px 150px 150px 1fr;
 	grid-template-rows: auto;
 }
 /*
@@ -96,7 +119,7 @@ textarea {
 */
 .talent > div {
 	display: grid;
-	grid-template-columns: 40px 20px 30px 250px 150px 150px 1fr 0px 10px;
+	grid-template-columns: 40px 20px 30px 250px 150px 150px 1fr 0px 12px;
 	grid-template-rows: auto;
 	grid-gap: 10px;
 }
@@ -109,19 +132,19 @@ textarea {
 
 @media (max-width: 1200px) and (min-width: 992px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 200px 125px 125px 1fr 0px 10px;
+		grid-template-columns: 40px 20px 30px 200px 125px 125px 1fr 0px 12px;
 	}
 }
 
 @media (max-width: 992px) and (min-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 150px 100px 100px 1fr 0px 10px;
+		grid-template-columns: 40px 20px 30px 150px 100px 100px 1fr 0px 12px;
 	}
 }
 
 @media (max-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px 10px;
+		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px 12px;
 	}
 }
 /*
@@ -304,6 +327,8 @@ talent {
 		li {
 			padding: 0;
 			margin: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 	}
 }
@@ -325,4 +350,15 @@ talent {
 		padding-left: 20px;
 		margin-left: 0px;
 	}
+}
+
+.header > div > div,
+.tablelike > div > div {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tablelike.talent > div > div:last-child {
+	overflow: visible;
+	text-overflow: unset;
 }

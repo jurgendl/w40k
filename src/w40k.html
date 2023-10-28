@@ -146,16 +146,17 @@ https://www.jsdelivr.com/package/npm/jquery
 		<button type="button" class="btn btn-sm btn-danger mb-1" id="wishlist_clear">Clear</button>
 		<textarea rows="3" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
 	</div>
-	<div>
-		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
-		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
-		<div style="display: inline-block; float: right;">
-			<div style="margin-left: 1em; margin-right: 1em; display: inline-block;">
-				Click to see skill ranks
-				<button id="skillRanksHelp" class="unstyled-button"><i class="icon-as-button fas fa-question-circle"></i></button>
-			</div>
-			|
-			<div style="margin-left: 1em; display: inline-block;">Click "<i class='fa-regular fa-eye'></i>" to see all prerequisites</div>
+	<div style="display: flex;">
+		<div style="display: inline-block; flex-grow: 99; flex-shrink: 0;">
+			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
+			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
+		</div>
+		<div style="padding-left: 1em; display: inline-block; flex-grow: 0; flex-shrink: 99;">
+			|&nbsp;&nbsp;Click to see skill ranks
+			<button id="skillRanksHelp" class="unstyled-button"><i class="icon-as-button fas fa-question-circle"></i></button>
+		</div>
+		<div style="padding-left: 1em; display: inline-block; flex-grow: 0; flex-shrink: 99;">
+			|&nbsp;&nbsp;Click "<i class='fa-regular fa-eye'></i>" to see all prerequisites
 		</div>
 	</div>
 	<div class="talent header">
@@ -174,7 +175,7 @@ https://www.jsdelivr.com/package/npm/jquery
 	<div class="tablelike talent" id="talent"></div>
 </div>
 
-<div style="padding: 2em;">
+<div>
 	<div id="selectedTree"></div>
 </div>
 
