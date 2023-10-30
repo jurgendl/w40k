@@ -290,14 +290,16 @@ class Prerequisite {
 	}
 }
 
+const scrollToAnchor_classList = ["animate__animated", "animate__faster", "animate__flash"];
+
 function scrollToAnchor(anchorId: string) {
 	//console.log("scrollToAnchor", anchorId);
 	const $toEl = document.getElementById(anchorId) as HTMLElement;
+	if (!$toEl) return; // anchor not visible
 	const $offset = $toEl.getBoundingClientRect().top + window.scrollY - 3;
 	window.scrollTo({top: $offset, behavior: "auto"});
-	const classList = ["animate__animated", "animate__faster", "animate__flash"];
-	$toEl.classList.add(...classList);
-	$toEl.addEventListener("animationend", () => $toEl.classList.remove(...classList));
+	$toEl.classList.add(...scrollToAnchor_classList);
+	$toEl.addEventListener("animationend", () => $toEl.classList.remove(...scrollToAnchor_classList));
 }
 
 // must cast as any to set property on window
@@ -322,9 +324,11 @@ export class App {
 
 	start(): void {
 		const source = this.getUrlParam('source') || "ow";
+		const reset = this.getUrlParam('reset') === 'true';
+		const cfg = reset ? null : this.getUrlParam('cfg');
 		fetch(`assets/w40k-${source}.json`)
 			.then((response) => response.json())
-			.then((data) => this.$start(data, source, this.getUrlParam('cfg')));
+			.then((data) => this.$start(data, source, cfg, reset));
 	}
 
 	public randomStr(length: number) {
@@ -351,14 +355,14 @@ export class App {
 		});
 	}
 
-	private $start(data: W40KData, source: string, configDateParam: string | null): void {
+	private $start(data: W40KData, source: string, configDateParam: string | null, reset: boolean): void {
 		this.data = data;
 		this.data.talents.forEach(talent => talent.expandsTo = []);
 		this.source = source;
 		this.createSkillRanksHelp();
 		//this.buildFullTree();
 		this.buildPrerequisitesTree();
-		this.loadConfigData(source, configDateParam);
+		this.loadConfigData(reset, source, configDateParam);
 		this.createClassSelectContainer();
 		this.createWorldSelectContainer();
 		this.createBackgroundSelectContainer();
@@ -388,6 +392,7 @@ export class App {
 		this.createSelectPicker('._selectpicker');
 		this.rebuildTables(null);
 		this.styleAptitudeMatches(null, data);
+		this.createResetLink();
 	}
 
 	private createSkillRanksHelp() {
@@ -423,20 +428,37 @@ export class App {
 		($(id) as any).selectpicker();
 	}
 
-	private loadConfigData(source: string, configDateParam: string | null) {
+	private loadConfigData(reset: boolean, source: string, configDateParam: string | null) {
+		if (reset) return;
 		const configDataString: string | null = localStorage.getItem("w40k-data-config-" + source);
 		if (configDateParam) {
 			if (configDateParam.startsWith("%7B") || configDateParam.startsWith("{")) {
-				console.log("load-json", `w40k-data-config-${this.source}`, configDateParam);
-				this.configData = JSON.parse(configDateParam);
+				try {
+					const parsed = JSON.parse(configDateParam);
+					console.log(parsed.skip0CbChecked != null);//force check json data
+					this.configData = parsed;
+					console.log("load-json", configDateParam);
+				} catch (e) {
+					console.error("ERROR logged in load-json: incorrect data:", configDateParam, e);
+				}
 			} else {
-				const decompressUrlSafe1 = decompressUrlSafe(configDateParam);
-				console.log("load-compressed", `w40k-data-config-${this.source}`, decompressUrlSafe1);
-				this.configData = JSON.parse(decompressUrlSafe1);
+				try {
+					const decompressUrlSafe1 = decompressUrlSafe(configDateParam);
+					this.configData = JSON.parse(decompressUrlSafe1);
+					console.log("load-compressed", decompressUrlSafe1);
+				} catch (e) {
+					console.error("ERROR logged in load-compressed: incorrect data:", configDateParam, e);
+				}
 			}
 		} else if (configDataString) {
-			console.log("load-browser", `w40k-data-config-${this.source}`, configDataString);
-			this.configData = JSON.parse(configDataString);
+			try {
+				const parsed = JSON.parse(configDataString);
+				console.log(parsed.skip0CbChecked != null);//force check json data
+				this.configData = parsed;
+				console.log("load-plain", configDataString);
+			} catch (e) {
+				console.error("ERROR logged in load-plain: incorrect data:", configDataString, e);
+			}
 		}
 	}
 
@@ -1418,6 +1440,8 @@ export class App {
 		saveLink.href = `?source=${this.source}&cfg=${encoded}`;
 		const saveLinkAlt = document.getElementById("saveLinkAlt") as HTMLLinkElement;
 		saveLinkAlt.href = `?source=${this.source}&cfg=${compressedSerializedData}`;
+		const settingsToCopy = document.getElementById("settingsToCopy") as HTMLInputElement;
+		settingsToCopy.value = compressedSerializedData;
 	}
 
 	private calcSkipAndSetMatchCount(costDiv: HTMLDivElement, j: number, matches: number, matchesDiv: HTMLDivElement, skip0CbChecked: boolean, skip: boolean) {
@@ -2040,5 +2064,10 @@ export class App {
 			});
 		}
 		//console.log(talent.talent, " -- ", talent.prerequisites, " -- ", talent.prerequisiteTree);
+	}
+
+	private createResetLink() {
+		const clearLink = document.getElementById("clearLink") as HTMLLinkElement;
+		clearLink.href = `w40k.html?source=${this.source}&reset=true`;
 	}
 }

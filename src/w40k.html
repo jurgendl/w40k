@@ -11,6 +11,7 @@ npm install @types/jquery
 https://www.npmjs.com/package/@types/jquery/v/3.5.18
 npm install --save @types/jquery
 https://www.jsdelivr.com/package/npm/jquery
+https://clipboardjs.com/
 -->
 <head>
 	<meta charset="UTF-8">
@@ -37,20 +38,40 @@ https://www.jsdelivr.com/package/npm/jquery
 	<script src="https://unpkg.com/@popperjs/core@2"></script>
 	<script src="https://unpkg.com/tippy.js@6"></script>
 	-->
+	<!--
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" integrity="sha512-oJp0DdQuQQrRsKVly+Ww6fAN1GwJN7d1bi8UubpEbzDUh84WrJ2CFPBnT4LqBCcfqTcHR5OGXFFhaPe3g1/bzQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	-->
+	<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
 </head>
 
 <body class="override">
 
 <div class='thetop'>
-	<a href="?source=ow">Only War</a>,
-	<a href="?source=dh2">Dark Heresy 2</a>
-	,
-	Bookmark (save) this page:
-	<a id="saveLink" href="?">[json]</a> or
-	<a id="saveLinkAlt" href="?">[compressed]</a>
 </div>
-<br>
+
+<div class="dropdown dropright mb-2">
+	<a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		<i class="fa-fw fas fa-bars"></i>
+	</a>
+	<div style="width: 450px;" class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+		<a class="dropdown-item" href="?source=ow">Open Only War</a>
+		<a class="dropdown-item" href="?source=dh2">Open Dark Heresy 2</a>
+		<a class="dropdown-item" href="?" id="saveLinkAlt">Save settings (bookmarkable link)</a>
+		<a class="dropdown-item" href="?" style="display: none" id="saveLink"></a>
+		<a class="dropdown-item" href="" id="clearLink">Clear settings and reload</a>
+		<div class="input-group input-group-sm dropdown-item">
+			<div class="input-group-prepend">
+				<span class="input-group-text" id="basic-addon1">Settings</span>
+			</div>
+			<input title="paste settings to load settings" type="text" class="form-control" id="settingsToCopy">
+			<div class="input-group-append">
+				<a class="clipboard btn btn-secondary" data-toggle="tooltip" title="copy settings to clipboard" data-clipboard-target="#settingsToCopy" data-clipboard-action="copy">
+					<i class="fa-fw fas fa-clipboard"></i>
+				</a>
+			</div>
+		</div>
+	</div>
+</div>
 
 <h1>Aptitudes</h1>
 <div>
@@ -198,6 +219,20 @@ https://www.jsdelivr.com/package/npm/jquery
 			return false;
 		})
 	})
+</script>
+<script>
+	$(function () {
+		new ClipboardJS('[data-clipboard-target]');
+		$('#settingsToCopy').on('focus', function(event) {
+			$(this).select();
+		});
+		// on paste into settingsToCopy
+		document.getElementById("settingsToCopy").addEventListener("paste", (event) => {
+			const paste = (event.clipboardData || window.clipboardData).getData("text");
+			const sourceParam = new URLSearchParams(window.location.search).get('source');
+			window.location.href = `w40k.html?source=${sourceParam}&cfg=${paste}`;
+		});
+	});
 </script>
 
 </body>
