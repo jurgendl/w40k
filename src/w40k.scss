@@ -363,3 +363,7 @@ talent {
 	overflow: visible;
 	text-overflow: unset;
 }
+
+.form-control:disabled, .form-control[readonly] {
+	color: #bbb;
+}

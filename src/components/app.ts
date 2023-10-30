@@ -375,18 +375,21 @@ export class App {
 			this.createExportCharacteristic();
 			this.createExportCharacteristicWishlist();
 			this.createCharacteristicWishlistClear(characteristic_wishlist);
+			this.createCharacteristicWishlistToggle(characteristic_wishlist);
 		}
 		{
 			const skill_wishlist = this.createSkillWishlist();
 			this.createExportSkill();
 			this.createExportSkillWishlist();
 			this.createSkillWishlistClear(skill_wishlist);
+			this.createSkillWishlistToggle(skill_wishlist);
 		}
 		{
 			const wishlist = this.createTalentWishlist();
 			this.createExportTalent();
 			this.createExportTalentWishlist();
-			this.createTalentWishlistClear(wishlist);
+			this.createTalentWishlistClear(wishlist)
+			this.createTalentWishlistToggle(wishlist);
 		}
 		this.createExportAll();
 		this.createSelectPicker('._selectpicker');
@@ -470,6 +473,15 @@ export class App {
 		});
 	}
 
+	private createCharacteristicWishlistToggle(characteristic_wishlist: HTMLTextAreaElement) {
+		const characteristic_wishlist_toggle = document.getElementById("characteristic_wishlist_toggle") as HTMLInputElement;
+		characteristic_wishlist_toggle.addEventListener("change", (event) => {
+			characteristic_wishlist.readOnly = !characteristic_wishlist_toggle.checked;
+			this.rebuildTables(event);
+		});
+	}
+
+
 	private createSkillWishlistClear(skill_wishlist: HTMLTextAreaElement) {
 		const skill_wishlist_clear = document.getElementById("skill_wishlist_clear") as HTMLSelectElement;
 		skill_wishlist_clear.addEventListener("click", (event) => {
@@ -478,10 +490,26 @@ export class App {
 		});
 	}
 
-	private createTalentWishlistClear(wishlist: HTMLTextAreaElement) {
-		const wishlist_clear = document.getElementById("wishlist_clear") as HTMLSelectElement;
-		wishlist_clear.addEventListener("click", (event) => {
-			wishlist.value = "";
+	private createSkillWishlistToggle(skill_wishlist: HTMLTextAreaElement) {
+		const skill_wishlist_toggle = document.getElementById("skill_wishlist_toggle") as HTMLInputElement;
+		skill_wishlist_toggle.addEventListener("change", (event) => {
+			skill_wishlist.readOnly = !skill_wishlist_toggle.checked;
+			this.rebuildTables(event);
+		});
+	}
+
+	private createTalentWishlistClear(talent_wishlist: HTMLTextAreaElement) {
+		const talent_wishlist_clear = document.getElementById("wishlist_clear") as HTMLSelectElement;
+		talent_wishlist_clear.addEventListener("click", (event) => {
+			talent_wishlist.value = "";
+			this.rebuildTables(event);
+		});
+	}
+
+	private createTalentWishlistToggle(talent_wishlist: HTMLTextAreaElement) {
+		const talent_wishlist_toggle = document.getElementById("talent_wishlist_toggle") as HTMLInputElement;
+		talent_wishlist_toggle.addEventListener("change", (event) => {
+			talent_wishlist.readOnly = !talent_wishlist_toggle.checked;
 			this.rebuildTables(event);
 		});
 	}
@@ -1128,6 +1156,7 @@ export class App {
 
 	private rebuildCharacteristicWishlist() {
 		const characteristic_wishlist = document.getElementById("characteristic_wishlist") as HTMLTextAreaElement;
+		if(characteristic_wishlist.readOnly) return [];
 		this.configData.characteristic_wishlist = characteristic_wishlist.value;
 		// split textarea content into array
 		const characteristic_wishlistArray = characteristic_wishlist.value.split("\n");
@@ -1147,6 +1176,7 @@ export class App {
 
 	private rebuildSkillWishlist() {
 		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
+		if(skill_wishlist.readOnly) return [];
 		this.configData.skill_wishlist = skill_wishlist.value;
 		// split textarea content into array
 		const skill_wishlistArray = skill_wishlist.value.split("\n");
@@ -1166,6 +1196,7 @@ export class App {
 
 	private rebuildTalentWishlist() {
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
+		if(wishlist.readOnly) return [];
 		this.configData.wishlist = wishlist.value;
 		// split textarea content into array
 		const wishlistArray = wishlist.value.split("\n");
