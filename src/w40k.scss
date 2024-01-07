@@ -7,11 +7,12 @@
 
 body {
 	padding: 2em 2em;
-	background-color: #111;
+	background-color: rgb(33, 37, 41);
 	color: #eee;
 	scroll-behavior: smooth;
 	font-weight: var(--normal);
 }
+
 @media (max-width: 1200px) {
 	body {
 		//
@@ -100,6 +101,7 @@ textarea {
 	grid-template-columns: 50px 20px 150px 1fr;
 	grid-template-rows: auto;
 }
+
 /*
 .characteristic > div :nth-child(4n),
 .characteristic > div :nth-child(4n - 1) {
@@ -111,6 +113,7 @@ textarea {
 	grid-template-columns: 50px 20px 150px 150px 1fr;
 	grid-template-rows: auto;
 }
+
 /*
 .skill > div :nth-child(5n),
 .skill > div :nth-child(5n - 1) {
@@ -147,6 +150,7 @@ textarea {
 		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px 12px;
 	}
 }
+
 /*
 .talent > div :nth-child(8n - 2),
 .talent > div :nth-child(8n - 3) {
@@ -230,6 +234,8 @@ textarea {
 
 /*::-webkit-scrollbar-thumb:window-inactive {
 }*/
+
+/* ========================  ======================== */
 
 .jump-to-anchor,
 a.jump-to-anchor {
@@ -367,3 +373,31 @@ talent {
 .form-control:disabled, .form-control[readonly] {
 	color: #bbb;
 }
+
+/* ========================  ======================== */
+
+input.form-control,
+textarea.form-control {
+	background-color: #ccc;
+}
+
+input.form-control:focus,
+textarea.form-control:focus {
+	background-color: #eee;
+}
+
+input.form-control[readonly],
+textarea.form-control[readonly] {
+	background-color: #999;
+	cursor: not-allowed;
+	-moz-user-select: none; // Firefox
+	-webkit-text-select: none; // IOS Safari
+	-webkit-user-select: none; // Safari
+	-khtml-user-select: none; // Konqueror HTML
+	user-select: none; // chrome and Opera
+}
+textarea.form-control[readonly]::selection {
+	background-color: transparent;
+}
+
+/* ========================  ======================== */
