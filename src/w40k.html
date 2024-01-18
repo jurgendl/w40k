@@ -28,6 +28,7 @@ https://clipboardjs.com/
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
 	<link rel="stylesheet" href="assets/w40k-chart.css">
+	<link rel="stylesheet" href="assets/scrollbars-but-nice.css">
 	<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/js/sb-admin-2.js" integrity="sha512-M82XdXhPLLSki+Ld1MsafNzOgHQB3txZr8+SQlGXSwn6veeqtYhPLbQeAfk9Y/Q9/gXcfa1jWT4YYUeoei6Uow==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -44,12 +45,9 @@ https://clipboardjs.com/
 	<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
 </head>
 
-<body class="override">
+<body data-bs-theme="dark" class="override">
 
-<div class='thetop'>
-</div>
-
-<div class="dropdown dropright mb-2">
+<div class="dropdown dropright mb-2 mr-5">
 	<a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 		<i class="fa-fw fas fa-bars"></i>
 	</a>
@@ -214,27 +212,6 @@ https://clipboardjs.com/
 	<div id="selectedTree"></div>
 </div>
 
-<div class='scrolltop'>
-	<div class='scroll icon'>
-		<i class="icon-as-button fa-solid fa-circle-arrow-up"></i>
-	</div>
-</div>
-
-<script>
-	$(window).scroll(function () {
-		if ($(this).scrollTop() > 50) {
-			$('.scrolltop:hidden').stop(true, true).fadeIn();
-		} else {
-			$('.scrolltop').stop(true, true).fadeOut();
-		}
-	});
-	$(function () {
-		$(".scroll").click(function () {
-			$("html,body").animate({scrollTop: $(".thetop").offset().top}, "0");
-			return false;
-		})
-	})
-</script>
 <script>
 	$(function () {
 		new ClipboardJS('[data-clipboard-target]');
@@ -249,6 +226,8 @@ https://clipboardjs.com/
 		});
 	});
 </script>
+
+<script src="assets/scroll-top-bottom.js"></script>
 
 </body>
 </html>
