@@ -223,15 +223,15 @@ a.jump-to-anchor {
 }
 
 characteristic {
-	color: darkgreen;
+	color: chartreuse;
 }
 
 skill {
-	color: darkblue;
+	color: burlywood;
 }
 
 talent {
-	color: darkred;
+	color: aqua;
 }
 
 .characteristic:not(.header) > div > :nth-child(4n - 1).m2 {
@@ -342,6 +342,22 @@ textarea.form-control[readonly] {
 }
 textarea.form-control[readonly]::selection {
 	background-color: transparent;
+}
+
+/* ========================  ======================== */
+
+.override .dropdown-menu {
+	border-radius: 0;
+	margin-top: 0;
+	padding-top: 0;
+}
+
+.override .form-control {
+	border-radius: 0;
+}
+
+.override .text-muted {
+	color: #aaa !important;
 }
 
 /* ========================  ======================== */

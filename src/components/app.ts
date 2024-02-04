@@ -15,7 +15,7 @@ import {compressUrlSafe, decompressUrlSafe} from './lzma-url.mjs'
 import 'animate.css';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
-import 'tippy.js/themes/light-border.css';
+import 'tippy.js/themes/translucent.css';
 
 export enum Aptitude {
 	/* common */
