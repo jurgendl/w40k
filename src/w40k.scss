@@ -13,6 +13,10 @@ body {
 	font-weight: var(--normal);
 }
 
+h1 {
+	margin-top: 1em;
+}
+
 @media (max-width: 1200px) {
 	body {
 		//
@@ -38,7 +42,7 @@ body {
 }
 
 html body {
-	font-family: 'Roboto', "Helvetica Neue", Helvetica, sans-serif;
+	font-family: system, -apple-system, ".SFNSText-Regular", "San Francisco", "Roboto", "Segoe UI", "Helvetica Neue", "Lucida Grande", sans-serif;;
 }
 
 @media screen and (prefers-reduced-motion: reduce) {
@@ -98,31 +102,19 @@ textarea {
 
 .characteristic > div {
 	display: grid;
-	grid-template-columns: 50px 20px 150px 1fr;
+	grid-template-columns: 50px 30px 150px 1fr;
 	grid-template-rows: auto;
 }
 
-/*
-.characteristic > div :nth-child(4n),
-.characteristic > div :nth-child(4n - 1) {
-	font-weight: var(--bolder);
-}
-*/
 .skill > div {
 	display: grid;
-	grid-template-columns: 50px 20px 150px 150px 1fr;
+	grid-template-columns: 50px 30px 150px 150px 1fr;
 	grid-template-rows: auto;
 }
 
-/*
-.skill > div :nth-child(5n),
-.skill > div :nth-child(5n - 1) {
-	font-weight: var(--bolder);
-}
-*/
 .talent > div {
 	display: grid;
-	grid-template-columns: 40px 20px 30px 250px 150px 150px 1fr 0px 22px;
+	grid-template-columns: 40px 30px 30px 250px 150px 150px 1fr 0px 22px;
 	grid-template-rows: auto;
 	grid-gap: 10px;
 }
@@ -135,36 +127,33 @@ textarea {
 
 @media (max-width: 1200px) and (min-width: 992px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 200px 125px 125px 1fr 0px 22px;
+		grid-template-columns: 40px 30px 30px 200px 125px 125px 1fr 0px 22px;
 	}
 }
 
 @media (max-width: 992px) and (min-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 150px 100px 100px 1fr 0px 22px;
+		grid-template-columns: 40px 30px 30px 150px 100px 100px 1fr 0px 22px;
 	}
 }
 
 @media (max-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 20px 30px 100px 75px 75px 1fr 0px 22px;
+		grid-template-columns: 40px 30px 30px 100px 75px 75px 1fr 0px 22px;
 	}
 }
 
-/*
-.talent > div :nth-child(8n - 2),
-.talent > div :nth-child(8n - 3) {
-	font-weight: var(--bolder);
-}
-*/
+/* 2 matches */
 .m2 {
-	color: darken(lightgreen, 30%);
+	color: chartreuse;
 }
 
+/* 1 match */
 .m1 {
 	color: goldenrod;
 }
 
+/* no match */
 .m0 {
 	color: indianred;
 }
@@ -227,7 +216,7 @@ characteristic {
 }
 
 skill {
-	color: burlywood;
+	color: goldenrod;
 }
 
 talent {
@@ -235,7 +224,7 @@ talent {
 }
 
 .characteristic:not(.header) > div > :nth-child(4n - 1).m2 {
-	color: darken(lightgreen, 30%);
+	color: chartreuse;
 }
 
 .animate__animated {
@@ -356,6 +345,7 @@ textarea.form-control[readonly]::selection {
 	border-radius: 0;
 }
 
+/* makes text better readable in tippy tooltips in darkmode (this is the way)  */
 .override .text-muted {
 	color: #aaa !important;
 }
