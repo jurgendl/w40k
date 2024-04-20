@@ -102,19 +102,19 @@ textarea {
 
 .characteristic > div {
 	display: grid;
-	grid-template-columns: 50px 30px 150px 1fr;
+	grid-template-columns: 60px 50px 30px 150px 1fr;
 	grid-template-rows: auto;
 }
 
 .skill > div {
 	display: grid;
-	grid-template-columns: 50px 30px 150px 150px 1fr;
+	grid-template-columns: 60px 50px 30px 150px 150px 1fr;
 	grid-template-rows: auto;
 }
 
 .talent > div {
 	display: grid;
-	grid-template-columns: 40px 30px 30px 250px 150px 150px 1fr 0px 22px;
+	grid-template-columns: 25px 40px 30px 30px 250px 150px 150px 1fr 0px 22px;
 	grid-template-rows: auto;
 	grid-gap: 10px;
 }
@@ -127,19 +127,19 @@ textarea {
 
 @media (max-width: 1200px) and (min-width: 992px) {
 	.talent > div {
-		grid-template-columns: 40px 30px 30px 200px 125px 125px 1fr 0px 22px;
+		grid-template-columns: 25px 40px 30px 30px 200px 125px 125px 1fr 0px 22px;
 	}
 }
 
 @media (max-width: 992px) and (min-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 30px 30px 150px 100px 100px 1fr 0px 22px;
+		grid-template-columns: 25px 40px 30px 30px 150px 100px 100px 1fr 0px 22px;
 	}
 }
 
 @media (max-width: 768px) {
 	.talent > div {
-		grid-template-columns: 40px 30px 30px 100px 75px 75px 1fr 0px 22px;
+		grid-template-columns: 25px 40px 30px 30px 100px 75px 75px 1fr 0px 22px;
 	}
 }
 

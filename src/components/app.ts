@@ -79,6 +79,7 @@ interface W40KData {
 interface W40KCharacteristic {
 	name: Aptitude;
 	aptitude: Aptitude;
+	rank: number;
 }
 
 interface W40KTalent {
@@ -91,11 +92,13 @@ interface W40KTalent {
 	ref: string
 	prerequisiteTree: Prerequisite;
 	expandsTo: W40KTalent[];
+	checked: boolean;
 }
 
 interface W40KSkill {
 	name: string;
 	aptitudes: Aptitude[];
+	rank: number;
 }
 
 interface W40KClass {
@@ -376,6 +379,7 @@ export class App {
 			this.createExportCharacteristicWishlist();
 			this.createCharacteristicWishlistClear(characteristic_wishlist);
 			this.createCharacteristicWishlistToggle(characteristic_wishlist);
+			this.createCostTalentsClear();
 		}
 		{
 			const skill_wishlist = this.createSkillWishlist();
@@ -383,6 +387,7 @@ export class App {
 			this.createExportSkillWishlist();
 			this.createSkillWishlistClear(skill_wishlist);
 			this.createSkillWishlistToggle(skill_wishlist);
+			this.createCostSkillsClear();
 		}
 		{
 			const wishlist = this.createTalentWishlist();
@@ -390,10 +395,11 @@ export class App {
 			this.createExportTalentWishlist();
 			this.createTalentWishlistClear(wishlist)
 			this.createTalentWishlistToggle(wishlist);
+			this.createCostCharacteristicsClear();
 		}
 		this.createExportAll();
 		this.createSelectPicker('._selectpicker');
-		this.rebuildTables(null);
+		this.rebuildTables(null, true, true, true);
 		this.styleAptitudeMatches(null, data);
 		this.createResetLink();
 	}
@@ -469,7 +475,7 @@ export class App {
 		const characteristic_wishlist_clear = document.getElementById("characteristic_wishlist_clear") as HTMLSelectElement;
 		characteristic_wishlist_clear.addEventListener("click", (event) => {
 			characteristic_wishlist.value = "";
-			this.rebuildTables(event);
+			this.rebuildTables(event, true, true, true);
 		});
 	}
 
@@ -477,7 +483,7 @@ export class App {
 		const characteristic_wishlist_toggle = document.getElementById("characteristic_wishlist_toggle") as HTMLInputElement;
 		characteristic_wishlist_toggle.addEventListener("change", (event) => {
 			characteristic_wishlist.readOnly = !characteristic_wishlist_toggle.checked;
-			this.rebuildTables(event);
+			this.rebuildTables(event, true, true, true);
 		});
 	}
 
@@ -486,7 +492,7 @@ export class App {
 		const skill_wishlist_clear = document.getElementById("skill_wishlist_clear") as HTMLSelectElement;
 		skill_wishlist_clear.addEventListener("click", (event) => {
 			skill_wishlist.value = "";
-			this.rebuildTables(event);
+			this.rebuildTables(event, true, true, true);
 		});
 	}
 
@@ -494,7 +500,7 @@ export class App {
 		const skill_wishlist_toggle = document.getElementById("skill_wishlist_toggle") as HTMLInputElement;
 		skill_wishlist_toggle.addEventListener("change", (event) => {
 			skill_wishlist.readOnly = !skill_wishlist_toggle.checked;
-			this.rebuildTables(event);
+			this.rebuildTables(event, true, true, true);
 		});
 	}
 
@@ -502,7 +508,7 @@ export class App {
 		const talent_wishlist_clear = document.getElementById("wishlist_clear") as HTMLSelectElement;
 		talent_wishlist_clear.addEventListener("click", (event) => {
 			talent_wishlist.value = "";
-			this.rebuildTables(event);
+			this.rebuildTables(event, true, true, true);
 		});
 	}
 
@@ -510,7 +516,7 @@ export class App {
 		const talent_wishlist_toggle = document.getElementById("talent_wishlist_toggle") as HTMLInputElement;
 		talent_wishlist_toggle.addEventListener("change", (event) => {
 			talent_wishlist.readOnly = !talent_wishlist_toggle.checked;
-			this.rebuildTables(event);
+			this.rebuildTables(event, true, true, true);
 		});
 	}
 
@@ -552,28 +558,28 @@ export class App {
 	private createTalentWishlist() {
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement; // talent_wishlist
 		wishlist.value = this.configData.wishlist;
-		wishlist.addEventListener("change", (event) => this.rebuildTables(event));
+		wishlist.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 		return wishlist;
 	}
 
 	private createSkillWishlist() {
 		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
 		skill_wishlist.value = this.configData.skill_wishlist;
-		skill_wishlist.addEventListener("change", (event) => this.rebuildTables(event));
+		skill_wishlist.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 		return skill_wishlist;
 	}
 
 	private createCharacteristicWishlist() {
 		const characteristic_wishlist = document.getElementById("characteristic_wishlist") as HTMLTextAreaElement;
 		characteristic_wishlist.value = this.configData.characteristic_wishlist;
-		characteristic_wishlist.addEventListener("change", (event) => this.rebuildTables(event));
+		characteristic_wishlist.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 		return characteristic_wishlist;
 	}
 
 	private createSkipZeroMatchesCheckbox() {
 		const skipZeroMatchesCheckbox = document.getElementById("skip0Cb") as HTMLInputElement;
 		skipZeroMatchesCheckbox.checked = this.configData.skip0CbChecked;
-		skipZeroMatchesCheckbox.addEventListener("change", (event) => this.rebuildTables(event));
+		skipZeroMatchesCheckbox.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 	}
 
 	private createAptitudeWishlistSelect() {
@@ -607,7 +613,7 @@ export class App {
 			}
 			aptitudeSelect.add(aptitudeSelectOption);
 		}
-		aptitudeSelect.addEventListener("change", (event) => this.rebuildTables(event));
+		aptitudeSelect.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 	}
 
 	private createRoleSelectContainer() {
@@ -633,7 +639,7 @@ export class App {
 				roleSelect.add(option);
 			}
 			// add event listener to select element
-			roleSelect.addEventListener("change", (event) => this.rebuildTables(event));
+			roleSelect.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 		} else {
 			roleSelectContainer.style.display = "none";
 		}
@@ -660,7 +666,7 @@ export class App {
 				backgroundSelect.add(option);
 			}
 			// add event listener to select element
-			backgroundSelect.addEventListener("change", (event) => this.rebuildTables(event));
+			backgroundSelect.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 		} else {
 			backgroundSelectContainer.style.display = "none";
 		}
@@ -687,7 +693,7 @@ export class App {
 				worldSelect.add(option);
 			}
 			// add event listener to select element
-			worldSelect.addEventListener("change", (event) => this.rebuildTables(event));
+			worldSelect.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 		} else {
 			worldSelectContainer.style.display = "none";
 		}
@@ -716,7 +722,7 @@ export class App {
 				classSelect.add(option);
 			}
 			// add event listener to select element
-			classSelect.addEventListener("change", (event) => this.rebuildTables(event));
+			classSelect.addEventListener("change", (event) => this.rebuildTables(event, true, true, true));
 		} else {
 			classSelectContainer.style.display = "none";
 		}
@@ -800,12 +806,8 @@ export class App {
 	}
 
 
-	private rebuildTables(event: Event | null) {
+	private rebuildTables(event: Event | null, doCharacteristics: boolean, doSkills: boolean, doTalents: boolean) {
 		//this.tree = new Tree();
-
-		const wishlistArray = this.rebuildTalentWishlist();
-		const skill_wishlistArray = this.rebuildSkillWishlist();
-		const characteristic_wishlistArray = this.rebuildCharacteristicWishlist();
 
 		this.selectedAptitudes = [];
 		this.selectedAptitudes.push(this.data.free);
@@ -814,10 +816,9 @@ export class App {
 		this.rebuildBackgroundSelect(duplicates);
 		this.rebuildAptitudeSelect(duplicates);
 
-		const skipZeroMatches = this.rebuildSkipZeroMatches();
-		this.rebuildTablesCharacteristics(characteristic_wishlistArray, skipZeroMatches);
-		this.rebuildTablesTalents(wishlistArray, skipZeroMatches);
-		this.rebuildTablesSkills(skill_wishlistArray, skipZeroMatches);
+		if (doCharacteristics) this.rebuildTablesCharacteristics(this.rebuildCharacteristicWishlist(), this.rebuildSkipZeroMatches());
+		if (doTalents) this.rebuildTablesTalents(this.rebuildTalentWishlist(), this.rebuildSkipZeroMatches());
+		if (doSkills) this.rebuildTablesSkills(this.rebuildSkillWishlist(), this.rebuildSkipZeroMatches());
 
 		//this.buildSelectedTree();
 
@@ -827,6 +828,8 @@ export class App {
 	}
 
 	private rebuildTablesSkills(skill_wishlistArray: string[], skipZeroMatches: boolean) {
+		console.log('rebuildTablesSkills');
+
 		const skillTableDiv = document.getElementById("skill") as HTMLDivElement;
 		skillTableDiv.innerHTML = "";
 
@@ -859,7 +862,26 @@ export class App {
 
 			const rootDiv = document.createElement("div");
 			skillTableDiv.appendChild(rootDiv);
+
+			const rankDiv = document.createElement("div");
+			rootDiv.appendChild(rankDiv);
+			const rankId = 'rankSkill_' + sortedSkills[i].name.replaceAll(' ', '_');
+			rankDiv.innerHTML = `<select id="${rankId}" style="width: unset" class="form-control form-control-sm"></select>`;
+			for (let j = 0; j < 5; j++) {
+				const option = document.createElement("option");
+				option.text = j.toString();
+				option.value = j.toString();
+				option.selected = (sortedSkills[i] && sortedSkills[i].rank == j) || j == 0;
+				document.getElementById(rankId)!.appendChild(option);
+			}
+			const rank = document.getElementById(rankId) as HTMLSelectElement;
+			rank.addEventListener("change", (event) => {
+				sortedSkills[i].rank = parseInt(rank.value);
+				this.calculateSkillCost();
+			});
+
 			rootDiv.appendChild(costDiv);
+
 			rootDiv.appendChild(matchesDiv);
 
 			const skillName = document.createElement("div");
@@ -877,6 +899,8 @@ export class App {
 	}
 
 	private rebuildTablesTalents(wishlistArray: string[], skip0CbChecked: boolean) {
+		console.log('rebuildTablesTalents');
+
 		const talentTableDiv = document.getElementById("talent") as HTMLDivElement;
 		talentTableDiv.innerHTML = "";
 
@@ -917,9 +941,26 @@ export class App {
 			}
 			if (skip) continue;
 
+
 			const recordDiv = document.createElement("div");
 			talentTableDiv.appendChild(recordDiv);
+
+			const pickDiv = document.createElement("div");
+			const cbId = 'chosenTalent_' + sortedTalents[i].talent.replaceAll(' ', '_');
+			pickDiv.innerHTML = `<div class="custom-control custom-control-sm custom-checkbox">
+					<input type="checkbox" class="custom-control-input" id="${cbId}">
+					<label class="custom-control-label" for="${cbId}">&nbsp;</label>
+				</div>`;
+			recordDiv.appendChild(pickDiv);
+			const pickCheckbox = document.getElementById(cbId) as HTMLInputElement;
+			pickCheckbox.addEventListener("change", (event) => {
+				sortedTalents[i].checked = pickCheckbox.checked;
+				this.calculateTalentCost();
+			});
+			pickCheckbox.checked = sortedTalents[i].checked;
+
 			recordDiv.appendChild(costDiv)
+
 			recordDiv.appendChild(matchesDiv);
 
 			const talentTierDiv = document.createElement("div");
@@ -1007,6 +1048,8 @@ export class App {
 	}
 
 	private rebuildTablesCharacteristics(characteristic_wishlistArray: string[], skip0CbChecked: boolean) {
+		console.log('rebuildTablesCharacteristics');
+
 		const characteristicTableDiv = document.getElementById("characteristic") as HTMLDivElement;
 		characteristicTableDiv.innerHTML = "";
 
@@ -1041,7 +1084,26 @@ export class App {
 
 			const rootDiv = document.createElement("div");
 			characteristicTableDiv.appendChild(rootDiv);
+
+			const rankDiv = document.createElement("div");
+			rootDiv.appendChild(rankDiv);
+			const rankId = 'rankCharacteristic_' + sortedCharacteristic[i].name.replaceAll(' ', '_');
+			rankDiv.innerHTML = `<select id="${rankId}" style="width: unset" class="form-control form-control-sm"></select>`;
+			for (let j = 0; j < 6; j++) {
+				const option = document.createElement("option");
+				option.text = j.toString();
+				option.value = j.toString();
+				option.selected = (sortedCharacteristic[i] && sortedCharacteristic[i].rank == j) || j == 0;
+				document.getElementById(rankId)!.appendChild(option);
+			}
+			const rank = document.getElementById(rankId) as HTMLSelectElement;
+			rank.addEventListener("change", (event) => {
+				sortedCharacteristic[i].rank = parseInt(rank.value);
+				this.calculateCharacteristicCost();
+			});
+
 			rootDiv.appendChild(costDiv);
+
 			rootDiv.appendChild(matchesDiv);
 
 			const characteristicName = document.createElement("div");
@@ -1156,7 +1218,7 @@ export class App {
 
 	private rebuildCharacteristicWishlist() {
 		const characteristic_wishlist = document.getElementById("characteristic_wishlist") as HTMLTextAreaElement;
-		if(characteristic_wishlist.readOnly) return [];
+		if (characteristic_wishlist.readOnly) return [];
 		this.configData.characteristic_wishlist = characteristic_wishlist.value;
 		// split textarea content into array
 		const characteristic_wishlistArray = characteristic_wishlist.value.split("\n");
@@ -1176,7 +1238,7 @@ export class App {
 
 	private rebuildSkillWishlist() {
 		const skill_wishlist = document.getElementById("skill_wishlist") as HTMLTextAreaElement;
-		if(skill_wishlist.readOnly) return [];
+		if (skill_wishlist.readOnly) return [];
 		this.configData.skill_wishlist = skill_wishlist.value;
 		// split textarea content into array
 		const skill_wishlistArray = skill_wishlist.value.split("\n");
@@ -1196,7 +1258,7 @@ export class App {
 
 	private rebuildTalentWishlist() {
 		const wishlist = document.getElementById("wishlist") as HTMLTextAreaElement;
-		if(wishlist.readOnly) return [];
+		if (wishlist.readOnly) return [];
 		this.configData.wishlist = wishlist.value;
 		// split textarea content into array
 		const wishlistArray = wishlist.value.split("\n");
@@ -2100,5 +2162,103 @@ export class App {
 	private createResetLink() {
 		const clearLink = document.getElementById("clearLink") as HTMLLinkElement;
 		clearLink.href = `w40k.html?source=${this.source}&reset=true`;
+	}
+
+	private calculateCharacteristicCost() {
+		let totalCost = 0;
+		for (let i = 0; i < this.data.characteristic.length; i++) {
+			if (this.data.characteristic[i].rank > 0) {
+				for (let j = 0; j < this.data.costs.length; j++) {
+					if (this.data.costs[j].type === "characteristic") {
+						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
+						let matches = 0;
+						if (this.selectedAptitudes.includes(this.data.characteristic[i].name)) matches++;
+						if (this.selectedAptitudes.includes(this.data.characteristic[i].aptitude)) matches++;
+						for (let x = 0; x < this.data.characteristic[i].rank; x++) {
+							//console.log(j, x, matches, this.data.costs[j].cost[2 - matches]);
+							//console.log(this.data.costs[j].cost[2 - matches][x]);
+							totalCost += this.data.costs[j].cost[2 - matches][x];
+						}
+					}
+				}
+			}
+		}
+		const costCharacteristics = document.getElementById("costCharacteristics") as HTMLInputElement;
+		costCharacteristics.value = totalCost.toString();
+	}
+
+	private calculateSkillCost() {
+		let totalCost = 0;
+		for (let i = 0; i < this.data.skills.length; i++) {
+			if (this.data.skills[i].rank > 0) {
+				for (let j = 0; j < this.data.costs.length; j++) {
+					if (this.data.costs[j].type === "skill") {
+						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
+						let matches = 0;
+						if (this.selectedAptitudes.includes(this.data.skills[i].aptitudes[0])) matches++;
+						if (this.selectedAptitudes.includes(this.data.skills[i].aptitudes[1])) matches++;
+						for (let x = 0; x < this.data.skills[i].rank; x++) {
+							//console.log(j, x, matches, this.data.costs[j].cost[2 - matches]);
+							//console.log(this.data.costs[j].cost[2 - matches][x]);
+							totalCost += this.data.costs[j].cost[2 - matches][x];
+						}
+					}
+				}
+			}
+		}
+		const costSkills = document.getElementById("costSkills") as HTMLInputElement;
+		costSkills.value = totalCost.toString();
+	}
+
+	private calculateTalentCost() {
+		let totalCost = 0;
+		for (let i = 0; i < this.data.talents.length; i++) {
+			if (this.data.talents[i].checked) {
+				for (let j = 0; j < this.data.costs.length; j++) {
+					if (this.data.costs[j].type === "talent") {
+						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
+						let matches = 0;
+						if (this.selectedAptitudes.includes(this.data.talents[i].apt1)) matches++;
+						if (this.selectedAptitudes.includes(this.data.talents[i].apt2)) matches++;
+						totalCost += this.data.costs[j].cost[2 - matches][this.data.talents[i].tier - 1];
+					}
+				}
+			}
+		}
+		const costTalents = document.getElementById("costTalents") as HTMLInputElement;
+		costTalents.value = totalCost.toString();
+	}
+
+	private createCostTalentsClear() {
+		const clear = document.getElementById("costTalentsClear") as HTMLButtonElement;
+		clear.onclick = evt => {
+			for (let i = 0; i < this.data.talents.length; i++) {
+				this.data.talents[i].checked = false;
+			}
+			this.rebuildTables(evt, false, false, true);
+			this.calculateTalentCost();
+		};
+	}
+
+	private createCostSkillsClear() {
+		const clear = document.getElementById("costSkillsClear") as HTMLButtonElement;
+		clear.onclick = evt => {
+			for (let i = 0; i < this.data.skills.length; i++) {
+				this.data.skills[i].rank = 0;
+			}
+			this.rebuildTables(evt, false, true, false);
+			this.calculateSkillCost();
+		};
+	}
+
+	private createCostCharacteristicsClear() {
+		const clear = document.getElementById("costCharacteristicsClear") as HTMLButtonElement;
+		clear.onclick = evt => {
+			for (let i = 0; i < this.data.characteristic.length; i++) {
+				this.data.characteristic[i].rank = 0;
+			}
+			this.rebuildTables(evt, true, false, false);
+			this.calculateCharacteristicCost();
+		};
 	}
 }

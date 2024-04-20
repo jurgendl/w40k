@@ -125,12 +125,23 @@ https://clipboardjs.com/
 		<button title="clear wishlist" type="button" class="btn btn-sm btn-danger" id="characteristic_wishlist_clear"><i class="fa-fw fa-solid fa-trash"></i></button>
 		<textarea rows="3" class="wishlist form-control" id="characteristic_wishlist" name="characteristic_wishlist"></textarea>
 	</div>
-	<div>
-		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export to clipboard</button>
-		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic_wishlist">Export to wishlist</button>
+	<div class="form-group">
+		<div class="input-group input-group-sm">
+			<input type="text" class="form-control" disabled id="costCharacteristics" placeholder="cost">
+			<div class="input-group-append">
+				<button class="btn btn-outline-secondary" type="button" id="costCharacteristicsClear"><i class="fa-fw fa-solid fa-trash"></i></button>
+			</div>
+		</div>
+	</div>
+	<div style="display: flex;">
+    	<div style="display: inline-block; flex-grow: 99; flex-shrink: 0;">
+			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic">Export to clipboard</button>
+			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_characteristic_wishlist">Export to wishlist</button>
+		</div>
 	</div>
 	<div class="characteristic header">
 		<div>
+			<div></div>
 			<div title="cost">cost</div>
 			<div title="aptitude matches">AM</div>
 			<div title="characteristic">characteristic</div>
@@ -152,12 +163,27 @@ https://clipboardjs.com/
 		<button title="clear wishlist" type="button" class="btn btn-sm btn-danger" id="skill_wishlist_clear"><i class="fa-fw fa-solid fa-trash"></i></button>
 		<textarea rows="3" class="wishlist form-control" id="skill_wishlist" name="skill_wishlist"></textarea>
 	</div>
-	<div>
-		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export to clipboard</button>
-		<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill_wishlist">Export to wishlist</button>
+	<div class="form-group">
+		<div class="input-group input-group-sm">
+			<input type="text" class="form-control" disabled id="costSkills" placeholder="cost">
+			<div class="input-group-append">
+				<button class="btn btn-outline-secondary" type="button" id="costSkillsClear"><i class="fa-fw fa-solid fa-trash"></i></button>
+			</div>
+		</div>
+	</div>
+	<div style="display: flex;">
+		<div style="display: inline-block; flex-grow: 99; flex-shrink: 0;">
+			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill">Export to clipboard</button>
+			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_skill_wishlist">Export to wishlist</button>
+		</div>
+		<div style="padding-left: 1em; display: inline-block; flex-grow: 0; flex-shrink: 99;">
+			Click to see skill ranks
+			<button id="skillRanksHelp" class="unstyled-button"><i class="icon-as-button fas fa-question-circle"></i></button>
+		</div>
 	</div>
 	<div class="skill header">
 		<div>
+			<div></div>
 			<div title="cost">cost</div>
 			<div title="aptitude matches">AM</div>
 			<div title="skill">skill</div>
@@ -180,21 +206,26 @@ https://clipboardjs.com/
 		<button title="clear wishlist" type="button" class="btn btn-sm btn-danger" id="wishlist_clear"><i class="fa-fw fa-solid fa-trash"></i></button>
         <textarea rows="3" class="wishlist form-control" id="wishlist" name="wishlist"></textarea>
 	</div>
+	<div class="form-group">
+		<div class="input-group input-group-sm">
+			<input type="text" class="form-control" disabled id="costTalents" placeholder="cost">
+			<div class="input-group-append">
+				<button class="btn btn-outline-secondary" type="button" id="costTalentsClear"><i class="fa-fw fa-solid fa-trash"></i></button>
+			</div>
+		</div>
+	</div>
 	<div style="display: flex;">
 		<div style="display: inline-block; flex-grow: 99; flex-shrink: 0;">
 			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent">Export to clipboard</button>
 			<button type="button" class="btn btn-sm btn-primary mb-1" id="export_talent_wishlist">Export to wishlist</button>
 		</div>
 		<div style="padding-left: 1em; display: inline-block; flex-grow: 0; flex-shrink: 99;">
-			|&nbsp;&nbsp;Click to see skill ranks
-			<button id="skillRanksHelp" class="unstyled-button"><i class="icon-as-button fas fa-question-circle"></i></button>
-		</div>
-		<div style="padding-left: 1em; display: inline-block; flex-grow: 0; flex-shrink: 99;">
-			|&nbsp;&nbsp;Click "<i class='fa-regular fa-eye'></i>" to see all prerequisites
+			Click "<i class='fa-regular fa-eye'></i>" below to see all prerequisites
 		</div>
 	</div>
 	<div class="talent header">
 		<div>
+			<div></div>
 			<div title="cost">cost</div>
 			<div title="aptitude matches">AM</div>
 			<div title="tier">tier</div>
