@@ -883,7 +883,7 @@ export class App {
 
 				const dropdownDiv = document.createElement("div");
 				dropdownDiv.classList.add('rank-dropdown');
-				dropdownDiv.innerHTML = Array.from({length: 5}, (v, k) => k + 1)
+				dropdownDiv.innerHTML = Array.from({length: 4}, (v, k) => k + 1)
 					.map((l) => {
 						if (sortedSkill[i].ranks && sortedSkill[i].ranks.includes(l)) {
 							return `<div class="custom-control custom-checkbox">
