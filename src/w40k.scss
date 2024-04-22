@@ -147,17 +147,17 @@ textarea {
 
 /* 2 matches */
 .m2 {
-	color: chartreuse;
+	color: limegreen;
 }
 
 /* 1 match */
 .m1 {
-	color: goldenrod;
+	color: gold;
 }
 
 /* no match */
 .m0 {
-	color: indianred;
+	color: orangered;
 }
 
 .badge {
@@ -201,24 +201,24 @@ a.jump-to-anchor {
 	color: unset;
 }
 
-.characteristic:not(.header) > div > :nth-child(4n - 1) {
+/*.characteristic:not(.header) > div > :nth-child(4n - 3) {
+	color: aqua;
+}*/
+
+.skill:not(.header) > div > :nth-child(5n - 5) {
 	color: aqua;
 }
 
-.skill:not(.header) > div > :nth-child(5n - 2) {
-	color: aqua;
-}
-
-.talent:not(.header) > div > :nth-child(8n - 4) {
+.talent:not(.header) > div > :nth-child(8n - 3) {
 	color: aqua;
 }
 
 characteristic {
-	color: chartreuse;
+	color: limegreen;
 }
 
 skill {
-	color: goldenrod;
+	color: gold;
 }
 
 talent {
@@ -226,7 +226,7 @@ talent {
 }
 
 .characteristic:not(.header) > div > :nth-child(4n - 1).m2 {
-	color: chartreuse;
+	color: limegreen;
 }
 
 .animate__animated {

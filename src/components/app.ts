@@ -189,6 +189,9 @@ class ConfigData {
 	roleSelected: string;
 	extraAptitudesSelected: string[];
 	aptitudesWishlist: string[];
+	characteristicRanks: { name: string, ranks: number[] }[];
+	skillRanks: { name: string, ranks: number[] }[];
+	talentPicks: string[];
 
 	constructor() {
 		this.wishlist = ""; // talent_wishlist
@@ -201,6 +204,9 @@ class ConfigData {
 		this.backgroundSelected = "";
 		this.roleSelected = "";
 		this.extraAptitudesSelected = [];
+		this.characteristicRanks = [];
+		this.skillRanks = [];
+		this.talentPicks = [];
 	}
 }
 
@@ -366,6 +372,23 @@ export class App {
 		//this.buildFullTree();
 		this.buildPrerequisitesTree();
 		this.loadConfigData(reset, source, configDateParam);
+		{
+			if (this.configData.characteristicRanks)
+				this.configData.characteristicRanks.forEach((each) => {
+					const characteristic = this.data.characteristic.find((c) => c.name === each.name);
+					if (characteristic) characteristic.ranks = each.ranks;
+				});
+			if (this.configData.skillRanks)
+				this.configData.skillRanks.forEach((each) => {
+					const skill = this.data.skills.find((s) => s.name === each.name);
+					if (skill) skill.ranks = each.ranks;
+				});
+			if (this.configData.talentPicks)
+				this.configData.talentPicks.forEach((each) => {
+					const talent = this.data.talents.find((t) => t.talent === each);
+					if (talent) talent.checked = true;
+				});
+		}
 		this.createClassSelectContainer();
 		this.createWorldSelectContainer();
 		this.createBackgroundSelectContainer();
@@ -959,9 +982,8 @@ export class App {
 			for (let j = 0; j < sortedSkill[i].aptitudes.length; j++) {
 				const skillApt = document.createElement("div");
 				skillApt.innerHTML = sortedSkill[i].aptitudes[j];
-				if (this.selectedAptitudes.includes(sortedSkill[i].aptitudes[j])) {
-					skillApt.classList.add("m2");
-				}
+				if (this.selectedAptitudes.includes(sortedSkill[i].aptitudes[j])) skillApt.classList.add("m2");
+				else skillApt.classList.add("m1");
 				rootDiv.appendChild(skillApt);
 			}
 		}
@@ -1010,7 +1032,6 @@ export class App {
 			}
 			if (skip) continue;
 
-
 			const recordDiv = document.createElement("div");
 			talentTableDiv.appendChild(recordDiv);
 
@@ -1050,12 +1071,14 @@ export class App {
 			talentApt1Div.innerHTML = sortedTalents[i].apt1;
 			recordDiv.appendChild(talentApt1Div);
 			if (this.selectedAptitudes.includes(sortedTalents[i].apt1)) talentApt1Div.classList.add("m2");
+			else talentApt1Div.classList.add("m1");
 
 			const talentApt2Div = document.createElement("div");
 			talentApt2Div.setAttribute("data-export", "true");
 			talentApt2Div.innerHTML = sortedTalents[i].apt2;
 			recordDiv.appendChild(talentApt2Div);
 			if (this.selectedAptitudes.includes(sortedTalents[i].apt2)) talentApt2Div.classList.add("m2");
+			else talentApt2Div.classList.add("m1");
 
 			const talentPrerequisitesDiv = document.createElement("div");
 			talentPrerequisitesDiv.setAttribute("data-export", sortedTalents[i].prerequisites);
@@ -1232,11 +1255,13 @@ export class App {
 			const characteristicName = document.createElement("div");
 			characteristicName.innerHTML = sortedCharacteristic[i].name;
 			if (this.selectedAptitudes.includes(sortedCharacteristic[i].name)) characteristicName.classList.add("m2");
+			else characteristicName.classList.add("m1");
 			rootDiv.appendChild(characteristicName);
 
 			const characteristicAptitude = document.createElement("div");
 			characteristicAptitude.innerHTML = sortedCharacteristic[i].aptitude;
 			if (this.selectedAptitudes.includes(sortedCharacteristic[i].aptitude)) characteristicAptitude.classList.add("m2");
+			else characteristicAptitude.classList.add("m1");
 			rootDiv.appendChild(characteristicAptitude);
 		}
 	}
@@ -2288,9 +2313,15 @@ export class App {
 	}
 
 	private calculateCharacteristicCost() {
+		this.configData.characteristicRanks = [];
 		let totalCost = 0;
 		for (let i = 0; i < this.data.characteristic.length; i++) {
 			if (this.data.characteristic[i].ranks && this.data.characteristic[i].ranks.length > 0) {
+				this.configData.characteristicRanks.push({
+						name: this.data.characteristic[i].name,
+						ranks: this.data.characteristic[i].ranks
+					}
+				);
 				for (let j = 0; j < this.data.costs.length; j++) {
 					if (this.data.costs[j].type === "characteristic") {
 						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -2306,12 +2337,20 @@ export class App {
 		}
 		const costCharacteristics = document.getElementById("costCharacteristics") as HTMLInputElement;
 		costCharacteristics.value = totalCost.toString();
+
+		this.save();
 	}
 
 	private calculateSkillCost() {
+		this.configData.skillRanks = [];
 		let totalCost = 0;
 		for (let i = 0; i < this.data.skills.length; i++) {
 			if (this.data.skills[i].ranks && this.data.skills[i].ranks.length > 0) {
+				this.configData.skillRanks.push({
+						name: this.data.skills[i].name,
+						ranks: this.data.skills[i].ranks
+					}
+				);
 				console.log('calculateSkillCost', this.data.skills[i]);
 				for (let j = 0; j < this.data.costs.length; j++) {
 					if (this.data.costs[j].type === "skill") {
@@ -2329,12 +2368,16 @@ export class App {
 		}
 		const costSkills = document.getElementById("costSkills") as HTMLInputElement;
 		costSkills.value = totalCost.toString();
+
+		this.save();
 	}
 
 	private calculateTalentCost() {
+		this.configData.talentPicks = [];
 		let totalCost = 0;
 		for (let i = 0; i < this.data.talents.length; i++) {
 			if (this.data.talents[i].checked) {
+				this.configData.talentPicks.push(this.data.talents[i].talent);
 				for (let j = 0; j < this.data.costs.length; j++) {
 					if (this.data.costs[j].type === "talent") {
 						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
@@ -2348,6 +2391,8 @@ export class App {
 		}
 		const costTalents = document.getElementById("costTalents") as HTMLInputElement;
 		costTalents.value = totalCost.toString();
+
+		this.save();
 	}
 
 	private createCostTalentsClear() {
