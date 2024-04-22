@@ -102,14 +102,16 @@ textarea {
 
 .characteristic > div {
 	display: grid;
-	grid-template-columns: 60px 50px 30px 150px 1fr;
+	grid-template-columns: 40px 50px 30px 150px 1fr;
 	grid-template-rows: auto;
+	position: relative;
 }
 
 .skill > div {
 	display: grid;
-	grid-template-columns: 60px 50px 30px 150px 150px 1fr;
+	grid-template-columns: 40px 50px 30px 150px 150px 1fr;
 	grid-template-rows: auto;
+	position: relative;
 }
 
 .talent > div {
@@ -348,6 +350,43 @@ textarea.form-control[readonly]::selection {
 /* makes text better readable in tippy tooltips in darkmode (this is the way)  */
 .override .text-muted {
 	color: #aaa !important;
+}
+
+/* ========================  ======================== */
+
+ .rank-dropdown-button {
+	 padding: 1px 3px;
+ }
+
+.rank-dropdown {
+	display: none;
+	height: 0px;
+	position: absolute;
+	left: 3px;
+	top: calc( 100% - 3px );
+	background-color: #333;
+	color: #eee;
+	/* drop shadow on dark background */
+	box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
+	border-radius: 5px;
+	border: 1px solid #eee;
+}
+
+.rank-dropdown.rank-dropdown-shown {
+	display: unset;
+	height: auto;
+	z-index: 100;
+	padding: 5px 8px;
+}
+
+.rank-dropdown label {
+	cursor: pointer;
+}
+
+/* ========================  ======================== */
+
+.form-control:disabled, .form-control[readonly] {
+	color: #262424 !important;
 }
 
 /* ========================  ======================== */

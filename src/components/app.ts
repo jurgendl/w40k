@@ -79,7 +79,7 @@ interface W40KData {
 interface W40KCharacteristic {
 	name: Aptitude;
 	aptitude: Aptitude;
-	rank: number;
+	ranks: number[];
 }
 
 interface W40KTalent {
@@ -98,7 +98,7 @@ interface W40KTalent {
 interface W40KSkill {
 	name: string;
 	aptitudes: Aptitude[];
-	rank: number;
+	ranks: number[];
 }
 
 interface W40KClass {
@@ -402,6 +402,21 @@ export class App {
 		this.rebuildTables(null, true, true, true);
 		this.styleAptitudeMatches(null, data);
 		this.createResetLink();
+
+		// if on document click, close all popovers
+		document.addEventListener('click', (event) => {
+			const target = event.target as HTMLElement;
+			/*if (!target.closest('.tippy-content')) {
+				tippy.hideAll();
+			}*/
+			const closest = target.closest('.rank-dropdown-shown');
+			document.querySelectorAll('.rank-dropdown-shown').forEach((el) => {
+					if (el != closest) {
+						el.classList.remove('rank-dropdown-shown');
+					}
+				}
+			);
+		});
 	}
 
 	private createSkillRanksHelp() {
@@ -833,7 +848,7 @@ export class App {
 		const skillTableDiv = document.getElementById("skill") as HTMLDivElement;
 		skillTableDiv.innerHTML = "";
 
-		const sortedSkills = this.data.skills.sort((a, b) => {
+		const sortedSkill = this.data.skills.sort((a, b) => {
 			let amatches = 0;
 			if (this.selectedAptitudes.includes(a.aptitudes[0])) amatches++;
 			if (this.selectedAptitudes.includes(a.aptitudes[1])) amatches++;
@@ -842,8 +857,8 @@ export class App {
 			if (this.selectedAptitudes.includes(b.aptitudes[1])) bmatches++;
 			return bmatches - amatches;
 		});
-		for (let i = 0; i < sortedSkills.length; i++) {
-			if (!(skill_wishlistArray.length == 0 || skill_wishlistArray.includes(sortedSkills[i].name.toLowerCase().trim()))) {
+		for (let i = 0; i < sortedSkill.length; i++) {
+			if (!(skill_wishlistArray.length == 0 || skill_wishlistArray.includes(sortedSkill[i].name.toLowerCase().trim()))) {
 				continue;
 			}
 			const costDiv = document.createElement("div");
@@ -853,8 +868,8 @@ export class App {
 				if (this.data.costs[j].type === "skill") {
 					// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 					let matches = 0;
-					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[0])) matches++;
-					if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[1])) matches++;
+					if (this.selectedAptitudes.includes(sortedSkill[i].aptitudes[0])) matches++;
+					if (this.selectedAptitudes.includes(sortedSkill[i].aptitudes[1])) matches++;
 					skip = this.calcSkipAndSetMatchCount(costDiv, j, matches, matchesDiv, skipZeroMatches, skip);
 				}
 			}
@@ -863,34 +878,88 @@ export class App {
 			const rootDiv = document.createElement("div");
 			skillTableDiv.appendChild(rootDiv);
 
-			const rankDiv = document.createElement("div");
-			rootDiv.appendChild(rankDiv);
-			const rankId = 'rankSkill_' + sortedSkills[i].name.replaceAll(' ', '_');
-			rankDiv.innerHTML = `<select id="${rankId}" style="width: unset" class="form-control form-control-sm"></select>`;
-			for (let j = 0; j < 5; j++) {
-				const option = document.createElement("option");
-				option.text = j.toString();
-				option.value = j.toString();
-				option.selected = (sortedSkills[i] && sortedSkills[i].rank == j) || j == 0;
-				document.getElementById(rankId)!.appendChild(option);
+			{
+				const rankId = 'rankSkill_' + sortedSkill[i].name.replaceAll(' ', '_');
+
+				const dropdownDiv = document.createElement("div");
+				dropdownDiv.classList.add('rank-dropdown');
+				dropdownDiv.innerHTML = Array.from({length: 5}, (v, k) => k + 1)
+					.map((l) => {
+						if (sortedSkill[i].ranks && sortedSkill[i].ranks.includes(l)) {
+							return `<div class="custom-control custom-checkbox">
+									<input checked value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
+									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
+								</div>`;
+						}
+						return `<div class="custom-control custom-checkbox">
+									<input value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
+									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
+								</div>`;
+					})
+					.join('');
+				rootDiv.appendChild(dropdownDiv);
+
+				const dropdownButtonDiv = document.createElement("div");
+				dropdownButtonDiv.innerHTML = `
+					<button style="border-radius: 6px !important;" id="${rankId}" title="selected ranks" class="btn btn-sm btn-secondary rank-dropdown-button">
+						<span>0</span>
+					</button>
+					`;
+				rootDiv.appendChild(dropdownButtonDiv);
+
+				// if clicked on button with id rankId, set class 'rank-dropdown-shown' to dropdownDiv
+				dropdownButtonDiv.addEventListener('click', (event) => {
+					dropdownDiv.classList.toggle('rank-dropdown-shown');
+					event.stopPropagation();
+				});
+
+				// if clicked on checkbox, set value to button
+				dropdownDiv.querySelectorAll('input').forEach((input) => {
+					input.addEventListener('change', (event) => {
+						sortedSkill[i].ranks = Array.from(dropdownDiv.querySelectorAll('input:checked')).map((input) => parseInt((input as HTMLInputElement).value));
+						const rankLabel = dropdownButtonDiv.querySelector('span');
+						const min = Math.min(...sortedSkill[i].ranks);
+						const max = Math.max(...sortedSkill[i].ranks);
+						if (sortedSkill[i].ranks.length === 0) {
+							rankLabel!.textContent = '0';
+						} else if (sortedSkill[i].ranks.length === 1) {
+							rankLabel!.textContent = sortedSkill[i].ranks[0].toString();
+						} else {
+							rankLabel!.textContent = min.toString() + '-' + max.toString();
+							if (max - min > 1) sortedSkill[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
+						}
+						console.log('ranks', min, max, sortedSkill[i]);
+						this.calculateSkillCost();
+					});
+				});
+				if (sortedSkill[i].ranks && sortedSkill[i].ranks.length > 0) {
+					const rankLabel = dropdownButtonDiv.querySelector('span');
+					const min = Math.min(...sortedSkill[i].ranks);
+					const max = Math.max(...sortedSkill[i].ranks);
+					if (sortedSkill[i].ranks.length === 0) {
+						rankLabel!.textContent = '0';
+					} else if (sortedSkill[i].ranks.length === 1) {
+						rankLabel!.textContent = sortedSkill[i].ranks[0].toString();
+					} else {
+						rankLabel!.textContent = min.toString() + '-' + max.toString();
+						if (max - min > 1) sortedSkill[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
+					}
+					console.log('ranks', min, max, sortedSkill[i]);
+					this.calculateSkillCost();
+				}
 			}
-			const rank = document.getElementById(rankId) as HTMLSelectElement;
-			rank.addEventListener("change", (event) => {
-				sortedSkills[i].rank = parseInt(rank.value);
-				this.calculateSkillCost();
-			});
 
 			rootDiv.appendChild(costDiv);
 
 			rootDiv.appendChild(matchesDiv);
 
 			const skillName = document.createElement("div");
-			skillName.innerHTML = sortedSkills[i].name;
+			skillName.innerHTML = sortedSkill[i].name;
 			rootDiv.appendChild(skillName);
-			for (let j = 0; j < sortedSkills[i].aptitudes.length; j++) {
+			for (let j = 0; j < sortedSkill[i].aptitudes.length; j++) {
 				const skillApt = document.createElement("div");
-				skillApt.innerHTML = sortedSkills[i].aptitudes[j];
-				if (this.selectedAptitudes.includes(sortedSkills[i].aptitudes[j])) {
+				skillApt.innerHTML = sortedSkill[i].aptitudes[j];
+				if (this.selectedAptitudes.includes(sortedSkill[i].aptitudes[j])) {
 					skillApt.classList.add("m2");
 				}
 				rootDiv.appendChild(skillApt);
@@ -1085,22 +1154,76 @@ export class App {
 			const rootDiv = document.createElement("div");
 			characteristicTableDiv.appendChild(rootDiv);
 
-			const rankDiv = document.createElement("div");
-			rootDiv.appendChild(rankDiv);
-			const rankId = 'rankCharacteristic_' + sortedCharacteristic[i].name.replaceAll(' ', '_');
-			rankDiv.innerHTML = `<select id="${rankId}" style="width: unset" class="form-control form-control-sm"></select>`;
-			for (let j = 0; j < 6; j++) {
-				const option = document.createElement("option");
-				option.text = j.toString();
-				option.value = j.toString();
-				option.selected = (sortedCharacteristic[i] && sortedCharacteristic[i].rank == j) || j == 0;
-				document.getElementById(rankId)!.appendChild(option);
+			{
+				const rankId = 'rankCharacteristic_' + sortedCharacteristic[i].name.replaceAll(' ', '_');
+
+				const dropdownDiv = document.createElement("div");
+				dropdownDiv.classList.add('rank-dropdown');
+				dropdownDiv.innerHTML = Array.from({length: 5}, (v, k) => k + 1)
+					.map((l) => {
+						if (sortedCharacteristic[i].ranks && sortedCharacteristic[i].ranks.includes(l)) {
+							return `<div class="custom-control custom-checkbox">
+									<input checked value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
+									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
+								</div>`;
+						}
+						return `<div class="custom-control custom-checkbox">
+									<input value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
+									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
+								</div>`;
+					})
+					.join('');
+				rootDiv.appendChild(dropdownDiv);
+
+				const dropdownButtonDiv = document.createElement("div");
+				dropdownButtonDiv.innerHTML = `
+					<button style="border-radius: 6px !important;" id="${rankId}" title="selected ranks" class="btn btn-sm btn-secondary rank-dropdown-button">
+						<span>0</span>
+					</button>
+					`;
+				rootDiv.appendChild(dropdownButtonDiv);
+
+				// if clicked on button with id rankId, set class 'rank-dropdown-shown' to dropdownDiv
+				dropdownButtonDiv.addEventListener('click', (event) => {
+					dropdownDiv.classList.toggle('rank-dropdown-shown');
+					event.stopPropagation();
+				});
+
+				// if clicked on checkbox, set value to button
+				dropdownDiv.querySelectorAll('input').forEach((input) => {
+					input.addEventListener('change', (event) => {
+						sortedCharacteristic[i].ranks = Array.from(dropdownDiv.querySelectorAll('input:checked')).map((input) => parseInt((input as HTMLInputElement).value));
+						const rankLabel = dropdownButtonDiv.querySelector('span');
+						const min = Math.min(...sortedCharacteristic[i].ranks);
+						const max = Math.max(...sortedCharacteristic[i].ranks);
+						if (sortedCharacteristic[i].ranks.length === 0) {
+							rankLabel!.textContent = '0';
+						} else if (sortedCharacteristic[i].ranks.length === 1) {
+							rankLabel!.textContent = sortedCharacteristic[i].ranks[0].toString();
+						} else {
+							rankLabel!.textContent = min.toString() + '-' + max.toString();
+							if (max - min > 1) sortedCharacteristic[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
+						}
+						console.log('ranks', min, max, sortedCharacteristic[i]);
+						this.calculateCharacteristicCost();
+					});
+				});
+				if (sortedCharacteristic[i].ranks && sortedCharacteristic[i].ranks.length > 0) {
+					const rankLabel = dropdownButtonDiv.querySelector('span');
+					const min = Math.min(...sortedCharacteristic[i].ranks);
+					const max = Math.max(...sortedCharacteristic[i].ranks);
+					if (sortedCharacteristic[i].ranks.length === 0) {
+						rankLabel!.textContent = '0';
+					} else if (sortedCharacteristic[i].ranks.length === 1) {
+						rankLabel!.textContent = sortedCharacteristic[i].ranks[0].toString();
+					} else {
+						rankLabel!.textContent = min.toString() + '-' + max.toString();
+						if (max - min > 1) sortedCharacteristic[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
+					}
+					console.log('ranks', min, max, sortedCharacteristic[i]);
+					this.calculateCharacteristicCost();
+				}
 			}
-			const rank = document.getElementById(rankId) as HTMLSelectElement;
-			rank.addEventListener("change", (event) => {
-				sortedCharacteristic[i].rank = parseInt(rank.value);
-				this.calculateCharacteristicCost();
-			});
 
 			rootDiv.appendChild(costDiv);
 
@@ -2167,17 +2290,15 @@ export class App {
 	private calculateCharacteristicCost() {
 		let totalCost = 0;
 		for (let i = 0; i < this.data.characteristic.length; i++) {
-			if (this.data.characteristic[i].rank > 0) {
+			if (this.data.characteristic[i].ranks && this.data.characteristic[i].ranks.length > 0) {
 				for (let j = 0; j < this.data.costs.length; j++) {
 					if (this.data.costs[j].type === "characteristic") {
 						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 						let matches = 0;
 						if (this.selectedAptitudes.includes(this.data.characteristic[i].name)) matches++;
 						if (this.selectedAptitudes.includes(this.data.characteristic[i].aptitude)) matches++;
-						for (let x = 0; x < this.data.characteristic[i].rank; x++) {
-							//console.log(j, x, matches, this.data.costs[j].cost[2 - matches]);
-							//console.log(this.data.costs[j].cost[2 - matches][x]);
-							totalCost += this.data.costs[j].cost[2 - matches][x];
+						for (let x = 0; x < this.data.characteristic[i].ranks.length; x++) {
+							totalCost += this.data.costs[j].cost[2 - matches][this.data.characteristic[i].ranks[x] - 1];
 						}
 					}
 				}
@@ -2190,17 +2311,17 @@ export class App {
 	private calculateSkillCost() {
 		let totalCost = 0;
 		for (let i = 0; i < this.data.skills.length; i++) {
-			if (this.data.skills[i].rank > 0) {
+			if (this.data.skills[i].ranks && this.data.skills[i].ranks.length > 0) {
+				console.log('calculateSkillCost', this.data.skills[i]);
 				for (let j = 0; j < this.data.costs.length; j++) {
 					if (this.data.costs[j].type === "skill") {
 						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
 						let matches = 0;
 						if (this.selectedAptitudes.includes(this.data.skills[i].aptitudes[0])) matches++;
 						if (this.selectedAptitudes.includes(this.data.skills[i].aptitudes[1])) matches++;
-						for (let x = 0; x < this.data.skills[i].rank; x++) {
-							//console.log(j, x, matches, this.data.costs[j].cost[2 - matches]);
-							//console.log(this.data.costs[j].cost[2 - matches][x]);
-							totalCost += this.data.costs[j].cost[2 - matches][x];
+						// iterate this.data.skills[i].ranks
+						for (let x = 0; x < this.data.skills[i].ranks.length; x++) {
+							totalCost += this.data.costs[j].cost[2 - matches][this.data.skills[i].ranks[x] - 1];
 						}
 					}
 				}
@@ -2244,7 +2365,7 @@ export class App {
 		const clear = document.getElementById("costSkillsClear") as HTMLButtonElement;
 		clear.onclick = evt => {
 			for (let i = 0; i < this.data.skills.length; i++) {
-				this.data.skills[i].rank = 0;
+				this.data.skills[i].ranks = [];
 			}
 			this.rebuildTables(evt, false, true, false);
 			this.calculateSkillCost();
@@ -2255,7 +2376,7 @@ export class App {
 		const clear = document.getElementById("costCharacteristicsClear") as HTMLButtonElement;
 		clear.onclick = evt => {
 			for (let i = 0; i < this.data.characteristic.length; i++) {
-				this.data.characteristic[i].rank = 0;
+				this.data.characteristic[i].ranks = [];
 			}
 			this.rebuildTables(evt, true, false, false);
 			this.calculateCharacteristicCost();
