@@ -908,16 +908,13 @@ export class App {
 				dropdownDiv.classList.add('rank-dropdown');
 				dropdownDiv.innerHTML = Array.from({length: 4}, (v, k) => k + 1)
 					.map((l) => {
-						if (sortedSkill[i].ranks && sortedSkill[i].ranks.includes(l)) {
-							return `<div class="custom-control custom-checkbox">
-									<input checked value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
-									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
-								</div>`;
-						}
-						return `<div class="custom-control custom-checkbox">
-									<input value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
-									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
-								</div>`;
+						const isChecked = sortedSkill[i].ranks && sortedSkill[i].ranks.includes(l) ? 'checked' : '';
+						return `
+							<div class="custom-control custom-checkbox">
+								<input ${isChecked} value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
+								<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
+							</div>
+							`;
 					})
 					.join('');
 				rootDiv.appendChild(dropdownDiv);
@@ -951,7 +948,7 @@ export class App {
 							rankLabel!.textContent = min.toString() + '-' + max.toString();
 							if (max - min > 1) sortedSkill[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
 						}
-						console.log('ranks', min, max, sortedSkill[i]);
+						console.log('rebuildTablesSkills: ranks', min, max, sortedSkill[i]);
 						this.calculateSkillCost();
 					});
 				});
@@ -967,10 +964,10 @@ export class App {
 						rankLabel!.textContent = min.toString() + '-' + max.toString();
 						if (max - min > 1) sortedSkill[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
 					}
-					console.log('ranks', min, max, sortedSkill[i]);
-					this.calculateSkillCost();
+					console.log('rebuildTablesSkills: ranks', min, max, sortedSkill[i]);
 				}
 			}
+			this.calculateSkillCost();
 
 			rootDiv.appendChild(costDiv);
 
@@ -1037,10 +1034,12 @@ export class App {
 
 			const pickDiv = document.createElement("div");
 			const cbId = 'chosenTalent_' + sortedTalents[i].talent.replaceAll(' ', '_');
-			pickDiv.innerHTML = `<div class="custom-control custom-control-sm custom-checkbox">
+			pickDiv.innerHTML = `
+				<div class="custom-control custom-control-sm custom-checkbox">
 					<input type="checkbox" class="custom-control-input" id="${cbId}">
 					<label class="custom-control-label" for="${cbId}">&nbsp;</label>
-				</div>`;
+				</div>
+				`;
 			recordDiv.appendChild(pickDiv);
 			const pickCheckbox = document.getElementById(cbId) as HTMLInputElement;
 			pickCheckbox.addEventListener("change", (event) => {
@@ -1130,6 +1129,7 @@ export class App {
 			actionDiv.innerHTML = `<button id="${popId}" class="unstyled-button"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
 			this.createPopOver(popId, popup);
 		}
+		this.calculateTalentCost();
 	}
 
 	private rebuildSkipZeroMatches() {
@@ -1184,16 +1184,13 @@ export class App {
 				dropdownDiv.classList.add('rank-dropdown');
 				dropdownDiv.innerHTML = Array.from({length: 5}, (v, k) => k + 1)
 					.map((l) => {
-						if (sortedCharacteristic[i].ranks && sortedCharacteristic[i].ranks.includes(l)) {
-							return `<div class="custom-control custom-checkbox">
-									<input checked value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
-									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
-								</div>`;
-						}
-						return `<div class="custom-control custom-checkbox">
-									<input value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
-									<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
-								</div>`;
+						const isChecked = sortedCharacteristic[i].ranks && sortedCharacteristic[i].ranks.includes(l) ? 'checked' : '';
+						return `
+							<div class="custom-control custom-checkbox">
+								<input ${isChecked} value="${l}" type="checkbox" class="custom-control-input" id="${rankId}_${l}">
+								<label class="custom-control-label" for="${rankId}_${l}">&nbsp;rank&nbsp;${l}&nbsp;</label>
+							</div>
+							`;
 					})
 					.join('');
 				rootDiv.appendChild(dropdownDiv);
@@ -1227,7 +1224,7 @@ export class App {
 							rankLabel!.textContent = min.toString() + '-' + max.toString();
 							if (max - min > 1) sortedCharacteristic[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
 						}
-						console.log('ranks', min, max, sortedCharacteristic[i]);
+						console.log('rebuildTablesCharacteristics: ranks', min, max, sortedCharacteristic[i]);
 						this.calculateCharacteristicCost();
 					});
 				});
@@ -1243,10 +1240,10 @@ export class App {
 						rankLabel!.textContent = min.toString() + '-' + max.toString();
 						if (max - min > 1) sortedCharacteristic[i].ranks = Array.from({length: max - min + 1}, (v, k) => k + min);
 					}
-					console.log('ranks', min, max, sortedCharacteristic[i]);
-					this.calculateCharacteristicCost();
+					console.log('rebuildTablesCharacteristics: ranks', min, max, sortedCharacteristic[i]);
 				}
 			}
+			this.calculateCharacteristicCost();
 
 			rootDiv.appendChild(costDiv);
 
@@ -2351,7 +2348,6 @@ export class App {
 						ranks: this.data.skills[i].ranks
 					}
 				);
-				console.log('calculateSkillCost', this.data.skills[i]);
 				for (let j = 0; j < this.data.costs.length; j++) {
 					if (this.data.costs[j].type === "skill") {
 						// cost: number[]/*2,1,0 matches*/[]/*max:1,2,3,4*/;
