@@ -967,7 +967,7 @@ export class App {
 					console.log('rebuildTablesSkills: ranks', min, max, sortedSkill[i]);
 				}
 			}
-			this.calculateSkillCost();
+			this.calculateSkillCost(false);
 
 			rootDiv.appendChild(costDiv);
 
@@ -1129,7 +1129,7 @@ export class App {
 			actionDiv.innerHTML = `<button id="${popId}" class="unstyled-button"><i class='icon-as-button fa-regular fa-eye'></i></button>`;
 			this.createPopOver(popId, popup);
 		}
-		this.calculateTalentCost();
+		this.calculateTalentCost(false);
 	}
 
 	private rebuildSkipZeroMatches() {
@@ -1243,7 +1243,7 @@ export class App {
 					console.log('rebuildTablesCharacteristics: ranks', min, max, sortedCharacteristic[i]);
 				}
 			}
-			this.calculateCharacteristicCost();
+			this.calculateCharacteristicCost(false);
 
 			rootDiv.appendChild(costDiv);
 
@@ -2309,7 +2309,7 @@ export class App {
 		clearLink.href = `w40k.html?source=${this.source}&reset=true`;
 	}
 
-	private calculateCharacteristicCost() {
+	private calculateCharacteristicCost(doSave = true) {
 		this.configData.characteristicRanks = [];
 		let totalCost = 0;
 		for (let i = 0; i < this.data.characteristic.length; i++) {
@@ -2335,10 +2335,10 @@ export class App {
 		const costCharacteristics = document.getElementById("costCharacteristics") as HTMLInputElement;
 		costCharacteristics.value = totalCost.toString();
 
-		this.save();
+		if(doSave) this.save();
 	}
 
-	private calculateSkillCost() {
+	private calculateSkillCost(doSave = true) {
 		this.configData.skillRanks = [];
 		let totalCost = 0;
 		for (let i = 0; i < this.data.skills.length; i++) {
@@ -2365,10 +2365,10 @@ export class App {
 		const costSkills = document.getElementById("costSkills") as HTMLInputElement;
 		costSkills.value = totalCost.toString();
 
-		this.save();
+		if(doSave) this.save();
 	}
 
-	private calculateTalentCost() {
+	private calculateTalentCost(doSave = true) {
 		this.configData.talentPicks = [];
 		let totalCost = 0;
 		for (let i = 0; i < this.data.talents.length; i++) {
@@ -2388,7 +2388,7 @@ export class App {
 		const costTalents = document.getElementById("costTalents") as HTMLInputElement;
 		costTalents.value = totalCost.toString();
 
-		this.save();
+		if(doSave) this.save();
 	}
 
 	private createCostTalentsClear() {
