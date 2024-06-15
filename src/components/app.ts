@@ -20,6 +20,7 @@ import 'tippy.js/themes/translucent.css';
 export enum Aptitude {
 	/* common */
 	General = "General",
+
 	/* standard */
 	Weapon_Skill = "Weapon Skill",
 	Ballistic_Skill = "Ballistic Skill",
@@ -31,6 +32,7 @@ export enum Aptitude {
 	Willpower = "Willpower",
 	Fellowship = "Fellowship",
 	/* special */
+
 	Offence = "Offence",
 	Finesse = "Finesse",
 	Defence = "Defence",
@@ -324,7 +326,8 @@ export class App {
 	selectedAptitudes: Aptitude[] = [];
 	source = "ow";
 	urlParams: URLSearchParams | null = null;
-	dollar: any;
+
+	//dollar: any;
 
 	getUrlParam(parameter: string): string | null {
 		if (!this.urlParams) this.urlParams = new URLSearchParams(window.location.search);
@@ -340,7 +343,7 @@ export class App {
 			.then((data) => this.$start(data, source, cfg, reset));
 	}
 
-	public randomStr(length: number) {
+	/*private randomStr(length: number) {
 		let result = '';
 		const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 		const charactersLength = characters.length;
@@ -350,7 +353,7 @@ export class App {
 			counter += 1;
 		}
 		return result;
-	}
+	}*/
 
 	private createPopOver(id: string, content: string) {
 		tippy('#' + id, {
@@ -2069,6 +2072,7 @@ export class App {
 
 	private prerequisitesAsList$(prerequisite: Prerequisite, prerequisiteList: Prerequisite[]) {
 		if (!prerequisite) return;
+
 		if (prerequisite.and && prerequisite.and.length > 0) {
 			prerequisite.and.forEach((item) => this.prerequisitesAsList$(item, prerequisiteList));
 		} else if (prerequisite.or && prerequisite.or.length > 0) {
@@ -2214,9 +2218,7 @@ export class App {
 
 	private prerequisitesAsTree$(talent: W40KTalent, prerequisite: Prerequisite, parentHtmlElement: HTMLElement) {
 		this.prerequisiteToString(talent, prerequisite, parentHtmlElement);
-		if (prerequisite.talentPick) {
-			this.prerequisitesAsTree(prerequisite.talentPick.talent, parentHtmlElement);
-		}
+		if (prerequisite.talentPick) this.prerequisitesAsTree(prerequisite.talentPick.talent, parentHtmlElement);
 	}
 
 	private splitPrerequisitesToAnd(prerequisites: string): string[] {
@@ -2231,9 +2233,9 @@ export class App {
 		for (let i = 0; i < this.data.talents.length; i++) {
 			const talent = this.data.talents[i];
 			// regex talentName (choice)
-			const regex = new RegExp("^" + talent.talent + " \\((.+)\\)$", "i");
-			if (regex.test(prerequisite.text)) {
-				const matcher = prerequisite.text.match(regex);
+			const regexTalentChoice = new RegExp("^" + talent.talent + " \\((.+)\\)$", "i");
+			if (regexTalentChoice.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(regexTalentChoice);
 				const choice = matcher![1];
 				prerequisite.talentPick = new TalentPick(talent, choice.split(",").map((each) => each.trim()).sort());
 				talent.expandsTo.push(parentTalent);
@@ -2245,9 +2247,9 @@ export class App {
 		for (let i = 0; i < this.data.characteristic.length; i++) {
 			const characteristic = this.data.characteristic[i];
 			// regex characteristicName number
-			const regex = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
-			if (regex.test(prerequisite.text)) {
-				const matcher = prerequisite.text.match(regex);
+			const regexCharacteristicNumber = new RegExp("^" + characteristic.name + " (\\d+)$", "i");
+			if (regexCharacteristicNumber.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(regexCharacteristicNumber);
 				const amount = parseInt(matcher![1]);
 				prerequisite.characteristicPick = new CharacteristicPick(characteristic, amount);
 			}
@@ -2255,16 +2257,16 @@ export class App {
 		for (let i = 0; i < this.data.skills.length; i++) {
 			const skill = this.data.skills[i];
 			// regex skillName (choice) +number
-			const regex2 = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
+			const regexSkillChoiceNumber = new RegExp("^" + skill.name + " \\((.+)\\) \\+(\\d+)$", "i");
 			// regex skillName +number
-			const regex1 = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
-			if (regex2.test(prerequisite.text)) {
-				const matcher = prerequisite.text.match(regex2);
+			const skillNumber = new RegExp("^" + skill.name + " \\+(\\d+)$", "i");
+			if (regexSkillChoiceNumber.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(regexSkillChoiceNumber);
 				const amount = parseInt(matcher![2]);
 				const choice = matcher![1];
 				prerequisite.skillPick = new SkillPick(skill, amount, choice.split(",").map((each) => each.trim()).sort());
-			} else if (regex1.test(prerequisite.text)) {
-				const matcher = prerequisite.text.match(regex1);
+			} else if (skillNumber.test(prerequisite.text)) {
+				const matcher = prerequisite.text.match(skillNumber);
 				const amount = parseInt(matcher![1]);
 				prerequisite.skillPick = new SkillPick(skill, amount);
 			}
@@ -2301,7 +2303,6 @@ export class App {
 				this.buildPrerequisitesTree$$(talent, orPrerequisite);
 			});
 		}
-		//console.log(talent.talent, " -- ", talent.prerequisites, " -- ", talent.prerequisiteTree);
 	}
 
 	private createResetLink() {
@@ -2335,7 +2336,7 @@ export class App {
 		const costCharacteristics = document.getElementById("costCharacteristics") as HTMLInputElement;
 		costCharacteristics.value = totalCost.toString();
 
-		if(doSave) this.save();
+		if (doSave) this.save();
 	}
 
 	private calculateSkillCost(doSave = true) {
@@ -2365,7 +2366,7 @@ export class App {
 		const costSkills = document.getElementById("costSkills") as HTMLInputElement;
 		costSkills.value = totalCost.toString();
 
-		if(doSave) this.save();
+		if (doSave) this.save();
 	}
 
 	private calculateTalentCost(doSave = true) {
@@ -2388,7 +2389,7 @@ export class App {
 		const costTalents = document.getElementById("costTalents") as HTMLInputElement;
 		costTalents.value = totalCost.toString();
 
-		if(doSave) this.save();
+		if (doSave) this.save();
 	}
 
 	private createCostTalentsClear() {
